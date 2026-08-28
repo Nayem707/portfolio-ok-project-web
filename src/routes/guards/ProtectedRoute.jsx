@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectAuth } from "@/store/auth";
+import { selectAuth } from "@/features/auth";
 
 /**
  * Guards routes that require an authenticated user.

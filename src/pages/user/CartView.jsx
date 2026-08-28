@@ -17,8 +17,8 @@ import {
   selectCartTotals,
   removeFromCart,
   setQuantity,
-} from "@/store/cart";
-import { toggleWishlist } from "@/store/wishlist";
+} from "@/features/cart";
+import { toggleWishlist } from "@/features/wishlist";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 

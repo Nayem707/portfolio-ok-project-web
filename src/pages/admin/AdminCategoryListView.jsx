@@ -18,8 +18,8 @@ import {
   addCategory,
   updateCategory,
   deleteCategory,
-} from "@/store/categories";
-import { selectProducts } from "@/store/products";
+} from "@/features/categories";
+import { selectProducts } from "@/features/products";
 import { formatDate } from "@/utils";
 
 const emptyForm = { name: "", description: "", image: "", status: "Active" };

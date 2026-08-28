@@ -11,8 +11,8 @@ import ProductGrid from "@/components/product/ProductGrid";
 import CategoryCard from "@/components/product/CategoryCard";
 import SectionHeader from "@/components/common/SectionHeader";
 import Button from "@/components/common/Button";
-import { selectProducts } from "@/store/products";
-import { selectCategories } from "@/store/categories";
+import { selectProducts } from "@/features/products";
+import { selectCategories } from "@/features/categories";
 
 const perks = [
   { icon: TruckIcon, title: "Free Shipping", desc: "On orders over $150" },

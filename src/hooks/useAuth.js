@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { selectAuth, selectIsAdmin } from "@/store/auth";
+import { selectAuth, selectIsAdmin } from "@/features/auth";
 
 export default function useAuth() {
   const { user, isAuthenticated, loading } = useSelector(selectAuth);

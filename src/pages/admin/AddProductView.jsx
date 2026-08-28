@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ProductForm from "@/components/admin/ProductForm";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { addProduct } from "@/store/products";
+import { addProduct } from "@/features/products";
 
 export default function AddProductView() {
   const dispatch = useDispatch();

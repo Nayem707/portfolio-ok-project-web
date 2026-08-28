@@ -1,5 +1,5 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { calcCartTotals } from "@/utils";
+import { calcCartTotals } from "./cart.utils";
 
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartCount = createSelector(selectCartItems, (items) =>

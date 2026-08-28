@@ -10,7 +10,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Logo from "@/components/layout/Logo";
-import { toggleAdminSidebar } from "@/store/ui";
+import { toggleAdminSidebar } from "@/features/ui";
 import { classNames } from "@/utils";
 
 const navItems = [

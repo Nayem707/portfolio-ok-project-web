@@ -6,8 +6,8 @@ import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import Rating from "@/components/common/Rating";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Badge from "@/components/common/Badge";
-import { addToCart } from "@/store/cart";
-import { toggleWishlist, selectWishlistItems } from "@/store/wishlist";
+import { addToCart } from "@/features/cart";
+import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames } from "@/utils";
 
 export default function ProductCard({ product }) {

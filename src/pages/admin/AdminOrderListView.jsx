@@ -7,7 +7,7 @@ import Select from "@/components/common/Select";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { selectOrders } from "@/store/orders";
+import { selectOrders } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 

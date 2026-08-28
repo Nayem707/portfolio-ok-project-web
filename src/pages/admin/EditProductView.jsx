@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ProductForm from "@/components/admin/ProductForm";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
-import { selectProducts, updateProduct } from "@/store/products";
+import { selectProducts, updateProduct } from "@/features/products";
 
 export default function EditProductView() {
   const { id } = useParams();

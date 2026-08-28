@@ -11,7 +11,7 @@ import Badge from "@/components/common/Badge";
 import EmptyState from "@/components/common/EmptyState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import { getUserById } from "@/data/users";
-import { selectOrders } from "@/store/orders";
+import { selectOrders } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 
 export default function AdminUserDetailsView() {

@@ -13,9 +13,9 @@ import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectCartItems, selectCartTotals, clearCart } from "@/store/cart";
-import { placeOrder } from "@/store/orders";
-import { selectCurrentUser } from "@/store/auth";
+import { selectCartItems, selectCartTotals, clearCart } from "@/features/cart";
+import { placeOrder } from "@/features/orders";
+import { selectCurrentUser } from "@/features/auth";
 import { formatCurrency, getDiscountedPrice, classNames } from "@/utils";
 import { PAYMENT_METHODS } from "@/constants";
 

@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
 import CategoryCard from "@/components/product/CategoryCard";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectCategories } from "@/store/categories";
-import { selectProducts } from "@/store/products";
+import { selectCategories } from "@/features/categories";
+import { selectProducts } from "@/features/products";
 
 export default function CategoriesView() {
   const categories = useSelector(selectCategories);

@@ -1,5 +1,3 @@
-import { SHIPPING_FLAT_RATE, FREE_SHIPPING_THRESHOLD } from "@/constants";
-
 export const formatCurrency = (value = 0) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -34,24 +32,6 @@ export const getDiscountedPrice = (price, discount = 0) => {
 };
 
 export const getDiscountPercent = (price, discount = 0) => Math.round(discount);
-
-export const calcCartTotals = (items = []) => {
-  const subtotal = items.reduce(
-    (sum, item) =>
-      sum + getDiscountedPrice(item.price, item.discount) * item.quantity,
-    0,
-  );
-  const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : SHIPPING_FLAT_RATE;
-  const total = subtotal + shipping;
-  return {
-    subtotal: +subtotal.toFixed(2),
-    shipping: +shipping.toFixed(2),
-    total: +total.toFixed(2),
-  };
-};
 
 export const truncate = (str = "", length = 60) =>
   str.length > length ? `${str.slice(0, length).trim()}…` : str;

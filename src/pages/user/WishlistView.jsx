@@ -15,8 +15,8 @@ import {
   selectWishlistItems,
   removeFromWishlist,
   clearWishlist,
-} from "@/store/wishlist";
-import { addToCart } from "@/store/cart";
+} from "@/features/wishlist";
+import { addToCart } from "@/features/cart";
 
 export default function WishlistView() {
   const dispatch = useDispatch();

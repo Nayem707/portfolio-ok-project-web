@@ -7,8 +7,8 @@ import {
   selectCartItems,
   selectCartTotals,
   removeFromCart,
-} from "@/store/cart";
-import { toggleMiniCart } from "@/store/ui";
+} from "@/features/cart";
+import { toggleMiniCart } from "@/features/ui";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 
 export default function MiniCart({ open }) {

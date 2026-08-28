@@ -21,9 +21,9 @@ import QuantitySelector from "@/components/common/QuantitySelector";
 import SectionHeader from "@/components/common/SectionHeader";
 import ProductGrid from "@/components/product/ProductGrid";
 import EmptyState from "@/components/common/EmptyState";
-import { selectProducts } from "@/store/products";
-import { addToCart } from "@/store/cart";
-import { toggleWishlist, selectWishlistItems } from "@/store/wishlist";
+import { selectProducts } from "@/features/products";
+import { addToCart } from "@/features/cart";
+import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames } from "@/utils";
 
 export default function ProductDetailsView() {
