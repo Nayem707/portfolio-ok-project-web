@@ -37,16 +37,16 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800">
+      <section className="from-primary-600 to-primary-800 bg-gradient-to-br">
         <div className="container-app grid items-center gap-8 py-14 lg:grid-cols-2 lg:py-20">
           <div className="text-white">
             <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
               New Season Collection 2026
             </span>
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight sm:text-5xl">
+            <h1 className="mt-5 text-4xl leading-tight font-extrabold sm:text-5xl">
               Discover products you’ll love, at prices you’ll enjoy.
             </h1>
-            <p className="mt-4 max-w-lg text-primary-100">
+            <p className="text-primary-100 mt-4 max-w-lg">
               Shop the latest in electronics, fashion, home, and more. Quality
               products, fast delivery, and a checkout experience built for you.
             </p>
@@ -86,7 +86,7 @@ export default function Home() {
         <div className="container-app grid grid-cols-2 gap-4 py-6 lg:grid-cols-4">
           {perks.map((perk) => (
             <div key={perk.title} className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+              <span className="bg-primary-50 text-primary-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
                 <perk.icon className="h-6 w-6" />
               </span>
               <div>
@@ -138,7 +138,7 @@ export default function Home() {
               className="absolute inset-0 h-full w-full object-cover opacity-30"
             />
             <div className="relative">
-              <p className="text-sm font-medium text-accent-300">
+              <p className="text-accent-300 text-sm font-medium">
                 Limited Time
               </p>
               <h3 className="mt-2 text-2xl font-bold">
@@ -157,7 +157,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-accent-500 p-8 text-white">
+          <div className="bg-accent-500 relative flex flex-col justify-center overflow-hidden rounded-2xl p-8 text-white">
             <img
               src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80"
               alt=""

@@ -8,7 +8,7 @@ export default function Breadcrumb({ items = [] }) {
         <li>
           <Link
             to="/"
-            className="flex items-center hover:text-primary-600"
+            className="hover:text-primary-600 flex items-center"
             aria-label="Home"
           >
             <HomeIcon className="h-4 w-4" />

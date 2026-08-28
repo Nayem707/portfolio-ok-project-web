@@ -79,7 +79,7 @@ export default function DashboardOverview() {
           <h2 className="font-semibold text-slate-900">Recent Orders</h2>
           <Link
             to="/account/orders"
-            className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+            className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm font-medium"
           >
             View all <ArrowRightIcon className="h-4 w-4" />
           </Link>
@@ -92,7 +92,7 @@ export default function DashboardOverview() {
               action={
                 <Link
                   to="/products"
-                  className="text-sm font-medium text-primary-600"
+                  className="text-primary-600 text-sm font-medium"
                 >
                   Start shopping →
                 </Link>

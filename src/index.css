@@ -16,17 +16,13 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium
-      transition-all duration-150 focus:outline-none focus-visible:ring-2
-      focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .input-base {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm
-      text-slate-800 placeholder:text-slate-400 transition
-      focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100;
+    @apply focus:border-primary-500 focus:ring-primary-100 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 transition placeholder:text-slate-400 focus:ring-2 focus:outline-none;
   }
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-card;
+    @apply shadow-card rounded-xl border border-slate-200 bg-white;
   }
   .container-app {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;

@@ -76,7 +76,7 @@ export default function Wishlist() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <Link
                   to={`/products/${item.id}`}
-                  className="line-clamp-2 text-sm font-semibold text-slate-800 hover:text-primary-700"
+                  className="hover:text-primary-700 line-clamp-2 text-sm font-semibold text-slate-800"
                 >
                   {item.name}
                 </Link>

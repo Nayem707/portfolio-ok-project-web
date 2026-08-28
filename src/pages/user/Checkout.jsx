@@ -219,7 +219,7 @@ export default function Checkout() {
                       : "border-slate-200 hover:border-slate-300",
                   )}
                 >
-                  <method.icon className="h-6 w-6 text-primary-600" />
+                  <method.icon className="text-primary-600 h-6 w-6" />
                   <div>
                     <p className="text-sm font-semibold text-slate-800">
                       {method.value}
@@ -263,7 +263,7 @@ export default function Checkout() {
                       alt={item.name}
                       className="h-14 w-14 rounded-lg border border-slate-100 object-cover"
                     />
-                    <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-white">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-white">
                       {item.quantity}
                     </span>
                   </div>

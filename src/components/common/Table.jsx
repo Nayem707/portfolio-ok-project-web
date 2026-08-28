@@ -20,7 +20,7 @@ export default function Table({
       {/* Desktop table */}
       <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
             <tr>
               {columns.map((col) => (
                 <th

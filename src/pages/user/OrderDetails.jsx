@@ -87,7 +87,7 @@ export default function OrderDetails() {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/products/${item.id}`}
-                    className="line-clamp-1 text-sm font-medium text-slate-800 hover:text-primary-700"
+                    className="hover:text-primary-700 line-clamp-1 text-sm font-medium text-slate-800"
                   >
                     {item.name}
                   </Link>

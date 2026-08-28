@@ -118,9 +118,9 @@ export default function Addresses() {
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2 font-semibold text-slate-800">
                 {addr.label === "Work" ? (
-                  <BriefcaseIcon className="h-5 w-5 text-primary-600" />
+                  <BriefcaseIcon className="text-primary-600 h-5 w-5" />
                 ) : (
-                  <HomeIcon className="h-5 w-5 text-primary-600" />
+                  <HomeIcon className="text-primary-600 h-5 w-5" />
                 )}
                 {addr.label}
               </span>
@@ -145,7 +145,7 @@ export default function Addresses() {
               {!addr.default && (
                 <button
                   onClick={() => makeDefault(addr.id)}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                  className="text-primary-600 hover:bg-primary-50 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium"
                 >
                   <MapPinIcon className="h-4 w-4" /> Set default
                 </button>

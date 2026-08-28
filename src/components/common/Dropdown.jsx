@@ -32,7 +32,7 @@ export default function Dropdown({
       {open && (
         <div
           className={classNames(
-            "absolute z-40 mt-2 min-w-[12rem] animate-fade-in overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg",
+            "animate-fade-in absolute z-40 mt-2 min-w-[12rem] overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg",
             align === "right" ? "right-0" : "left-0",
             className,
           )}

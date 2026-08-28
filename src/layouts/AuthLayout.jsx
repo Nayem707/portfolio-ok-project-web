@@ -5,8 +5,8 @@ export default function AuthLayout() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary-700 p-12 text-white lg:flex">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-primary-900" />
+      <div className="bg-primary-700 relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 text-white lg:flex">
+        <div className="from-primary-600 to-primary-900 absolute inset-0 bg-gradient-to-br" />
         <div
           className="absolute inset-0 opacity-20"
           style={{
@@ -20,15 +20,15 @@ export default function AuthLayout() {
           <Logo textClassName="text-white" />
         </div>
         <div className="relative max-w-md">
-          <h2 className="text-3xl font-bold leading-tight">
+          <h2 className="text-3xl leading-tight font-bold">
             Shopping made simple, delightful, and fast.
           </h2>
-          <p className="mt-4 text-primary-100">
+          <p className="text-primary-100 mt-4">
             Discover thousands of products, track your orders, and enjoy a
             seamless checkout experience — all in one place.
           </p>
         </div>
-        <div className="relative flex gap-8 text-sm text-primary-100">
+        <div className="text-primary-100 relative flex gap-8 text-sm">
           <div>
             <p className="text-2xl font-bold text-white">10k+</p>
             <p>Products</p>

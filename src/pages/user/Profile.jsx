@@ -48,7 +48,7 @@ export default function Profile() {
             />
             <button
               type="button"
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm transition hover:bg-primary-700"
+              className="bg-primary-600 hover:bg-primary-700 absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-sm transition"
               aria-label="Change photo"
             >
               <CameraIcon className="h-4 w-4" />

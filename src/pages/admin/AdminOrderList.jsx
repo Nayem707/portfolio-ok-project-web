@@ -77,7 +77,7 @@ export default function AdminOrderList() {
       render: (o) => (
         <Link
           to={`/admin/orders/${o.id}`}
-          className="inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-primary-600"
+          className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
         >
           <EyeIcon className="h-4.5 w-4.5" />
         </Link>
@@ -111,7 +111,7 @@ export default function AdminOrderList() {
       <div className="card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}

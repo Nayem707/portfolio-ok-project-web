@@ -129,7 +129,7 @@ export default function ProductForm({
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
-                    className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-xs font-medium text-red-600 opacity-0 transition group-hover:opacity-100"
+                    className="absolute top-1 right-1 rounded-md bg-white/90 px-1.5 py-0.5 text-xs font-medium text-red-600 opacity-0 transition group-hover:opacity-100"
                   >
                     Remove
                   </button>

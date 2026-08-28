@@ -51,7 +51,7 @@ export default function AccountLayout() {
             </div>
           </div>
 
-          <nav className="card mt-4 overflow-x-auto p-2 no-scrollbar">
+          <nav className="card no-scrollbar mt-4 overflow-x-auto p-2">
             <ul className="flex gap-1 lg:flex-col">
               {navItems.map((item) => (
                 <li key={item.to} className="shrink-0">
@@ -60,7 +60,7 @@ export default function AccountLayout() {
                     end={item.end}
                     className={({ isActive }) =>
                       classNames(
-                        "flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium transition",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition",
                         isActive
                           ? "bg-primary-50 text-primary-700"
                           : "text-slate-600 hover:bg-slate-50",
@@ -79,7 +79,7 @@ export default function AccountLayout() {
                     toast.success("Signed out");
                     navigate("/");
                   }}
-                  className="flex w-full items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap text-red-600 transition hover:bg-red-50"
                 >
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
                   Sign out

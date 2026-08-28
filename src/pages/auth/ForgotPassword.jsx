@@ -168,7 +168,7 @@ export default function ForgotPassword() {
           Remember your password?{" "}
           <Link
             to="/login"
-            className="font-semibold text-primary-600 hover:text-primary-700"
+            className="text-primary-600 hover:text-primary-700 font-semibold"
           >
             Sign in
           </Link>

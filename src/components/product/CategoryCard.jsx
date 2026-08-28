@@ -4,7 +4,7 @@ export default function CategoryCard({ category, productCount }) {
   return (
     <Link
       to={`/products?category=${encodeURIComponent(category.name)}`}
-      className="group relative flex h-44 flex-col justify-end overflow-hidden rounded-xl border border-slate-200 shadow-card transition hover:shadow-card-hover"
+      className="group shadow-card hover:shadow-card-hover relative flex h-44 flex-col justify-end overflow-hidden rounded-xl border border-slate-200 transition"
     >
       <img
         src={category.image}

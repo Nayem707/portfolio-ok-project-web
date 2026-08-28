@@ -91,7 +91,7 @@ export default function AdminCategoryList() {
                   No image
                 </div>
               )}
-              <div className="absolute right-3 top-3">
+              <div className="absolute top-3 right-3">
                 <Badge color={cat.status === "Active" ? "green" : "gray"}>
                   {cat.status}
                 </Badge>

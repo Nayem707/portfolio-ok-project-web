@@ -36,11 +36,11 @@ export default function AdminTopbar() {
         </button>
 
         <div className="relative hidden max-w-md flex-1 sm:block">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             placeholder="Search…"
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
+            className="focus:border-primary-400 focus:ring-primary-100 w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pr-4 pl-11 text-sm focus:bg-white focus:ring-2 focus:outline-none"
           />
         </div>
 
@@ -49,7 +49,7 @@ export default function AdminTopbar() {
             trigger={
               <span className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100">
                 <BellIcon className="h-6 w-6" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-500" />
+                <span className="bg-accent-500 absolute top-2 right-2 h-2 w-2 rounded-full" />
               </span>
             }
           >

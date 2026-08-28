@@ -4,7 +4,7 @@ export default function Tabs({ tabs = [], active, onChange, className }) {
   return (
     <div className={classNames("border-b border-slate-200", className)}>
       <nav
-        className="-mb-px flex gap-6 overflow-x-auto no-scrollbar"
+        className="no-scrollbar -mb-px flex gap-6 overflow-x-auto"
         aria-label="Tabs"
       >
         {tabs.map((tab) => {
@@ -16,7 +16,7 @@ export default function Tabs({ tabs = [], active, onChange, className }) {
               key={value}
               onClick={() => onChange(value)}
               className={classNames(
-                "whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition",
+                "border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap transition",
                 isActive
                   ? "border-primary-600 text-primary-700"
                   : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700",

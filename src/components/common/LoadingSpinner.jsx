@@ -15,7 +15,7 @@ export default function LoadingSpinner({ size = "md", className, label }) {
     >
       <div
         className={classNames(
-          "animate-spin rounded-full border-primary-200 border-t-primary-600",
+          "border-primary-200 border-t-primary-600 animate-spin rounded-full",
           sizes[size],
         )}
         role="status"

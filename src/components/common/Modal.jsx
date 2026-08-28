@@ -42,7 +42,7 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         className={classNames(
-          "relative z-10 w-full animate-fade-in overflow-hidden rounded-2xl bg-white shadow-xl",
+          "animate-fade-in relative z-10 w-full overflow-hidden rounded-2xl bg-white shadow-xl",
           sizes[size],
         )}
       >

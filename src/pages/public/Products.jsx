@@ -97,7 +97,7 @@ export default function Products() {
       <div>
         <h3 className="mb-3 text-sm font-semibold text-slate-800">Search</h3>
         <div className="relative">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => {
@@ -120,7 +120,7 @@ export default function Products() {
             className={classNames(
               "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
               !category
-                ? "bg-primary-50 font-medium text-primary-700"
+                ? "bg-primary-50 text-primary-700 font-medium"
                 : "text-slate-600 hover:bg-slate-50",
             )}
           >
@@ -138,7 +138,7 @@ export default function Products() {
                 className={classNames(
                   "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
                   category === cat.name
-                    ? "bg-primary-50 font-medium text-primary-700"
+                    ? "bg-primary-50 text-primary-700 font-medium"
                     : "text-slate-600 hover:bg-slate-50",
                 )}
               >
@@ -162,7 +162,7 @@ export default function Products() {
             setMaxPrice(Number(e.target.value));
             setPage(1);
           }}
-          className="w-full accent-primary-600"
+          className="accent-primary-600 w-full"
         />
         <div className="mt-1 flex justify-between text-xs text-slate-500">
           <span>$10</span>
@@ -226,7 +226,7 @@ export default function Products() {
               className="fixed inset-0 z-40 bg-slate-900/40"
               onClick={() => setShowFilters(false)}
             />
-            <div className="fixed left-0 top-0 z-50 h-full w-80 max-w-[85%] animate-fade-in overflow-y-auto bg-white p-5 shadow-xl">
+            <div className="animate-fade-in fixed top-0 left-0 z-50 h-full w-80 max-w-[85%] overflow-y-auto bg-white p-5 shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Filters</h2>
                 <button

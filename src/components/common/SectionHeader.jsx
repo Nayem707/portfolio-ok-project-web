@@ -18,7 +18,7 @@ export default function SectionHeader({
       {to && (
         <Link
           to={to}
-          className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary-600 transition hover:text-primary-700"
+          className="text-primary-600 hover:text-primary-700 flex shrink-0 items-center gap-1.5 text-sm font-medium transition"
         >
           {linkLabel}
           <ArrowRightIcon className="h-4 w-4" />

@@ -29,7 +29,7 @@ export default function MobileMenu({ open }) {
         onClick={close}
         aria-hidden="true"
       />
-      <aside className="fixed left-0 top-0 z-50 flex h-full w-72 animate-fade-in flex-col bg-white shadow-xl">
+      <aside className="animate-fade-in fixed top-0 left-0 z-50 flex h-full w-72 flex-col bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
           <Logo />
           <button
@@ -61,7 +61,7 @@ export default function MobileMenu({ open }) {
             ))}
           </ul>
 
-          <p className="mt-5 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mt-5 px-3 text-xs font-semibold tracking-wide text-slate-400 uppercase">
             Categories
           </p>
           <ul className="mt-2 space-y-1">

@@ -167,7 +167,7 @@ export default function AdminOrderDetails() {
               <p>{order.customer.email}</p>
               <Link
                 to={`/admin/users/${order.customer.id}`}
-                className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-700"
+                className="text-primary-600 hover:text-primary-700 mt-2 inline-block text-sm font-medium"
               >
                 View customer →
               </Link>

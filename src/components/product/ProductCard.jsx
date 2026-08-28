@@ -31,7 +31,7 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
+    <div className="group shadow-card hover:shadow-card-hover relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 hover:-translate-y-0.5">
       <div className="relative aspect-square overflow-hidden bg-slate-100">
         <Link to={`/products/${product.id}`}>
           <img
@@ -42,7 +42,7 @@ export default function ProductCard({ product }) {
           />
         </Link>
 
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.discount > 0 && (
             <Badge color="red">-{Math.round(product.discount)}%</Badge>
           )}
@@ -52,7 +52,7 @@ export default function ProductCard({ product }) {
         <button
           onClick={handleWishlist}
           className={classNames(
-            "absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur transition hover:scale-105",
+            "absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur transition hover:scale-105",
             isWishlisted ? "text-red-500" : "text-slate-500",
           )}
           aria-label="Toggle wishlist"
@@ -74,11 +74,11 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <span className="text-xs font-medium text-primary-600">
+        <span className="text-primary-600 text-xs font-medium">
           {product.category}
         </span>
         <Link to={`/products/${product.id}`} className="mt-1">
-          <h3 className="line-clamp-2 text-sm font-semibold text-slate-800 transition hover:text-primary-700">
+          <h3 className="hover:text-primary-700 line-clamp-2 text-sm font-semibold text-slate-800 transition">
             {product.name}
           </h3>
         </Link>
@@ -90,7 +90,7 @@ export default function ProductCard({ product }) {
           <button
             onClick={handleAddToCart}
             disabled={outOfStock}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="bg-primary-600 hover:bg-primary-700 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Add to cart"
           >
             <ShoppingBagIcon className="h-4.5 w-4.5" />

@@ -64,12 +64,12 @@ export default function Navbar() {
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <Link
               to="/wishlist"
-              className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-primary-600"
+              className="hover:text-primary-600 relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
               aria-label="Wishlist"
             >
               <HeartIcon className="h-6 w-6" />
               {wishlistCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-bold text-white">
+                <span className="bg-accent-500 absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
                   {wishlistCount}
                 </span>
               )}
@@ -77,12 +77,12 @@ export default function Navbar() {
 
             <button
               onClick={() => dispatch(toggleMiniCart(true))}
-              className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-primary-600"
+              className="hover:text-primary-600 relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
               aria-label="Cart"
             >
               <ShoppingBagIcon className="h-6 w-6" />
               {cartCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white">
+                <span className="bg-primary-600 absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
                   {cartCount}
                 </span>
               )}
@@ -135,7 +135,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="ml-1 hidden items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 sm:flex"
+                className="bg-primary-600 hover:bg-primary-700 ml-1 hidden items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition sm:flex"
               >
                 Sign in
               </Link>
@@ -164,7 +164,7 @@ export default function Navbar() {
             <Link
               key={cat.id}
               to={`/products?category=${encodeURIComponent(cat.name)}`}
-              className="text-sm font-medium text-slate-500 transition hover:text-primary-600"
+              className="hover:text-primary-600 text-sm font-medium text-slate-500 transition"
             >
               {cat.name}
             </Link>

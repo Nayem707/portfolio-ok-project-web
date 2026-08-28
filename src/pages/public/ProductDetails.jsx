@@ -95,7 +95,7 @@ export default function ProductDetails() {
               className="aspect-square w-full object-cover"
             />
             {product.discount > 0 && (
-              <Badge color="red" className="absolute left-4 top-4">
+              <Badge color="red" className="absolute top-4 left-4">
                 -{Math.round(product.discount)}% OFF
               </Badge>
             )}
@@ -126,7 +126,7 @@ export default function ProductDetails() {
 
         {/* Info */}
         <div>
-          <span className="text-sm font-medium text-primary-600">
+          <span className="text-primary-600 text-sm font-medium">
             {product.category}
           </span>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
@@ -234,7 +234,7 @@ export default function ProductDetails() {
                 key={perk.label}
                 className="flex items-center gap-2 text-sm text-slate-600"
               >
-                <perk.icon className="h-5 w-5 text-primary-600" />
+                <perk.icon className="text-primary-600 h-5 w-5" />
                 {perk.label}
               </div>
             ))}

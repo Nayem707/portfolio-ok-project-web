@@ -27,7 +27,7 @@ export default function MiniCart({ open }) {
         onClick={close}
         aria-hidden="true"
       />
-      <aside className="fixed right-0 top-0 z-50 flex h-full w-full max-w-sm animate-fade-in flex-col bg-white shadow-xl">
+      <aside className="animate-fade-in fixed top-0 right-0 z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
             <ShoppingBagIcon className="h-5 w-5" /> Your Cart ({items.length})

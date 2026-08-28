@@ -33,7 +33,7 @@ export default function OrderStatusTimeline({ status }) {
             {idx < ORDER_STATUS_FLOW.length - 1 && (
               <span
                 className={classNames(
-                  "absolute left-4 top-8 h-full w-0.5 sm:left-1/2 sm:top-4 sm:h-0.5 sm:w-full",
+                  "absolute top-8 left-4 h-full w-0.5 sm:top-4 sm:left-1/2 sm:h-0.5 sm:w-full",
                   idx < currentIndex ? "bg-primary-600" : "bg-slate-200",
                 )}
               />
@@ -44,7 +44,7 @@ export default function OrderStatusTimeline({ status }) {
                 done
                   ? "border-primary-600 bg-primary-600 text-white"
                   : "border-slate-300 bg-white text-slate-400",
-                active && "ring-4 ring-primary-100",
+                active && "ring-primary-100 ring-4",
               )}
             >
               {done ? <CheckIcon className="h-4 w-4" /> : idx + 1}

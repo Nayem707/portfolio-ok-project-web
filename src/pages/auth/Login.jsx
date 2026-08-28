@@ -72,20 +72,20 @@ export default function Login() {
         Sign in to your account to continue shopping.
       </p>
 
-      <div className="mt-4 rounded-lg border border-primary-100 bg-primary-50/60 p-3 text-xs text-primary-700">
+      <div className="border-primary-100 bg-primary-50/60 text-primary-700 mt-4 rounded-lg border p-3 text-xs">
         <p className="font-medium">Demo accounts — click to autofill:</p>
         <div className="mt-2 flex gap-2">
           <button
             type="button"
             onClick={() => quickFill("USER")}
-            className="rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1 ring-primary-100 hover:bg-primary-50"
+            className="ring-primary-100 hover:bg-primary-50 rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1"
           >
             User
           </button>
           <button
             type="button"
             onClick={() => quickFill("ADMIN")}
-            className="rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1 ring-primary-100 hover:bg-primary-50"
+            className="ring-primary-100 hover:bg-primary-50 rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1"
           >
             Admin
           </button>
@@ -116,7 +116,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-9 text-slate-400 hover:text-slate-600"
+              className="absolute top-9 right-3 text-slate-400 hover:text-slate-600"
               aria-label="Toggle password visibility"
             >
               {showPassword ? (
@@ -129,7 +129,7 @@ export default function Login() {
           <div className="mt-2 text-right">
             <Link
               to="/forgot-password"
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
             >
               Forgot password?
             </Link>
@@ -145,7 +145,7 @@ export default function Login() {
         Don’t have an account?{" "}
         <Link
           to="/register"
-          className="font-semibold text-primary-600 hover:text-primary-700"
+          className="text-primary-600 hover:text-primary-700 font-semibold"
         >
           Create one
         </Link>

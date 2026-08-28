@@ -241,7 +241,7 @@ export default function AdminDashboard() {
             <h2 className="font-semibold text-slate-900">Recent Orders</h2>
             <Link
               to="/admin/orders"
-              className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm font-medium"
             >
               View all <ArrowRightIcon className="h-4 w-4" />
             </Link>
@@ -278,7 +278,7 @@ export default function AdminDashboard() {
             <h2 className="font-semibold text-slate-900">Recent Users</h2>
             <Link
               to="/admin/users"
-              className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm font-medium"
             >
               View all <ArrowRightIcon className="h-4 w-4" />
             </Link>

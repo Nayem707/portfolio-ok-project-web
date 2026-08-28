@@ -29,7 +29,7 @@ export default function QuantitySelector({
       </button>
       <span
         className={classNames(
-          "select-none text-center font-semibold text-slate-800",
+          "text-center font-semibold text-slate-800 select-none",
           text,
         )}
       >

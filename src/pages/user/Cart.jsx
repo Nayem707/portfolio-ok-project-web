@@ -62,7 +62,7 @@ export default function Cart() {
       </h1>
 
       {remaining > 0 && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-700">
+        <div className="border-primary-100 bg-primary-50 text-primary-700 mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
           <TruckIcon className="h-5 w-5" />
           Add <strong>{formatCurrency(remaining)}</strong> more to qualify for
           free shipping!
@@ -87,12 +87,12 @@ export default function Cart() {
               <div className="flex flex-1 flex-col">
                 <div className="flex justify-between gap-3">
                   <div>
-                    <span className="text-xs font-medium text-primary-600">
+                    <span className="text-primary-600 text-xs font-medium">
                       {item.category}
                     </span>
                     <Link
                       to={`/products/${item.id}`}
-                      className="mt-0.5 block font-semibold text-slate-800 hover:text-primary-700"
+                      className="hover:text-primary-700 mt-0.5 block font-semibold text-slate-800"
                     >
                       {item.name}
                     </Link>
