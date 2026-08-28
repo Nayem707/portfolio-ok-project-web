@@ -12,11 +12,19 @@
   * {
     @apply border-slate-200;
   }
+
+  button:not(:disabled),
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [role="button"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .input-base {
     @apply focus:border-primary-500 focus:ring-primary-100 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 transition placeholder:text-slate-400 focus:ring-2 focus:outline-none;
