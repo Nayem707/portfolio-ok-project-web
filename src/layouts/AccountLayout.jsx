@@ -12,7 +12,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { logout, selectCurrentUser } from "@/store/slices/authSlice";
+import { logout, selectCurrentUser } from "@/store/auth";
 import { classNames } from "@/utils";
 
 const navItems = [

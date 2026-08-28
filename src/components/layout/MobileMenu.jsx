@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Logo from "@/components/layout/Logo";
 import Button from "@/components/common/Button";
-import { toggleMobileMenu } from "@/store/slices/uiSlice";
-import { logout, selectAuth } from "@/store/slices/authSlice";
-import { selectCategories } from "@/store/slices/categorySlice";
+import { toggleMobileMenu } from "@/store/ui";
+import { logout, selectAuth } from "@/store/auth";
+import { selectCategories } from "@/store/categories";
 import toast from "react-hot-toast";
 
 export default function MobileMenu({ open }) {

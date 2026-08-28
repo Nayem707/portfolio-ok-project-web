@@ -1,8 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { loadState, saveState, removeState } from "@/utils/storage";
-import { ROLES } from "@/constants";
-
-const AUTH_KEY = "auth_user";
+import { AUTH_KEY } from "./auth.constants";
 
 const initialState = {
   user: loadState(AUTH_KEY, null),
@@ -43,10 +41,6 @@ const authSlice = createSlice({
     },
   },
 });
-
-export const selectAuth = (state) => state.auth;
-export const selectCurrentUser = (state) => state.auth.user;
-export const selectIsAdmin = (state) => state.auth.user?.role === ROLES.ADMIN;
 
 export const { loginStart, loginSuccess, loginFailure, logout, updateProfile } =
   authSlice.actions;

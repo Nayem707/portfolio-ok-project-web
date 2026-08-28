@@ -43,10 +43,6 @@ const productSlice = createSlice({
   },
 });
 
-export const selectProducts = (state) => state.product.items;
-export const selectProductById = (id) => (state) =>
-  state.product.items.find((p) => p.id === id);
-
 export const { addProduct, updateProduct, deleteProduct } =
   productSlice.actions;
 export default productSlice.reducer;

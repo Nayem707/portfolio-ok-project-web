@@ -14,11 +14,11 @@ import {
 import Logo from "@/components/layout/Logo";
 import SearchBar from "@/components/common/SearchBar";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
-import { selectCartCount } from "@/store/slices/cartSlice";
-import { selectWishlistCount } from "@/store/slices/wishlistSlice";
-import { toggleMiniCart, toggleMobileMenu } from "@/store/slices/uiSlice";
-import { logout, selectAuth } from "@/store/slices/authSlice";
-import { selectCategories } from "@/store/slices/categorySlice";
+import { selectCartCount } from "@/store/cart";
+import { selectWishlistCount } from "@/store/wishlist";
+import { toggleMiniCart, toggleMobileMenu } from "@/store/ui";
+import { logout, selectAuth } from "@/store/auth";
+import { selectCategories } from "@/store/categories";
 import { classNames } from "@/utils";
 import toast from "react-hot-toast";
 

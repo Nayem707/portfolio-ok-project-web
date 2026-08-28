@@ -23,8 +23,8 @@ import {
 import StatCard from "@/components/common/StatCard";
 import Badge from "@/components/common/Badge";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
-import { selectOrders } from "@/store/slices/orderSlice";
-import { selectProducts } from "@/store/slices/productSlice";
+import { selectOrders } from "@/store/orders";
+import { selectProducts } from "@/store/products";
 import { users } from "@/data/users";
 import { salesByMonth, topProducts } from "@/data/orders";
 import { formatCurrency, formatDate } from "@/utils";

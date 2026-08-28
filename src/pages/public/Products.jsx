@@ -11,8 +11,8 @@ import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectProducts } from "@/store/slices/productSlice";
-import { selectCategories } from "@/store/slices/categorySlice";
+import { selectProducts } from "@/store/products";
+import { selectCategories } from "@/store/categories";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
 import { getDiscountedPrice, classNames } from "@/utils";
 

@@ -1,4 +1,4 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { loadState, saveState } from "@/utils/storage";
 
 const WISHLIST_KEY = "wishlist_items";
@@ -42,16 +42,6 @@ const wishlistSlice = createSlice({
     },
   },
 });
-
-export const selectWishlistItems = (state) => state.wishlist.items;
-export const selectWishlistCount = createSelector(
-  selectWishlistItems,
-  (items) => items.length,
-);
-export const selectIsWishlisted = (id) =>
-  createSelector(selectWishlistItems, (items) =>
-    items.some((i) => i.id === id),
-  );
 
 export const { toggleWishlist, removeFromWishlist, clearWishlist } =
   wishlistSlice.actions;

@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { baseApi } from "@/store/api/baseApi";
-import authReducer from "@/store/slices/authSlice";
-import cartReducer from "@/store/slices/cartSlice";
-import wishlistReducer from "@/store/slices/wishlistSlice";
-import uiReducer from "@/store/slices/uiSlice";
-import productReducer from "@/store/slices/productSlice";
-import categoryReducer from "@/store/slices/categorySlice";
-import orderReducer from "@/store/slices/orderSlice";
+import { baseApi } from "@/store/baseApi";
+import authReducer from "@/store/auth/auth.slice";
+import cartReducer from "@/store/cart/cart.slice";
+import wishlistReducer from "@/store/wishlist/wishlist.slice";
+import uiReducer from "@/store/ui/ui.slice";
+import productReducer from "@/store/products/products.slice";
+import categoryReducer from "@/store/categories/categories.slice";
+import orderReducer from "@/store/orders/orders.slice";
 
 export const store = configureStore({
   reducer: {

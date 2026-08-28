@@ -5,7 +5,7 @@ import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import OrderStatusTimeline from "@/components/order/OrderStatusTimeline";
-import { selectOrders } from "@/store/slices/orderSlice";
+import { selectOrders } from "@/store/orders";
 import { formatCurrency, formatDate, getDiscountedPrice } from "@/utils";
 
 export default function OrderDetails() {

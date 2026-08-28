@@ -9,8 +9,8 @@ import Tabs from "@/components/common/Tabs";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
-import { selectCurrentUser } from "@/store/slices/authSlice";
-import { selectOrders } from "@/store/slices/orderSlice";
+import { selectCurrentUser } from "@/store/auth";
+import { selectOrders } from "@/store/orders";
 import { formatCurrency, formatDate } from "@/utils";
 
 const filters = [

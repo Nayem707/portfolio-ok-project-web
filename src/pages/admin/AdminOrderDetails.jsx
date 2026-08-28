@@ -11,7 +11,7 @@ import {
   selectOrders,
   updateOrderStatus,
   updatePaymentStatus,
-} from "@/store/slices/orderSlice";
+} from "@/store/orders";
 import { formatCurrency, formatDate, getDiscountedPrice } from "@/utils";
 import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
 

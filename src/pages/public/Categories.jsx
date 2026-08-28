@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
 import CategoryCard from "@/components/product/CategoryCard";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectCategories } from "@/store/slices/categorySlice";
-import { selectProducts } from "@/store/slices/productSlice";
+import { selectCategories } from "@/store/categories";
+import { selectProducts } from "@/store/products";
 
 export default function Categories() {
   const categories = useSelector(selectCategories);

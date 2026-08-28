@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
-import { loginSuccess } from "@/store/slices/authSlice";
+import { loginSuccess } from "@/store/auth";
 import { demoAccounts } from "@/data/accounts";
 
 export default function Login() {

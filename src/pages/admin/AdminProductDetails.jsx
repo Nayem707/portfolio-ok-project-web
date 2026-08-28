@@ -6,7 +6,7 @@ import Badge from "@/components/common/Badge";
 import Rating from "@/components/common/Rating";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import EmptyState from "@/components/common/EmptyState";
-import { selectProducts } from "@/store/slices/productSlice";
+import { selectProducts } from "@/store/products";
 import { formatDate, formatCurrency } from "@/utils";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };

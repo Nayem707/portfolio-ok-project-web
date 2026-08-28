@@ -16,8 +16,8 @@ import Select from "@/components/common/Select";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { selectProducts, deleteProduct } from "@/store/slices/productSlice";
-import { selectCategories } from "@/store/slices/categorySlice";
+import { selectProducts, deleteProduct } from "@/store/products";
+import { selectCategories } from "@/store/categories";
 import { formatCurrency, formatDate } from "@/utils";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };

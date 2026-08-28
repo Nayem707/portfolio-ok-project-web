@@ -10,8 +10,8 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
-import { toggleAdminSidebar } from "@/store/slices/uiSlice";
-import { logout, selectCurrentUser } from "@/store/slices/authSlice";
+import { toggleAdminSidebar } from "@/store/ui";
+import { logout, selectCurrentUser } from "@/store/auth";
 
 export default function AdminTopbar() {
   const dispatch = useDispatch();

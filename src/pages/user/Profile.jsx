@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { CameraIcon } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
-import { selectCurrentUser, updateProfile } from "@/store/slices/authSlice";
+import { selectCurrentUser, updateProfile } from "@/store/auth";
 
 export default function Profile() {
   const user = useSelector(selectCurrentUser);

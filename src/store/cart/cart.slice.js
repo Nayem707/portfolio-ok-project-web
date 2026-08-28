@@ -1,6 +1,5 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { loadState, saveState } from "@/utils/storage";
-import { calcCartTotals } from "@/utils";
 
 const CART_KEY = "cart_items";
 
@@ -64,14 +63,6 @@ const cartSlice = createSlice({
     },
   },
 });
-
-export const selectCartItems = (state) => state.cart.items;
-export const selectCartCount = createSelector(selectCartItems, (items) =>
-  items.reduce((sum, i) => sum + i.quantity, 0),
-);
-export const selectCartTotals = createSelector(selectCartItems, (items) =>
-  calcCartTotals(items),
-);
 
 export const {
   addToCart,

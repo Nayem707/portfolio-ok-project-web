@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
-import { selectCategories } from "@/store/slices/categorySlice";
+import { selectCategories } from "@/store/categories";
 import { PRODUCT_STATUS } from "@/constants";
 
 const empty = {

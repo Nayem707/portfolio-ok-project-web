@@ -10,9 +10,9 @@ import {
 import StatCard from "@/components/common/StatCard";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
-import { selectCurrentUser } from "@/store/slices/authSlice";
-import { selectOrders } from "@/store/slices/orderSlice";
-import { selectWishlistItems } from "@/store/slices/wishlistSlice";
+import { selectCurrentUser } from "@/store/auth";
+import { selectOrders } from "@/store/orders";
+import { selectWishlistItems } from "@/store/wishlist";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
