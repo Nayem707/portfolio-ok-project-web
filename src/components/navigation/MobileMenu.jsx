@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import Logo from "@/components/layout/Logo";
+import Logo from "@/components/navigation/Logo";
 import Button from "@/components/common/Button";
 import { toggleMobileMenu } from "@/features/ui";
 import { logout, selectAuth } from "@/features/auth";

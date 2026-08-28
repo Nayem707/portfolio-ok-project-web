@@ -6,7 +6,7 @@ import {
   MapPinIcon,
   PhoneIcon,
 } from "@heroicons/react/24/outline";
-import Logo from "@/components/layout/Logo";
+import Logo from "@/components/navigation/Logo";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 

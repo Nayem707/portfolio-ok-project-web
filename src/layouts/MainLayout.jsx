@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import MobileMenu from "@/components/layout/MobileMenu";
+import Navbar from "@/components/navigation/Navbar";
+import Footer from "@/components/navigation/Footer";
+import MobileMenu from "@/components/navigation/MobileMenu";
 import MiniCart from "@/components/cart/MiniCart";
 
 export default function MainLayout() {

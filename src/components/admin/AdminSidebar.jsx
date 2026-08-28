@@ -9,7 +9,7 @@ import {
   Cog6ToothIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import Logo from "@/components/layout/Logo";
+import Logo from "@/components/navigation/Logo";
 import { toggleAdminSidebar } from "@/features/ui";
 import { classNames } from "@/utils";
 

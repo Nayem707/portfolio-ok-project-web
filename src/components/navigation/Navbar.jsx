@@ -11,7 +11,7 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import Logo from "@/components/layout/Logo";
+import Logo from "@/components/navigation/Logo";
 import SearchBar from "@/components/common/SearchBar";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import { selectCartCount } from "@/features/cart";
