@@ -13,7 +13,7 @@ import Button from "@/components/common/Button";
 import { loginSuccess } from "@/store/auth";
 import { demoAccounts } from "@/data/accounts";
 
-export default function Login() {
+export default function LoginView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();

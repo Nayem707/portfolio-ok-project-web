@@ -11,7 +11,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { users as seedUsers } from "@/data/users";
 import { formatDate } from "@/utils";
 
-export default function AdminUserList() {
+export default function AdminUserListView() {
   const [users, setUsers] = useState(seedUsers);
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");

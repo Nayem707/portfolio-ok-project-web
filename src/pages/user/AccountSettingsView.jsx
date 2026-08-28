@@ -24,7 +24,7 @@ function Toggle({ enabled, onChange }) {
   );
 }
 
-export default function AccountSettings() {
+export default function AccountSettingsView() {
   const [passwords, setPasswords] = useState({
     current: "",
     next: "",

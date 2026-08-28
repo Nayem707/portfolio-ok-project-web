@@ -22,7 +22,7 @@ const filters = [
   "Cancelled",
 ];
 
-export default function Orders() {
+export default function OrdersView() {
   const user = useSelector(selectCurrentUser);
   const allOrders = useSelector(selectOrders);
   const [active, setActive] = useState("All");

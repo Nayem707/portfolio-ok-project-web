@@ -14,7 +14,7 @@ import { getUserById } from "@/data/users";
 import { selectOrders } from "@/store/orders";
 import { formatCurrency, formatDate } from "@/utils";
 
-export default function AdminUserDetails() {
+export default function AdminUserDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const user = getUserById(id);

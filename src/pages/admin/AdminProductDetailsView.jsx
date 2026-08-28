@@ -11,7 +11,7 @@ import { formatDate, formatCurrency } from "@/utils";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
 
-export default function AdminProductDetails() {
+export default function AdminProductDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const product = useSelector(selectProducts).find((p) => p.id === id);

@@ -26,7 +26,7 @@ import { addToCart } from "@/store/cart";
 import { toggleWishlist, selectWishlistItems } from "@/store/wishlist";
 import { classNames } from "@/utils";
 
-export default function ProductDetails() {
+export default function ProductDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();

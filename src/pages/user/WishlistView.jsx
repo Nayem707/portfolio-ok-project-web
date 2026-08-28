@@ -18,7 +18,7 @@ import {
 } from "@/store/wishlist";
 import { addToCart } from "@/store/cart";
 
-export default function Wishlist() {
+export default function WishlistView() {
   const dispatch = useDispatch();
   const items = useSelector(selectWishlistItems);
 

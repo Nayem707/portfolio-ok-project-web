@@ -15,7 +15,7 @@ import {
 import { formatCurrency, formatDate, getDiscountedPrice } from "@/utils";
 import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
 
-export default function AdminOrderDetails() {
+export default function AdminOrderDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();

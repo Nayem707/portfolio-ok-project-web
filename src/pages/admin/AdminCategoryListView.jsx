@@ -24,7 +24,7 @@ import { formatDate } from "@/utils";
 
 const emptyForm = { name: "", description: "", image: "", status: "Active" };
 
-export default function AdminCategoryList() {
+export default function AdminCategoryListView() {
   const categories = useSelector(selectCategories);
   const products = useSelector(selectProducts);
   const dispatch = useDispatch();

@@ -3,15 +3,15 @@ import { Route } from "react-router-dom";
 import AccountLayout from "@/layouts/AccountLayout";
 import ProtectedRoute from "@/routes/guards/ProtectedRoute";
 
-import Cart from "@/pages/user/Cart";
-import Wishlist from "@/pages/user/Wishlist";
-import Checkout from "@/pages/user/Checkout";
-import DashboardOverview from "@/pages/user/DashboardOverview";
-import Profile from "@/pages/user/Profile";
-import Orders from "@/pages/user/Orders";
-import OrderDetails from "@/pages/user/OrderDetails";
-import Addresses from "@/pages/user/Addresses";
-import AccountSettings from "@/pages/user/AccountSettings";
+import CartView from "@/pages/user/CartView";
+import WishlistView from "@/pages/user/WishlistView";
+import CheckoutView from "@/pages/user/CheckoutView";
+import DashboardOverviewView from "@/pages/user/DashboardOverviewView";
+import ProfileView from "@/pages/user/ProfileView";
+import OrdersView from "@/pages/user/OrdersView";
+import OrderDetailsView from "@/pages/user/OrderDetailsView";
+import AddressesView from "@/pages/user/AddressesView";
+import AccountSettingsView from "@/pages/user/AccountSettingsView";
 
 import { USER_PATHS } from "@/routes/user/user.paths";
 
@@ -21,13 +21,13 @@ import { USER_PATHS } from "@/routes/user/user.paths";
  */
 export const userRoutes = (
   <>
-    <Route path={USER_PATHS.CART} element={<Cart />} />
-    <Route path={USER_PATHS.WISHLIST} element={<Wishlist />} />
+    <Route path={USER_PATHS.CART} element={<CartView />} />
+    <Route path={USER_PATHS.WISHLIST} element={<WishlistView />} />
     <Route
       path={USER_PATHS.CHECKOUT}
       element={
         <ProtectedRoute>
-          <Checkout />
+          <CheckoutView />
         </ProtectedRoute>
       }
     />
@@ -40,15 +40,18 @@ export const userRoutes = (
         </ProtectedRoute>
       }
     >
-      <Route index element={<DashboardOverview />} />
-      <Route path={USER_PATHS.ACCOUNT_PROFILE} element={<Profile />} />
-      <Route path={USER_PATHS.ACCOUNT_ORDERS} element={<Orders />} />
+      <Route index element={<DashboardOverviewView />} />
+      <Route path={USER_PATHS.ACCOUNT_PROFILE} element={<ProfileView />} />
+      <Route path={USER_PATHS.ACCOUNT_ORDERS} element={<OrdersView />} />
       <Route
         path={USER_PATHS.ACCOUNT_ORDER_DETAILS}
-        element={<OrderDetails />}
+        element={<OrderDetailsView />}
       />
-      <Route path={USER_PATHS.ACCOUNT_ADDRESSES} element={<Addresses />} />
-      <Route path={USER_PATHS.ACCOUNT_SETTINGS} element={<AccountSettings />} />
+      <Route path={USER_PATHS.ACCOUNT_ADDRESSES} element={<AddressesView />} />
+      <Route
+        path={USER_PATHS.ACCOUNT_SETTINGS}
+        element={<AccountSettingsView />}
+      />
     </Route>
   </>
 );

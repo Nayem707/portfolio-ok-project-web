@@ -5,7 +5,7 @@ import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
-export default function AdminSettings() {
+export default function AdminSettingsView() {
   const [store, setStore] = useState({
     name: "Shoply",
     email: "support@shoply.com",

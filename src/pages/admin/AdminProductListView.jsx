@@ -22,7 +22,7 @@ import { formatCurrency, formatDate } from "@/utils";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
 
-export default function AdminProductList() {
+export default function AdminProductListView() {
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
   const dispatch = useDispatch();

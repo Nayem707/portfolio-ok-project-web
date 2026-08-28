@@ -6,7 +6,7 @@ import ProductForm from "@/components/admin/ProductForm";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { addProduct } from "@/store/products";
 
-export default function AddProduct() {
+export default function AddProductView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

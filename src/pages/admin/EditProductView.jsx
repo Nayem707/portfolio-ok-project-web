@@ -7,7 +7,7 @@ import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import { selectProducts, updateProduct } from "@/store/products";
 
-export default function EditProduct() {
+export default function EditProductView() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();

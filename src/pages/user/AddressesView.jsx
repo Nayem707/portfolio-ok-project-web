@@ -48,7 +48,7 @@ const emptyForm = {
   country: "United States",
 };
 
-export default function Addresses() {
+export default function AddressesView() {
   const [addresses, setAddresses] = useState(initialAddresses);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);

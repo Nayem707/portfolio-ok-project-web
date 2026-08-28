@@ -30,7 +30,7 @@ import { salesByMonth, topProducts } from "@/data/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
-export default function AdminDashboard() {
+export default function AdminDashboardView() {
   const orders = useSelector(selectOrders);
   const products = useSelector(selectProducts);
 

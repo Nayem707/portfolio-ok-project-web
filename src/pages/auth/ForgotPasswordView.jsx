@@ -9,7 +9,7 @@ import {
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 
-export default function ForgotPassword() {
+export default function ForgotPasswordView() {
   const [step, setStep] = useState("email"); // email | verify | reset | done
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");

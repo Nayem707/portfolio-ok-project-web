@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import Button from "@/components/common/Button";
 
-export default function NotFound() {
+export default function NotFoundView() {
   return (
     <div className="container-app flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
       <p className="text-primary-600 text-7xl font-extrabold">404</p>

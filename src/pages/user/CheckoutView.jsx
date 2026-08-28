@@ -27,7 +27,7 @@ const countries = [
   "Germany",
 ];
 
-export default function Checkout() {
+export default function CheckoutView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);

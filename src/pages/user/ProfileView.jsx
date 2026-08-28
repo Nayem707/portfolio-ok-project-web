@@ -6,7 +6,7 @@ import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { selectCurrentUser, updateProfile } from "@/store/auth";
 
-export default function Profile() {
+export default function ProfileView() {
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const [form, setForm] = useState({

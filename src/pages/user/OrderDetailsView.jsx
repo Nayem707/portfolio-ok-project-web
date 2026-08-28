@@ -8,7 +8,7 @@ import OrderStatusTimeline from "@/components/order/OrderStatusTimeline";
 import { selectOrders } from "@/store/orders";
 import { formatCurrency, formatDate, getDiscountedPrice } from "@/utils";
 
-export default function OrderDetails() {
+export default function OrderDetailsView() {
   const { id } = useParams();
   const location = useLocation();
   const orders = useSelector(selectOrders);

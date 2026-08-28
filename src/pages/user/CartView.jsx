@@ -22,7 +22,7 @@ import { toggleWishlist } from "@/store/wishlist";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
-export default function Cart() {
+export default function CartView() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
   const { subtotal, shipping, total } = useSelector(selectCartTotals);

@@ -11,7 +11,7 @@ import { selectOrders } from "@/store/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
-export default function AdminOrderList() {
+export default function AdminOrderListView() {
   const orders = useSelector(selectOrders);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");

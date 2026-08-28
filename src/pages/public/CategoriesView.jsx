@@ -4,7 +4,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { selectCategories } from "@/store/categories";
 import { selectProducts } from "@/store/products";
 
-export default function Categories() {
+export default function CategoriesView() {
   const categories = useSelector(selectCategories);
   const products = useSelector(selectProducts);
 

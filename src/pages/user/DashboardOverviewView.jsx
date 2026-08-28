@@ -16,7 +16,7 @@ import { selectWishlistItems } from "@/store/wishlist";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
-export default function DashboardOverview() {
+export default function DashboardOverviewView() {
   const user = useSelector(selectCurrentUser);
   const allOrders = useSelector(selectOrders);
   const wishlist = useSelector(selectWishlistItems);

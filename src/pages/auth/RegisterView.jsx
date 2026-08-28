@@ -11,7 +11,7 @@ import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { loginSuccess } from "@/store/auth";
 
-export default function Register() {
+export default function RegisterView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form, setForm] = useState({

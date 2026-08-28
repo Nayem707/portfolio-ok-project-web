@@ -16,7 +16,7 @@ import { selectCategories } from "@/store/categories";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
 import { getDiscountedPrice, classNames } from "@/utils";
 
-export default function Products() {
+export default function ProductsView() {
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
   const [searchParams, setSearchParams] = useSearchParams();

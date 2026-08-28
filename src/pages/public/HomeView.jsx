@@ -25,7 +25,7 @@ const perks = [
   { icon: CreditCardIcon, title: "Flexible Payment", desc: "Multiple methods" },
 ];
 
-export default function Home() {
+export default function HomeView() {
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
   const featured = products.filter((p) => p.featured).slice(0, 4);
