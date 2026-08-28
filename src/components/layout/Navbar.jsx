@@ -1,0 +1,176 @@
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  HeartIcon,
+  ShoppingBagIcon,
+  UserCircleIcon,
+  Bars3Icon,
+  Squares2X2Icon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import Logo from "@/components/layout/Logo";
+import SearchBar from "@/components/common/SearchBar";
+import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
+import { selectCartCount } from "@/store/slices/cartSlice";
+import { selectWishlistCount } from "@/store/slices/wishlistSlice";
+import { toggleMiniCart, toggleMobileMenu } from "@/store/slices/uiSlice";
+import { logout, selectAuth } from "@/store/slices/authSlice";
+import { selectCategories } from "@/store/slices/categorySlice";
+import { classNames } from "@/utils";
+import toast from "react-hot-toast";
+
+const navLinkClass = ({ isActive }) =>
+  classNames(
+    "text-sm font-medium transition",
+    isActive ? "text-primary-700" : "text-slate-600 hover:text-primary-600",
+  );
+
+export default function Navbar() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const cartCount = useSelector(selectCartCount);
+  const wishlistCount = useSelector(selectWishlistCount);
+  const { user, isAuthenticated } = useSelector(selectAuth);
+  const categories = useSelector(selectCategories);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Signed out");
+    navigate("/");
+  };
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="container-app">
+        {/* Top row */}
+        <div className="flex h-16 items-center gap-4">
+          <button
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+            onClick={() => dispatch(toggleMobileMenu(true))}
+            aria-label="Open menu"
+          >
+            <Bars3Icon className="h-6 w-6" />
+          </button>
+
+          <Logo />
+
+          <div className="mx-2 hidden max-w-xl flex-1 md:block">
+            <SearchBar />
+          </div>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <Link
+              to="/wishlist"
+              className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-primary-600"
+              aria-label="Wishlist"
+            >
+              <HeartIcon className="h-6 w-6" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-bold text-white">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            <button
+              onClick={() => dispatch(toggleMiniCart(true))}
+              className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-primary-600"
+              aria-label="Cart"
+            >
+              <ShoppingBagIcon className="h-6 w-6" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+            {isAuthenticated ? (
+              <Dropdown
+                trigger={
+                  <span className="flex items-center gap-2 rounded-lg p-1.5 pr-2 transition hover:bg-slate-100">
+                    <img
+                      src={user.avatar || "https://i.pravatar.cc/150?img=12"}
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    <ChevronDownIcon className="hidden h-4 w-4 text-slate-400 sm:block" />
+                  </span>
+                }
+              >
+                <div className="border-b border-slate-100 px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {user.name}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {user.email}
+                  </p>
+                </div>
+                {user.role === "ADMIN" && (
+                  <DropdownItem onClick={() => navigate("/admin")}>
+                    <Squares2X2Icon className="h-4.5 w-4.5" /> Admin Dashboard
+                  </DropdownItem>
+                )}
+                <DropdownItem onClick={() => navigate("/account")}>
+                  <UserCircleIcon className="h-4.5 w-4.5" /> My Account
+                </DropdownItem>
+                <DropdownItem onClick={() => navigate("/account/orders")}>
+                  <ClipboardDocumentListIcon className="h-4.5 w-4.5" /> My
+                  Orders
+                </DropdownItem>
+                <DropdownItem onClick={() => navigate("/account/settings")}>
+                  <Cog6ToothIcon className="h-4.5 w-4.5" /> Settings
+                </DropdownItem>
+                <div className="my-1 border-t border-slate-100" />
+                <DropdownItem
+                  onClick={handleLogout}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <ArrowRightOnRectangleIcon className="h-4.5 w-4.5" /> Sign out
+                </DropdownItem>
+              </Dropdown>
+            ) : (
+              <Link
+                to="/login"
+                className="ml-1 hidden items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 sm:flex"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile search */}
+        <div className="pb-3 md:hidden">
+          <SearchBar />
+        </div>
+
+        {/* Category nav */}
+        <nav className="hidden items-center gap-6 border-t border-slate-100 py-3 lg:flex">
+          <NavLink to="/" end className={navLinkClass}>
+            Home
+          </NavLink>
+          <NavLink to="/products" className={navLinkClass}>
+            All Products
+          </NavLink>
+          <NavLink to="/categories" className={navLinkClass}>
+            Categories
+          </NavLink>
+          <span className="h-4 w-px bg-slate-200" />
+          {categories.slice(0, 5).map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/products?category=${encodeURIComponent(cat.name)}`}
+              className="text-sm font-medium text-slate-500 transition hover:text-primary-600"
+            >
+              {cat.name}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
