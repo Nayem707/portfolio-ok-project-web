@@ -8,18 +8,21 @@ import NotFoundView from "@/pages/public/NotFoundView";
 
 import { PUBLIC_PATHS } from "@/routes/public/public.paths";
 
-export const publicRoutes = (
-  <>
-    <Route path={PUBLIC_PATHS.HOME} element={<HomeView />} />
-    <Route path={PUBLIC_PATHS.PRODUCTS} element={<ProductsView />} />
-    <Route
-      path={PUBLIC_PATHS.PRODUCT_DETAILS}
-      element={<ProductDetailsView />}
-    />
-    <Route path={PUBLIC_PATHS.CATEGORIES} element={<CategoriesView />} />
-  </>
-);
+const publicRouteConfig = [
+  { path: PUBLIC_PATHS.HOME, element: <HomeView /> },
+  { path: PUBLIC_PATHS.PRODUCTS, element: <ProductsView /> },
+  { path: PUBLIC_PATHS.PRODUCT_DETAILS, element: <ProductDetailsView /> },
+  { path: PUBLIC_PATHS.CATEGORIES, element: <CategoriesView /> },
+];
+
+export const publicRoutes = publicRouteConfig.map(({ path, element }) => (
+  <Route key={path} path={path} element={element} />
+));
 
 export const notFoundRoute = (
-  <Route path={PUBLIC_PATHS.NOT_FOUND} element={<NotFoundView />} />
+  <Route
+    key={PUBLIC_PATHS.NOT_FOUND}
+    path={PUBLIC_PATHS.NOT_FOUND}
+    element={<NotFoundView />}
+  />
 );
