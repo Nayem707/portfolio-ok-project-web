@@ -8,9 +8,6 @@ import NotFoundView from "@/pages/public/NotFoundView";
 
 import { PUBLIC_PATHS } from "@/routes/public/public.paths";
 
-/**
- * Public storefront routes. Rendered inside MainLayout.
- */
 export const publicRoutes = (
   <>
     <Route path={PUBLIC_PATHS.HOME} element={<HomeView />} />
@@ -23,9 +20,6 @@ export const publicRoutes = (
   </>
 );
 
-/**
- * Catch-all 404 route. Rendered inside MainLayout.
- */
 export const notFoundRoute = (
   <Route path={PUBLIC_PATHS.NOT_FOUND} element={<NotFoundView />} />
 );
