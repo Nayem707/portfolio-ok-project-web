@@ -1,6 +1,6 @@
 import { Route } from "react-router-dom";
 
-import HomeView from "@/pages/public/HomeView";
+import HomeView from "@/pages/public/home/HomeView";
 import ProductsView from "@/pages/public/ProductsView";
 import ProductDetailsView from "@/pages/public/ProductDetailsView";
 import CategoriesView from "@/pages/public/CategoriesView";
