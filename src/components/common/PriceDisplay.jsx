@@ -16,12 +16,12 @@ export default function PriceDisplay({
     xl: "text-2xl",
   };
   return (
-    <div className={classNames("flex items-baseline gap-2", className)}>
+    <div className={classNames("flex items-baseline gap-1", className)}>
       <span className={classNames("font-bold text-slate-900", sizes[size])}>
         {formatCurrency(final)}
       </span>
       {hasDiscount && (
-        <span className="text-sm font-medium text-slate-400 line-through">
+        <span className="text-xs font-medium text-slate-400 line-through">
           {formatCurrency(price)}
         </span>
       )}

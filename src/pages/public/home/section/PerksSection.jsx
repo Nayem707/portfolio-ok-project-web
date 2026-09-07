@@ -18,7 +18,7 @@ const perks = [
 
 export default function PerksSection() {
   return (
-    <section className="border-b border-slate-200 bg-white">
+    <section className="bg-primary-600 border-b border-slate-200">
       <div className="container-app grid grid-cols-2 gap-4 py-6 lg:grid-cols-4">
         {perks.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="flex items-center gap-3">
@@ -26,8 +26,8 @@ export default function PerksSection() {
               <Icon className="h-6 w-6" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-800">{title}</p>
-              <p className="text-xs text-slate-500">{desc}</p>
+              <p className="text-sm font-semibold text-slate-100">{title}</p>
+              <p className="text-xs text-slate-200">{desc}</p>
             </div>
           </div>
         ))}
