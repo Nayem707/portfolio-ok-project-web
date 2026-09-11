@@ -63,7 +63,9 @@ export default function ProductDetailsView() {
 
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product, quantity }));
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} added to cart`, {
+      position: "bottom-right",
+    });
   };
 
   const handleBuyNow = () => {
@@ -240,6 +242,9 @@ export default function ProductDetailsView() {
                 dispatch(toggleWishlist(product));
                 toast.success(
                   isWishlisted ? "Removed from wishlist" : "Added to wishlist",
+                  {
+                    position: "bottom-right",
+                  },
                 );
               }}
               className={classNames(

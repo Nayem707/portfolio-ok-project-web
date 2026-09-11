@@ -101,7 +101,9 @@ export default function WishlistView() {
                     disabled={outOfStock}
                     onClick={() => {
                       dispatch(addToCart(item));
-                      toast.success("Added to cart");
+                      toast.success("Added to cart", {
+                        position: "bottom-right",
+                      });
                     }}
                   >
                     Add to cart
@@ -109,7 +111,9 @@ export default function WishlistView() {
                   <button
                     onClick={() => {
                       dispatch(removeFromWishlist(item.id));
-                      toast.success("Removed from wishlist");
+                      toast.success("Removed from wishlist", {
+                        position: "bottom-right",
+                      });
                     }}
                     className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                     aria-label="Remove"

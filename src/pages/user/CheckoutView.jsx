@@ -85,7 +85,9 @@ export default function CheckoutView() {
   const handlePlaceOrder = (e) => {
     e.preventDefault();
     if (!validate()) {
-      toast.error("Please complete the shipping information");
+      toast.error("Please complete the shipping information", {
+        position: "bottom-right",
+      });
       return;
     }
     setLoading(true);
@@ -115,7 +117,9 @@ export default function CheckoutView() {
       const action = dispatch(placeOrder(order));
       dispatch(clearCart());
       setLoading(false);
-      toast.success("Order placed successfully!");
+      toast.success("Order placed successfully!", {
+        position: "bottom-right",
+      });
       navigate(`/account/orders/${action.payload.id}`, {
         state: { justPlaced: true },
       });

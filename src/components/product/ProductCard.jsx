@@ -19,12 +19,19 @@ export default function ProductCard({ product }) {
   const handleAddToCart = () => {
     if (outOfStock) return;
     dispatch(addToCart(product));
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} added to cart`, {
+      position: "bottom-right",
+    });
   };
 
   const handleWishlist = () => {
     dispatch(toggleWishlist(product));
-    toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
+    toast.success(
+      isWishlisted ? "Removed from wishlist" : "Added to wishlist",
+      {
+        position: "bottom-right",
+      },
+    );
   };
 
   return (
