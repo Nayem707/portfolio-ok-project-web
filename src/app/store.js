@@ -6,6 +6,8 @@ import wishlistReducer from "@/features/wishlist/wishlist.slice";
 import uiReducer from "@/features/ui/ui.slice";
 import productReducer from "@/features/products/products.slice";
 import categoryReducer from "@/features/categories/categories.slice";
+import colorReducer from "@/features/colors/colors.slice";
+import sizeReducer from "@/features/sizes/sizes.slice";
 import orderReducer from "@/features/orders/orders.slice";
 
 export const store = configureStore({
@@ -16,6 +18,8 @@ export const store = configureStore({
     ui: uiReducer,
     product: productReducer,
     category: categoryReducer,
+    color: colorReducer,
+    size: sizeReducer,
     order: orderReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
