@@ -74,10 +74,20 @@ export default function AccountLayout() {
               ))}
               <li className="min-w-0">
                 <button
-                  onClick={() => {
-                    dispatch(logout());
-                    toast.success("Signed out");
-                    navigate("/");
+                  onClick={async () => {
+                    const refreshToken = localStorage.getItem("refresh_token");
+
+                    try {
+                      if (refreshToken) {
+                        await import("@/services/api").then(({ api }) => api.logout(refreshToken));
+                      }
+                    } catch (error) {
+                      console.warn("Backend logout request failed; clearing local auth state anyway.", error);
+                    } finally {
+                      dispatch(logout());
+                      toast.success("Signed out");
+                      navigate("/");
+                    }
                   }}
                   className="flex w-full items-center justify-start gap-2 rounded-lg px-2 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm"
                 >

@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import {
   FunnelIcon,
   XMarkIcon,
@@ -11,12 +12,14 @@ import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectProducts } from "@/features/products";
-import { selectCategories } from "@/features/categories";
+import { selectProducts, setProducts } from "@/features/products";
+import { selectCategories, setCategories } from "@/features/categories";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
 import { getDiscountedPrice, classNames } from "@/utils";
+import { api } from "@/services/api";
 
 export default function ProductsView() {
+  const dispatch = useDispatch();
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +37,41 @@ export default function ProductsView() {
     setSort(searchParams.get("sort") || "featured");
     setPage(1);
   }, [searchParams]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProducts = async () => {
+      try {
+        const response = await api.getProducts({
+          page: 1,
+          limit: 100,
+          search: search || undefined,
+          category: category || undefined,
+          sort: sort || undefined,
+        });
+
+        if (!mounted) return;
+
+        const items = response?.data?.items || response?.data || [];
+        dispatch(setProducts(items));
+
+        if (!categories.length) {
+          const categoryResponse = await api.getCategories();
+          const nextCategories = categoryResponse?.items || categoryResponse || [];
+          dispatch(setCategories(nextCategories));
+        }
+      } catch (error) {
+        toast.error("Unable to load products right now.");
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, search, category, sort, categories.length]);
 
   const filtered = useMemo(() => {
     let list = [...products];

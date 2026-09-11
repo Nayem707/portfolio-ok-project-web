@@ -8,8 +8,12 @@ import { ROLES } from "@/constants";
  * Non-admins are redirected to the storefront.
  */
 export default function AdminRoute({ children }) {
-  const { isAuthenticated, user } = useSelector(selectAuth);
+  const { isAuthenticated, user, initialized } = useSelector(selectAuth);
   const location = useLocation();
+
+  if (!initialized) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;

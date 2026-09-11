@@ -11,7 +11,7 @@ import {
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { loginSuccess } from "@/features/auth";
-import { demoAccounts } from "@/data/accounts";
+import { api } from "@/services/api";
 
 export default function LoginView() {
   const dispatch = useDispatch();
@@ -34,34 +34,42 @@ export default function LoginView() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
     setLoading(true);
 
-    // Frontend-only mock sign-in against demo accounts.
-    // Replace with an API/JWT call once the backend is available.
-    setTimeout(() => {
-      const account = demoAccounts.find(
-        (a) => a.email === form.email && a.password === form.password,
-      );
-      setLoading(false);
-      if (!account) {
-        setErrors({ password: "Invalid email or password" });
-        toast.error("Invalid credentials");
-        return;
-      }
-      const { password, ...user } = account;
-      dispatch(loginSuccess(user));
+    try {
+      const response = await api.login({
+        email: form.email,
+        password: form.password,
+      });
+
+      const user = response?.user ?? response;
+      const accessToken = response?.accessToken;
+      const refreshToken = response?.refreshToken;
+
+      dispatch(loginSuccess({ user, accessToken, refreshToken }));
       toast.success(`Welcome back, ${user.name.split(" ")[0]}!`);
       navigate(from || (user.role === "ADMIN" ? "/admin" : "/account"), {
         replace: true,
       });
-    }, 600);
+    } catch (error) {
+      const message = error?.response?.data?.error?.message || "Invalid email or password";
+      setErrors({ password: message });
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const quickFill = (role) => {
-    const account = demoAccounts.find((a) => a.role === role);
+    const sample = {
+      USER: { email: "user@example.com", password: "password123" },
+      ADMIN: { email: "admin@example.com", password: "password123" },
+    };
+    const account = sample[role] || sample.USER;
     setForm({ email: account.email, password: account.password });
   };
 

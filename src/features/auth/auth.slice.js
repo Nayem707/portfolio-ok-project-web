@@ -4,9 +4,10 @@ import { AUTH_KEY } from "./auth.constants";
 
 const initialState = {
   user: loadState(AUTH_KEY, null),
-  isAuthenticated: !!loadState(AUTH_KEY, null),
+  isAuthenticated: !!loadState(AUTH_KEY, null) || !!localStorage.getItem("auth_token"),
   loading: false,
   error: null,
+  initialized: false,
 };
 
 const authSlice = createSlice({
@@ -18,11 +19,38 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess(state, action) {
-      state.user = action.payload;
+      const user = action.payload?.user ?? action.payload;
+      const accessToken = action.payload?.accessToken ?? null;
+      const refreshToken = action.payload?.refreshToken ?? null;
+
+      state.user = user;
       state.isAuthenticated = true;
       state.loading = false;
       state.error = null;
-      saveState(AUTH_KEY, action.payload);
+      state.initialized = true;
+
+      if (accessToken) {
+        localStorage.setItem("auth_token", accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
+
+      saveState(AUTH_KEY, user);
+    },
+    restoreAuth(state, action) {
+      const user = action.payload?.user ?? action.payload ?? null;
+      state.user = user;
+      state.isAuthenticated = !!user;
+      state.loading = false;
+      state.error = null;
+      state.initialized = true;
+
+      if (user) {
+        saveState(AUTH_KEY, user);
+      } else {
+        removeState(AUTH_KEY);
+      }
     },
     loginFailure(state, action) {
       state.loading = false;
@@ -31,8 +59,16 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.isAuthenticated = false;
+      state.loading = false;
+      state.error = null;
+      state.initialized = true;
       removeState(AUTH_KEY);
       removeState("auth_token");
+      removeState("access_token");
+      removeState("refresh_token");
+    },
+    finishAuthInitialization(state) {
+      state.initialized = true;
     },
     updateProfile(state, action) {
       if (!state.user) return;
@@ -42,6 +78,13 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, updateProfile } =
-  authSlice.actions;
+export const {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+  restoreAuth,
+  finishAuthInitialization,
+  logout,
+  updateProfile,
+} = authSlice.actions;
 export default authSlice.reducer;

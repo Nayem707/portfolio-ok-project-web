@@ -10,6 +10,7 @@ import {
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { loginSuccess } from "@/features/auth";
+import { api } from "@/services/api";
 
 export default function RegisterView() {
   const dispatch = useDispatch();
@@ -38,25 +39,36 @@ export default function RegisterView() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
     setLoading(true);
 
-    // Frontend-only mock registration. Wire to an API endpoint later.
-    setTimeout(() => {
-      setLoading(false);
-      const user = {
-        id: `u-${Date.now()}`,
+    try {
+      const response = await api.register({
         name: form.name,
         email: form.email,
-        role: "USER",
-        avatar: "https://i.pravatar.cc/150?img=68",
-      };
-      dispatch(loginSuccess(user));
+        password: form.password,
+      });
+
+      const user = response?.user ?? response;
+      dispatch(
+        loginSuccess({
+          user,
+          accessToken: response?.accessToken,
+          refreshToken: response?.refreshToken,
+        }),
+      );
       toast.success("Account created successfully!");
       navigate("/account", { replace: true });
-    }, 700);
+    } catch (error) {
+      const message = error?.response?.data?.error?.message || "Unable to create account";
+      setErrors({ email: message });
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

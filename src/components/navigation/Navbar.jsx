@@ -39,10 +39,20 @@ export default function Navbar() {
   const { user, isAuthenticated } = useSelector(selectAuth);
   const categories = useSelector(selectCategories);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    toast.success("Signed out");
-    navigate("/");
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+
+    try {
+      if (refreshToken) {
+        await import("@/services/api").then(({ api }) => api.logout(refreshToken));
+      }
+    } catch (error) {
+      console.warn("Backend logout request failed; clearing local auth state anyway.", error);
+    } finally {
+      dispatch(logout());
+      toast.success("Signed out");
+      navigate("/");
+    }
   };
 
   return (

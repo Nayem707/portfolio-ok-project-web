@@ -7,8 +7,12 @@ import { selectAuth } from "@/features/auth";
  * Uses frontend auth state for now; ready for real JWT/API auth later.
  */
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useSelector(selectAuth);
+  const { isAuthenticated, initialized } = useSelector(selectAuth);
   const location = useLocation();
+
+  if (!initialized) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;

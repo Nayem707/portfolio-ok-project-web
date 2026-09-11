@@ -10,6 +10,9 @@ const categorySlice = createSlice({
   name: "category",
   initialState,
   reducers: {
+    setCategories(state, action) {
+      state.items = action.payload || [];
+    },
     addCategory: {
       reducer(state, action) {
         state.items.unshift(action.payload);
@@ -39,6 +42,6 @@ const categorySlice = createSlice({
   },
 });
 
-export const { addCategory, updateCategory, deleteCategory } =
+export const { setCategories, addCategory, updateCategory, deleteCategory } =
   categorySlice.actions;
 export default categorySlice.reducer;

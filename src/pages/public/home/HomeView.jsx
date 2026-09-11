@@ -1,9 +1,10 @@
-import { useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useMemo, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { selectProducts } from "@/features/products";
-import { selectCategories } from "@/features/categories";
+import { selectProducts, setProducts } from "@/features/products";
+import { selectCategories, setCategories } from "@/features/categories";
 import { PUBLIC_PATHS } from "@/routes/public/public.paths";
+import { api } from "@/services/api";
 
 import HeroSection from "@/pages/public/home/section/HeroSection";
 import PerksSection from "@/pages/public/home/section/PerksSection";
@@ -33,8 +34,40 @@ const productSections = [
 ];
 
 export default function HomeView() {
+  const dispatch = useDispatch();
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadHomeData = async () => {
+      try {
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          api.getProducts({ limit: 12, sort: "featured" }),
+          api.getCategories(),
+        ]);
+
+        if (!mounted) return;
+
+        const nextProducts = productsResponse?.data?.items || productsResponse?.data || [];
+        const nextCategories = categoriesResponse?.items || categoriesResponse || [];
+
+        dispatch(setProducts(nextProducts));
+        dispatch(setCategories(nextCategories));
+      } catch (error) {
+        console.error("Failed to load homepage data", error);
+      }
+    };
+
+    if (!products.length || !categories.length) {
+      loadHomeData();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, products.length, categories.length]);
 
   const productCollections = useMemo(
     () => ({
