@@ -488,7 +488,10 @@ export default function ProductDetailsView() {
         title="Write a Review"
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsReviewModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsReviewModalOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={submitReview}>Submit Review</Button>
@@ -510,14 +513,18 @@ export default function ProductDetailsView() {
                 <button
                   key={star}
                   type="button"
-                  onClick={() => setReviewForm((prev) => ({ ...prev, rating: star }))}
+                  onClick={() =>
+                    setReviewForm((prev) => ({ ...prev, rating: star }))
+                  }
                   className="rounded p-1"
                   aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
                 >
                   <StarIcon
                     className={classNames(
                       "h-6 w-6 transition",
-                      star <= reviewForm.rating ? "text-amber-400" : "text-slate-200",
+                      star <= reviewForm.rating
+                        ? "text-amber-400"
+                        : "text-slate-200",
                     )}
                   />
                 </button>
