@@ -91,6 +91,11 @@ export default {
           "0%": { opacity: "0", transform: "translateX(12px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "whatsapp-attention": {
+          "0%, 100%": { transform: "scale(1)" },
+          "40%": { transform: "scale(1.08)" },
+          "70%": { transform: "scale(1.03)" },
+        },
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
@@ -99,6 +104,7 @@ export default {
         "fade-in": "fade-in 0.25s ease-out",
         "slide-in-left": "slide-in-left 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.2s ease-out",
+        "whatsapp-attention": "whatsapp-attention 0.7s ease-in-out 1",
       },
     },
   },

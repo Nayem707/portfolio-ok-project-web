@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -30,6 +30,7 @@ import { classNames } from "@/utils";
 
 export default function ProductDetailsView() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
@@ -38,6 +39,16 @@ export default function ProductDetailsView() {
   const product = products.find((p) => p.id === id);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
+
+  useEffect(() => {
+    setShowWhatsappAttention(false);
+    const timer = setTimeout(() => {
+      setShowWhatsappAttention(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [id]);
 
   if (!product) {
     return (
@@ -84,6 +95,15 @@ export default function ProductDetailsView() {
   const goToNextImage = () => {
     setActiveImage((prev) => (prev + 1) % product.images.length);
   };
+
+  const currentProductUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}${location.search}${location.hash}`
+      : "";
+  const whatsappNumber = "8801962801817";
+  const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    `Hi! I am interested in this product: ${currentProductUrl}`,
+  )}`;
 
   return (
     <div className="container-app py-8">
@@ -327,6 +347,27 @@ export default function ProductDetailsView() {
           <ProductGrid products={related} />
         </section>
       )}
+
+      <a
+        href={whatsappHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share this product on WhatsApp"
+        className={classNames(
+          "fixed right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:h-14 sm:w-14",
+          showWhatsappAttention && "animate-whatsapp-attention",
+        )}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          className="h-6 w-6"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M19.05 4.91A9.82 9.82 0 0012.03 2a9.93 9.93 0 00-8.6 14.92L2 22l5.27-1.38a9.94 9.94 0 004.75 1.21h.01a9.97 9.97 0 007.02-16.92zm-7.03 15.24h-.01a8.3 8.3 0 01-4.22-1.15l-.3-.18-3.13.82.84-3.05-.2-.31A8.26 8.26 0 0112.02 3.7a8.3 8.3 0 010 16.45zm4.55-6.19c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.56.12-.16.25-.64.81-.78.98-.15.16-.3.19-.55.06-.25-.12-1.07-.39-2.03-1.24-.75-.67-1.25-1.5-1.4-1.75-.15-.25-.02-.38.11-.5.12-.11.25-.3.37-.45.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.44-.07-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.43.06-.65.31-.22.25-.85.83-.85 2.03 0 1.2.87 2.35.99 2.52.12.16 1.72 2.63 4.18 3.69.58.25 1.03.4 1.39.52.58.18 1.1.15 1.51.09.46-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z" />
+        </svg>
+      </a>
     </div>
   );
 }
