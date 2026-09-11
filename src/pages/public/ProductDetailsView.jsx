@@ -10,6 +10,8 @@ import {
   ShieldCheckIcon,
   ArrowPathIcon,
   CheckCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -69,6 +71,18 @@ export default function ProductDetailsView() {
     navigate("/checkout");
   };
 
+  const showGalleryControls = product.images.length > 1;
+
+  const goToPrevImage = () => {
+    setActiveImage((prev) =>
+      prev === 0 ? product.images.length - 1 : prev - 1,
+    );
+  };
+
+  const goToNextImage = () => {
+    setActiveImage((prev) => (prev + 1) % product.images.length);
+  };
+
   return (
     <div className="container-app py-8">
       <Breadcrumb
@@ -91,13 +105,33 @@ export default function ProductDetailsView() {
               alt={product.name}
               className="aspect-square w-full object-cover"
             />
+            {showGalleryControls && (
+              <>
+                <button
+                  type="button"
+                  onClick={goToPrevImage}
+                  className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeftIcon className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNextImage}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                  aria-label="Next image"
+                >
+                  <ChevronRightIcon className="h-5 w-5" />
+                </button>
+              </>
+            )}
             {product.discount > 0 && (
               <Badge color="red" className="absolute top-4 left-4">
                 -{Math.round(product.discount)}% OFF
               </Badge>
             )}
           </div>
-          {product.images.length > 1 && (
+          {showGalleryControls && (
             <div className="mt-4 flex gap-3">
               {product.images.map((img, idx) => (
                 <button
