@@ -20,7 +20,7 @@ export default function OrderStatusTimeline({ status }) {
   const currentIndex = ORDER_STATUS_FLOW.indexOf(status);
 
   return (
-    <ol className="relative flex flex-col gap-0 sm:flex-row sm:justify-between">
+    <ol className="relative flex flex-col gap-0 sm:flex-row sm:justify-between sm:gap-2">
       {ORDER_STATUS_FLOW.map((step, idx) => {
         const done = idx <= currentIndex;
         const active = idx === currentIndex;
@@ -33,7 +33,7 @@ export default function OrderStatusTimeline({ status }) {
             {idx < ORDER_STATUS_FLOW.length - 1 && (
               <span
                 className={classNames(
-                  "absolute top-8 left-4 h-full w-0.5 sm:top-4 sm:left-1/2 sm:h-0.5 sm:w-full",
+                  "absolute top-8 left-4 h-full w-0.5 sm:top-4 sm:left-[calc(50%+1rem)] sm:h-0.5 sm:w-[calc(100%-2rem)]",
                   idx < currentIndex ? "bg-primary-600" : "bg-slate-200",
                 )}
               />

@@ -34,7 +34,7 @@ export default function AccountLayout() {
       <Breadcrumb items={[{ label: "My Account" }]} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="h-fit lg:sticky lg:top-24">
+        <aside className="h-fit min-w-0 lg:sticky lg:top-24">
           <div className="card p-5">
             <div className="flex items-center gap-3">
               <img
@@ -51,16 +51,16 @@ export default function AccountLayout() {
             </div>
           </div>
 
-          <nav className="card no-scrollbar mt-4 overflow-x-auto p-2">
-            <ul className="flex gap-1 lg:flex-col">
+          <nav className="card mt-4 p-2">
+            <ul className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:flex lg:flex-col">
               {navItems.map((item) => (
-                <li key={item.to} className="shrink-0">
+                <li key={item.to} className="min-w-0">
                   <NavLink
                     to={item.to}
                     end={item.end}
                     className={({ isActive }) =>
                       classNames(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition",
+                        "flex items-center justify-start gap-2 rounded-lg px-2 py-2 text-xs font-medium transition sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm",
                         isActive
                           ? "bg-primary-50 text-primary-700"
                           : "text-slate-600 hover:bg-slate-50",
@@ -72,14 +72,14 @@ export default function AccountLayout() {
                   </NavLink>
                 </li>
               ))}
-              <li className="shrink-0">
+              <li className="min-w-0">
                 <button
                   onClick={() => {
                     dispatch(logout());
                     toast.success("Signed out");
                     navigate("/");
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap text-red-600 transition hover:bg-red-50"
+                  className="flex w-full items-center justify-start gap-2 rounded-lg px-2 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm"
                 >
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
                   Sign out
