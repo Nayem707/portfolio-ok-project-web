@@ -15,8 +15,12 @@ const empty = {
   stock: "",
   sku: "",
   images: [],
+  availableColors: "",
+  availableSizes: "",
   status: PRODUCT_STATUS.ACTIVE,
 };
+
+const toCsv = (value) => (Array.isArray(value) ? value.join(", ") : value || "");
 
 export default function ProductForm({
   initial,
@@ -29,6 +33,8 @@ export default function ProductForm({
     ...empty,
     ...initial,
     images: initial?.images || [],
+    availableColors: toCsv(initial?.availableColors),
+    availableSizes: toCsv(initial?.availableSizes),
   }));
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
@@ -67,6 +73,14 @@ export default function ProductForm({
       discount: Number(form.discount) || 0,
       stock: Number(form.stock),
       categoryId: cat?.id,
+      availableColors: form.availableColors
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+      availableSizes: form.availableSizes
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
     });
   };
 
@@ -195,6 +209,18 @@ export default function ProductForm({
                 <option key={s}>{s}</option>
               ))}
             </Select>
+            <Input
+              label="Available colors"
+              value={form.availableColors}
+              onChange={set("availableColors")}
+              placeholder="Black, White, Navy"
+            />
+            <Input
+              label="Available sizes"
+              value={form.availableSizes}
+              onChange={set("availableSizes")}
+              placeholder="S, M, L, XL"
+            />
           </div>
         </div>
 
