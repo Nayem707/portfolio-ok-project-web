@@ -1,6 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
 
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+};
+
 const heroSlides = [
   {
     id: 1,
@@ -144,9 +151,10 @@ const mapSectionKey = (key) => {
 };
 
 const mapHomepageSectionData = (baseSections, sections = []) => {
+  const sectionList = asArray(sections);
   const next = { ...baseSections };
 
-  for (const section of sections) {
+  for (const section of sectionList) {
     const key = mapSectionKey(section.sectionKey);
     if (!next[key]) continue;
 
@@ -178,21 +186,21 @@ export const fetchPublicHomepage = createAsyncThunk(
         api.getHeroSlides(),
       ]);
 
+      const homeSections = asArray(homePayload?.sections);
+      const fallbackSections = asArray(sectionsPayload);
+      const homeSlides = asArray(homePayload?.heroSlides);
+      const fallbackSlides = asArray(slidesPayload);
+
       const sections =
-        homePayload?.sections?.length > 0
-          ? homePayload.sections
-          : sectionsPayload || [];
+        homeSections.length > 0 ? homeSections : fallbackSections;
 
       return {
         sections,
-        heroSlides:
-          homePayload?.heroSlides?.length > 0
-            ? homePayload.heroSlides
-            : slidesPayload || [],
-        categories: homePayload?.categories || [],
-        featured: homePayload?.featured || [],
-        popular: homePayload?.popular || [],
-        newArrivals: homePayload?.newArrivals || [],
+        heroSlides: homeSlides.length > 0 ? homeSlides : fallbackSlides,
+        categories: asArray(homePayload?.categories),
+        featured: asArray(homePayload?.featured),
+        popular: asArray(homePayload?.popular),
+        newArrivals: asArray(homePayload?.newArrivals),
       };
     } catch (error) {
       return rejectWithValue(
@@ -242,11 +250,11 @@ const homePageSlice = createSlice({
           defaultSections(),
           action.payload.sections,
         );
-        state.heroSlides = action.payload.heroSlides;
-        state.categories = action.payload.categories;
-        state.featured = action.payload.featured;
-        state.popular = action.payload.popular;
-        state.newArrivals = action.payload.newArrivals;
+        state.heroSlides = asArray(action.payload.heroSlides);
+        state.categories = asArray(action.payload.categories);
+        state.featured = asArray(action.payload.featured);
+        state.popular = asArray(action.payload.popular);
+        state.newArrivals = asArray(action.payload.newArrivals);
 
         if (state.heroSlides.length > 0) {
           state.sections.hero = {

@@ -1,6 +1,12 @@
 import axiosInstance from "./axiosInstance";
 
 const getData = (response) => response?.data?.data ?? response?.data ?? [];
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.categories)) return value.categories;
+  return [];
+};
 
 export const api = {
   login: async (payload) => {
@@ -189,7 +195,7 @@ export const api = {
 
   getCategories: async (params = {}) => {
     const response = await axiosInstance.get("/categories", { params });
-    return getData(response);
+    return asArray(getData(response));
   },
 
   getCategoryById: async (categoryId) => {

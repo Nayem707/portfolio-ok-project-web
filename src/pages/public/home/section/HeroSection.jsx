@@ -32,9 +32,10 @@ const fallbackSlides = [
 ];
 
 const HeroSection = ({ slides = [] }) => {
+  const slideList = Array.isArray(slides) ? slides : [];
   const activeSlides =
-    slides.length > 0
-      ? slides.filter((slide) => slide.active !== false)
+    slideList.length > 0
+      ? slideList.filter((slide) => slide.active !== false)
       : fallbackSlides;
 
   const [currentSlide, setCurrentSlide] = useState(0);

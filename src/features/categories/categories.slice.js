@@ -1,6 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
 
+const normalizeCategoryItems = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.categories)) return payload.categories;
+  return [];
+};
+
 export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
   async (options = {}, { rejectWithValue }) => {
@@ -81,7 +88,7 @@ const categorySlice = createSlice({
   initialState,
   reducers: {
     setCategories(state, action) {
-      state.items = action.payload || [];
+      state.items = normalizeCategoryItems(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -92,7 +99,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload || [];
+        state.items = normalizeCategoryItems(action.payload);
         state.error = null;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
