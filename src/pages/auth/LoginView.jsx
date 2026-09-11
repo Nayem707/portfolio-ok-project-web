@@ -56,7 +56,8 @@ export default function LoginView() {
         replace: true,
       });
     } catch (error) {
-      const message = error?.response?.data?.error?.message || "Invalid email or password";
+      const message =
+        error?.response?.data?.error?.message || "Invalid email or password";
       setErrors({ password: message });
       toast.error(message);
     } finally {

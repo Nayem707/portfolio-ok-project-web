@@ -79,10 +79,15 @@ export default function AccountLayout() {
 
                     try {
                       if (refreshToken) {
-                        await import("@/services/api").then(({ api }) => api.logout(refreshToken));
+                        await import("@/services/api").then(({ api }) =>
+                          api.logout(refreshToken),
+                        );
                       }
                     } catch (error) {
-                      console.warn("Backend logout request failed; clearing local auth state anyway.", error);
+                      console.warn(
+                        "Backend logout request failed; clearing local auth state anyway.",
+                        error,
+                      );
                     } finally {
                       dispatch(logout());
                       toast.success("Signed out");

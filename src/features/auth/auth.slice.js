@@ -4,7 +4,8 @@ import { AUTH_KEY } from "./auth.constants";
 
 const initialState = {
   user: loadState(AUTH_KEY, null),
-  isAuthenticated: !!loadState(AUTH_KEY, null) || !!localStorage.getItem("auth_token"),
+  isAuthenticated:
+    !!loadState(AUTH_KEY, null) || !!localStorage.getItem("auth_token"),
   loading: false,
   error: null,
   initialized: false,

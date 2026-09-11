@@ -12,7 +12,9 @@ export default function App() {
 
     window.addEventListener("auth:logout", handleAuthLogout);
 
-    const token = localStorage.getItem("auth_token") || localStorage.getItem("access_token");
+    const token =
+      localStorage.getItem("auth_token") ||
+      localStorage.getItem("access_token");
     if (!token) {
       dispatch(finishAuthInitialization());
       return () => window.removeEventListener("auth:logout", handleAuthLogout);

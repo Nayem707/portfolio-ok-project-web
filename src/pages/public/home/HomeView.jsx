@@ -50,8 +50,10 @@ export default function HomeView() {
 
         if (!mounted) return;
 
-        const nextProducts = productsResponse?.data?.items || productsResponse?.data || [];
-        const nextCategories = categoriesResponse?.items || categoriesResponse || [];
+        const nextProducts =
+          productsResponse?.data?.items || productsResponse?.data || [];
+        const nextCategories =
+          categoriesResponse?.items || categoriesResponse || [];
 
         dispatch(setProducts(nextProducts));
         dispatch(setCategories(nextCategories));

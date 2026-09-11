@@ -58,7 +58,8 @@ export default function ProductsView() {
 
         if (!categories.length) {
           const categoryResponse = await api.getCategories();
-          const nextCategories = categoryResponse?.items || categoryResponse || [];
+          const nextCategories =
+            categoryResponse?.items || categoryResponse || [];
           dispatch(setCategories(nextCategories));
         }
       } catch (error) {

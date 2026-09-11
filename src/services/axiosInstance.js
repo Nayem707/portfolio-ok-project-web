@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -39,7 +40,9 @@ axiosInstance.interceptors.response.use(
 
       try {
         originalRequest._retry = true;
-        const response = await axiosInstance.post("/auth/refresh", { refreshToken });
+        const response = await axiosInstance.post("/auth/refresh", {
+          refreshToken,
+        });
         const payload = response?.data?.data ?? response?.data ?? {};
         const nextAccessToken = payload.accessToken;
         const nextRefreshToken = payload.refreshToken;
@@ -57,7 +60,9 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem("auth_token");
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        const savedUser = JSON.parse(localStorage.getItem("auth_user") || "null");
+        const savedUser = JSON.parse(
+          localStorage.getItem("auth_user") || "null",
+        );
         if (savedUser) {
           localStorage.removeItem("auth_user");
         }

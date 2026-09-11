@@ -14,7 +14,9 @@ export const api = {
   },
 
   refreshToken: async (refreshToken) => {
-    const response = await axiosInstance.post("/auth/refresh", { refreshToken });
+    const response = await axiosInstance.post("/auth/refresh", {
+      refreshToken,
+    });
     return getData(response);
   },
 

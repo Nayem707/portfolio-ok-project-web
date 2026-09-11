@@ -63,7 +63,8 @@ export default function RegisterView() {
       toast.success("Account created successfully!");
       navigate("/account", { replace: true });
     } catch (error) {
-      const message = error?.response?.data?.error?.message || "Unable to create account";
+      const message =
+        error?.response?.data?.error?.message || "Unable to create account";
       setErrors({ email: message });
       toast.error(message);
     } finally {
