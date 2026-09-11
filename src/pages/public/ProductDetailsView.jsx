@@ -41,13 +41,69 @@ export default function ProductDetailsView() {
   const wishlist = useSelector(selectWishlistItems);
 
   const product = products.find((p) => p.id === id);
+  const colorSwatches = {
+    Black: "#111827",
+    White: "#f8fafc",
+    Navy: "#1d4ed8",
+    Sand: "#d6b38c",
+    Olive: "#6b7280",
+    Blue: "#3b82f6",
+    Green: "#22c55e",
+    Red: "#ef4444",
+    Gray: "#9ca3af",
+    Rose: "#f9a8d4",
+    Blush: "#f5b4c5",
+    Ivory: "#f5f5f4",
+    Mocha: "#a16207",
+    Cream: "#f5f5dc",
+    Oak: "#a16207",
+    Charcoal: "#374151",
+    Natural: "#d6d3d1",
+    Silver: "#cbd5e1",
+    "Rose Gold": "#d97706",
+  };
+  const productColors = useMemo(() => {
+    const colors = product?.availableColors?.length
+      ? product.availableColors
+      : product?.category === "Fashion" ||
+          product?.category === "Sports & Outdoors"
+        ? ["Black", "White", "Navy", "Sand", "Olive"]
+        : ["Black", "White", "Silver", "Rose Gold"];
+
+    return colors.map((color) => ({
+      name: color,
+      value: colorSwatches[color] || color,
+    }));
+  }, [product]);
+  const productSizes = useMemo(() => {
+    if (product?.availableSizes?.length) return product.availableSizes;
+    if (
+      product?.category === "Fashion" ||
+      product?.category === "Sports & Outdoors"
+    ) {
+      return ["XS", "S", "M", "L", "XL"];
+    }
+    return ["Standard"];
+  }, [product]);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState(
+    productColors[0] || "Black",
+  );
+  const [selectedSize, setSelectedSize] = useState(
+    productSizes[0] || "Standard",
+  );
   const [visibleReviews, setVisibleReviews] = useState(6);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [customReviews, setCustomReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
+
+  useEffect(() => {
+    setSelectedColor(productColors[0] || "Black");
+    setSelectedSize(productSizes[0] || "Standard");
+    setQuantity(1);
+  }, [product?.id, productColors, productSizes]);
 
   useEffect(() => {
     setShowWhatsappAttention(false);
@@ -126,14 +182,31 @@ export default function ProductDetailsView() {
   }, [product.id]);
 
   const handleAddToCart = () => {
-    dispatch(addToCart({ ...product, quantity }));
-    toast.success(`${product.name} added to cart`, {
-      position: "bottom-right",
-    });
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+        selectedColor,
+        selectedSize,
+      }),
+    );
+    toast.success(
+      `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
+      {
+        position: "bottom-right",
+      },
+    );
   };
 
   const handleBuyNow = () => {
-    dispatch(addToCart({ ...product, quantity }));
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+        selectedColor,
+        selectedSize,
+      }),
+    );
     navigate("/checkout");
   };
 
@@ -300,6 +373,64 @@ export default function ProductDetailsView() {
               </Badge>
             )}
           </div>
+
+          {productColors.length > 0 && (
+            <div className="mt-6">
+              <span className="mb-2 block text-sm font-medium text-slate-700">
+                Color
+              </span>
+              <div className="flex flex-wrap gap-3">
+                {productColors.map((colorOption) => {
+                  const isSelected = selectedColor === colorOption.name;
+                  return (
+                    <button
+                      key={colorOption.name}
+                      type="button"
+                      onClick={() => setSelectedColor(colorOption.name)}
+                      aria-label={colorOption.name}
+                      title={colorOption.name}
+                      className={classNames(
+                        "relative h-9 w-9 rounded-full border-2 transition-all duration-200",
+                        isSelected
+                          ? "ring-primary-200 scale-105 ring-2"
+                          : "border-slate-200 hover:border-slate-400",
+                      )}
+                      style={{ backgroundColor: colorOption.value }}
+                    >
+                      {isSelected && (
+                        <span className="absolute inset-1 rounded-full border-2 border-white/90" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {productSizes.length > 0 && (
+            <div className="mt-6">
+              <span className="mb-2 block text-sm font-medium text-slate-700">
+                Size
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {productSizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setSelectedSize(size)}
+                    className={classNames(
+                      "rounded-full border px-3 py-1.5 text-sm transition",
+                      selectedSize === size
+                        ? "border-primary-600 bg-primary-50 text-primary-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {!outOfStock && (
             <div className="mt-6 flex items-center gap-4">

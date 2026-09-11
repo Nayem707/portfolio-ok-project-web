@@ -52,7 +52,7 @@ export const SORT_OPTIONS = [
   { label: "Top Rated", value: "rating" },
 ];
 
-export const PAGE_SIZE = 8;
+export const PAGE_SIZE = 20;
 
 export const SHIPPING_FLAT_RATE = 12;
 export const FREE_SHIPPING_THRESHOLD = 150;

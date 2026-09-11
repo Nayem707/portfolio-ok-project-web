@@ -15,6 +15,27 @@ export default function MiniCart({ open }) {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
   const { subtotal } = useSelector(selectCartTotals);
+  const colorSwatches = {
+    Black: "#111827",
+    White: "#f8fafc",
+    Navy: "#1d4ed8",
+    Sand: "#d6b38c",
+    Olive: "#6b7280",
+    Blue: "#3b82f6",
+    Green: "#22c55e",
+    Red: "#ef4444",
+    Gray: "#9ca3af",
+    Rose: "#f9a8d4",
+    Blush: "#f5b4c5",
+    Ivory: "#f5f5f4",
+    Mocha: "#a16207",
+    Cream: "#f5f5dc",
+    Oak: "#a16207",
+    Charcoal: "#374151",
+    Natural: "#d6d3d1",
+    Silver: "#cbd5e1",
+    "Rose Gold": "#d97706",
+  };
 
   const close = () => dispatch(toggleMiniCart(false));
 
@@ -68,9 +89,32 @@ export default function MiniCart({ open }) {
                     <p className="line-clamp-1 text-sm font-medium text-slate-800">
                       {item.name}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-400">
-                      Qty {item.quantity}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400">
+                      <span>Qty {item.quantity}</span>
+                      {(item.selectedColor || item.selectedSize) && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          {item.selectedColor && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500">
+                              <span
+                                className="h-2 w-2 rounded-full border border-slate-300"
+                                style={{
+                                  backgroundColor:
+                                    colorSwatches[item.selectedColor] ||
+                                    item.selectedColor,
+                                }}
+                              />
+                              {item.selectedColor}
+                            </span>
+                          )}
+                          {item.selectedSize && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500">
+                              {item.selectedSize}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                     <p className="mt-1 text-sm font-semibold text-slate-900">
                       {formatCurrency(
                         getDiscountedPrice(item.price, item.discount) *
@@ -79,7 +123,16 @@ export default function MiniCart({ open }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => dispatch(removeFromCart(item.id))}
+                    onClick={() =>
+                      dispatch(
+                        removeFromCart({
+                          id: item.id,
+                          color: item.selectedColor,
+                          size: item.selectedSize,
+                          itemKey: item.itemKey,
+                        }),
+                      )
+                    }
                     className="self-start rounded p-1 text-slate-300 hover:text-red-500"
                     aria-label="Remove"
                   >

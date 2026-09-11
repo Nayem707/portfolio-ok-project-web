@@ -22,6 +22,28 @@ import { toggleWishlist } from "@/features/wishlist";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
+const colorSwatches = {
+  Black: "#111827",
+  White: "#f8fafc",
+  Navy: "#1d4ed8",
+  Sand: "#d6b38c",
+  Olive: "#6b7280",
+  Blue: "#3b82f6",
+  Green: "#22c55e",
+  Red: "#ef4444",
+  Gray: "#9ca3af",
+  Rose: "#f9a8d4",
+  Blush: "#f5b4c5",
+  Ivory: "#f5f5f4",
+  Mocha: "#a16207",
+  Cream: "#f5f5dc",
+  Oak: "#a16207",
+  Charcoal: "#374151",
+  Natural: "#d6d3d1",
+  Silver: "#cbd5e1",
+  "Rose Gold": "#d97706",
+};
+
 export default function CartView() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
@@ -96,6 +118,28 @@ export default function CartView() {
                     >
                       {item.name}
                     </Link>
+                    {(item.selectedColor || item.selectedSize) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {item.selectedColor && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full border border-slate-300"
+                              style={{
+                                backgroundColor:
+                                  colorSwatches[item.selectedColor] ||
+                                  item.selectedColor,
+                              }}
+                            />
+                            {item.selectedColor}
+                          </span>
+                        )}
+                        {item.selectedSize && (
+                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                            Size: {item.selectedSize}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <p className="font-bold text-slate-900">
                     {formatCurrency(
@@ -110,7 +154,15 @@ export default function CartView() {
                     size="sm"
                     value={item.quantity}
                     onChange={(q) =>
-                      dispatch(setQuantity({ id: item.id, quantity: q }))
+                      dispatch(
+                        setQuantity({
+                          id: item.id,
+                          color: item.selectedColor,
+                          size: item.selectedSize,
+                          itemKey: item.itemKey,
+                          quantity: q,
+                        }),
+                      )
                     }
                     max={item.stock}
                   />
@@ -118,7 +170,14 @@ export default function CartView() {
                     <button
                       onClick={() => {
                         dispatch(toggleWishlist(item));
-                        dispatch(removeFromCart(item.id));
+                        dispatch(
+                          removeFromCart({
+                            id: item.id,
+                            color: item.selectedColor,
+                            size: item.selectedSize,
+                            itemKey: item.itemKey,
+                          }),
+                        );
                         toast.success("Moved to wishlist");
                       }}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100"
@@ -127,7 +186,14 @@ export default function CartView() {
                     </button>
                     <button
                       onClick={() => {
-                        dispatch(removeFromCart(item.id));
+                        dispatch(
+                          removeFromCart({
+                            id: item.id,
+                            color: item.selectedColor,
+                            size: item.selectedSize,
+                            itemKey: item.itemKey,
+                          }),
+                        );
                         toast.success("Removed from cart");
                       }}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50"
@@ -151,7 +217,7 @@ export default function CartView() {
         </div>
 
         {/* Summary */}
-        <aside className="h-fit lg:sticky lg:top-24">
+        <aside className="h-fit lg:sticky lg:top-32">
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-slate-900">
               Order Summary
