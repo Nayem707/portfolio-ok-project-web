@@ -156,13 +156,74 @@ export const api = {
     return response?.data ?? { data: [], meta: null };
   },
 
+  getFeaturedProducts: async (limit = 8) => {
+    const response = await axiosInstance.get("/products/featured", {
+      params: { limit },
+    });
+    return getData(response);
+  },
+
+  getPopularProducts: async (limit = 8) => {
+    const response = await axiosInstance.get("/products/popular", {
+      params: { limit },
+    });
+    return getData(response);
+  },
+
+  getNewArrivals: async (limit = 8) => {
+    const response = await axiosInstance.get("/products/new-arrivals", {
+      params: { limit },
+    });
+    return getData(response);
+  },
+
+  getProductByIdOrSlug: async (idOrSlug) => {
+    const response = await axiosInstance.get(`/products/${idOrSlug}`);
+    return getData(response);
+  },
+
+  getPublicProductReviews: async (productId) => {
+    const response = await axiosInstance.get(`/products/${productId}/reviews`);
+    return getData(response);
+  },
+
   getCategories: async () => {
     const response = await axiosInstance.get("/categories");
     return getData(response);
   },
 
+  getCategoryById: async (categoryId) => {
+    const response = await axiosInstance.get(`/categories/${categoryId}`);
+    return getData(response);
+  },
+
+  getColors: async () => {
+    const response = await axiosInstance.get("/attributes/colors");
+    return getData(response);
+  },
+
+  getSizes: async () => {
+    const response = await axiosInstance.get("/attributes/sizes");
+    return getData(response);
+  },
+
   getHomepage: async () => {
     const response = await axiosInstance.get("/homepage");
+    return getData(response);
+  },
+
+  getHomepageSections: async () => {
+    const response = await axiosInstance.get("/homepage/sections");
+    return getData(response);
+  },
+
+  getHeroSlides: async () => {
+    const response = await axiosInstance.get("/homepage/hero/slides");
+    return getData(response);
+  },
+
+  getHealth: async () => {
+    const response = await axiosInstance.get("/health");
     return getData(response);
   },
 };

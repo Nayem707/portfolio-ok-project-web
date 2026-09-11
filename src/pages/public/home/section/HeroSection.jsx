@@ -1,59 +1,72 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
-const HeroSection = () => {
-  const slides = [
-    {
-      id: 1,
-      image: "/image/hero1.png",
-      subtitle: "Welcome to Our Store",
-      title: "Discover Something Amazing",
-      description:
-        "Explore our latest collection and find products that perfectly match your style and needs.",
-      buttonText: "Explore Now",
-    },
-    {
-      id: 2,
-      image: "/image/hero2.png",
-      subtitle: "New Arrivals",
-      title: "Summer Collection 2026",
-      description:
-        "Stay ahead of the trends with our newest summer arrivals. Fresh styles, unbeatable prices.",
-      buttonText: "Shop Now",
-    },
-    {
-      id: 3,
-      image: "/image/hero3.png",
-      subtitle: "Special Offer",
-      title: "Up to 50% Off",
-      description:
-        "Don't miss out on our biggest sale of the season. Limited time offer on selected items.",
-      buttonText: "Grab Deal",
-    },
-  ];
+const fallbackSlides = [
+  {
+    id: 1,
+    image: "/image/hero1.png",
+    subtitle: "Welcome to Our Store",
+    title: "Discover Something Amazing",
+    description:
+      "Explore our latest collection and find products that perfectly match your style and needs.",
+    buttonText: "Explore Now",
+  },
+  {
+    id: 2,
+    image: "/image/hero2.png",
+    subtitle: "New Arrivals",
+    title: "Summer Collection 2026",
+    description:
+      "Stay ahead of the trends with our newest summer arrivals. Fresh styles, unbeatable prices.",
+    buttonText: "Shop Now",
+  },
+  {
+    id: 3,
+    image: "/image/hero3.png",
+    subtitle: "Special Offer",
+    title: "Up to 50% Off",
+    description:
+      "Don't miss out on our biggest sale of the season. Limited time offer on selected items.",
+    buttonText: "Grab Deal",
+  },
+];
+
+const HeroSection = ({ slides = [] }) => {
+  const activeSlides =
+    slides.length > 0
+      ? slides.filter((slide) => slide.active !== false)
+      : fallbackSlides;
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  useEffect(() => {
+    setCurrentSlide(0);
+  }, [activeSlides.length]);
+
   // Auto-slide every 5 seconds
   useEffect(() => {
+    if (!activeSlides.length) return undefined;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
+      setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [activeSlides.length]);
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
   };
 
   const goToPrev = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrentSlide(
+      (prev) => (prev - 1 + activeSlides.length) % activeSlides.length,
+    );
   };
 
   const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
   };
 
-  const slide = slides[currentSlide];
+  const slide = activeSlides[currentSlide] || fallbackSlides[0];
 
   return (
     <section className="relative min-h-90 overflow-hidden sm:min-h-107.5 lg:min-h-137.5">
@@ -82,9 +95,12 @@ const HeroSection = () => {
             {slide.description}
           </p>
 
-          <button className="mt-5 rounded-lg bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-yellow-300 sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8">
-            {slide.buttonText}
-          </button>
+          <Link
+            to={slide.buttonUrl || "/products"}
+            className="mt-5 inline-flex rounded-lg bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-yellow-300 sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
+          >
+            {slide.buttonText || "Explore"}
+          </Link>
         </div>
       </div>
 
@@ -93,7 +109,7 @@ const HeroSection = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 sm:gap-4 sm:px-6">
           {/* Dots */}
           <div className="flex gap-2">
-            {slides.map((_, index) => (
+            {activeSlides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
@@ -106,6 +122,23 @@ const HeroSection = () => {
               />
             ))}
           </div>
+
+          {activeSlides.length > 1 && (
+            <div className="hidden items-center gap-2 sm:flex">
+              <button
+                onClick={goToPrev}
+                className="rounded-md bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+              >
+                Prev
+              </button>
+              <button
+                onClick={goToNext}
+                className="rounded-md bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>

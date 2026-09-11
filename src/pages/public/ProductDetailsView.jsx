@@ -25,8 +25,17 @@ import QuantitySelector from "@/components/common/QuantitySelector";
 import SectionHeader from "@/components/common/SectionHeader";
 import ProductGrid from "@/components/product/ProductGrid";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import useAuth from "@/hooks/useAuth";
-import { selectProducts } from "@/features/products";
+import {
+  fetchProductByIdOrSlug,
+  selectCurrentProduct,
+  selectProductDetailsError,
+  selectProductDetailsLoading,
+} from "@/features/products";
+import { fetchColors, selectColors } from "@/features/colors";
+import { fetchSizes, selectSizes } from "@/features/sizes";
 import { addToCart } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames } from "@/utils";
@@ -38,10 +47,21 @@ export default function ProductDetailsView() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useAuth();
-  const products = useSelector(selectProducts);
+  const product = useSelector(selectCurrentProduct);
+  const productLoading = useSelector(selectProductDetailsLoading);
+  const productError = useSelector(selectProductDetailsError);
+  const colors = useSelector(selectColors);
+  const sizes = useSelector(selectSizes);
   const wishlist = useSelector(selectWishlistItems);
+  const [related, setRelated] = useState([]);
 
-  const product = products.find((p) => p.id === id);
+  useEffect(() => {
+    if (!id) return;
+    dispatch(fetchProductByIdOrSlug(id));
+    dispatch(fetchColors());
+    dispatch(fetchSizes());
+  }, [dispatch, id]);
+
   const colorSwatches = {
     Black: "#111827",
     White: "#f8fafc",
@@ -64,32 +84,36 @@ export default function ProductDetailsView() {
     "Rose Gold": "#d97706",
   };
   const productColors = useMemo(() => {
-    const colors = product?.availableColors?.length
-      ? product.availableColors
+    const names = product?.colors?.length
+      ? product.colors
       : product?.category === "Fashion" ||
           product?.category === "Sports & Outdoors"
         ? ["Black", "White", "Navy", "Sand", "Olive"]
-        : ["Black", "White", "Silver", "Rose Gold"];
+        : (colors || []).map((item) => item.name);
 
-    return colors.map((color) => ({
+    const fallback = ["Black", "White", "Silver", "Rose Gold"];
+    const selected = names.length > 0 ? names : fallback;
+
+    return selected.map((color) => ({
       name: color,
       value: colorSwatches[color] || color,
     }));
-  }, [product]);
+  }, [product, colors]);
   const productSizes = useMemo(() => {
-    if (product?.availableSizes?.length) return product.availableSizes;
+    if (product?.sizes?.length) return product.sizes;
     if (
       product?.category === "Fashion" ||
       product?.category === "Sports & Outdoors"
     ) {
       return ["XS", "S", "M", "L", "XL"];
     }
-    return ["Standard"];
-  }, [product]);
+    const names = (sizes || []).map((item) => item.name);
+    return names.length ? names : ["Standard"];
+  }, [product, sizes]);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(
-    productColors[0] || "Black",
+    productColors[0]?.name || "Black",
   );
   const [selectedSize, setSelectedSize] = useState(
     productSizes[0] || "Standard",
@@ -105,7 +129,7 @@ export default function ProductDetailsView() {
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
 
   useEffect(() => {
-    setSelectedColor(productColors[0] || "Black");
+    setSelectedColor(productColors[0]?.name || "Black");
     setSelectedSize(productSizes[0] || "Standard");
     setQuantity(1);
   }, [product?.id, productColors, productSizes]);
@@ -119,30 +143,34 @@ export default function ProductDetailsView() {
     return () => clearTimeout(timer);
   }, [id]);
 
-  if (!product) {
-    return (
-      <div className="container-app py-16">
-        <EmptyState
-          title="Product not found"
-          description="The product you’re looking for doesn’t exist or has been removed."
-          action={
-            <Button as={Link} to="/products">
-              Back to products
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!product?.id || !product?.categoryId) {
+      setRelated([]);
+      return;
+    }
 
-  const isWishlisted = wishlist.some((i) => i.id === product.id);
-  const outOfStock = product.stock === 0;
-  const related = products
-    .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
-    .slice(0, 4);
+    let mounted = true;
+    const loadRelated = async () => {
+      try {
+        const response = await api.getProducts({
+          page: 1,
+          limit: 8,
+          category: product.categoryId,
+        });
+        if (!mounted) return;
+        const items = response?.data || [];
+        setRelated(items.filter((item) => item.id !== product.id).slice(0, 4));
+      } catch {
+        if (mounted) setRelated([]);
+      }
+    };
 
-  const productReviews = reviews;
-  const visibleReviewItems = productReviews.slice(0, visibleReviews);
+    loadRelated();
+
+    return () => {
+      mounted = false;
+    };
+  }, [product?.id, product?.categoryId]);
 
   useEffect(() => {
     if (!product?.id) return;
@@ -160,7 +188,7 @@ export default function ProductDetailsView() {
       setReviewsLoading(true);
       setReviewsError("");
       try {
-        const response = await api.listProductReviews(product.id);
+        const response = await api.getPublicProductReviews(product.id);
         if (!mounted) return;
         setReviews(
           (response || []).map((review) => ({
@@ -191,6 +219,45 @@ export default function ProductDetailsView() {
       mounted = false;
     };
   }, [product?.id]);
+
+  if (productLoading && !product) {
+    return (
+      <LoadingSpinner className="py-16" label="Loading product details..." />
+    );
+  }
+
+  if (productError && !product) {
+    return (
+      <div className="container-app py-8">
+        <ErrorState
+          title="Could not load product"
+          description={productError}
+          onRetry={() => id && dispatch(fetchProductByIdOrSlug(id))}
+        />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="container-app py-16">
+        <EmptyState
+          title="Product not found"
+          description="The product you’re looking for doesn’t exist or has been removed."
+          action={
+            <Button as={Link} to="/products">
+              Back to products
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const isWishlisted = wishlist.some((i) => i.id === product.id);
+  const outOfStock = product.stock === 0;
+  const productReviews = reviews;
+  const visibleReviewItems = productReviews.slice(0, visibleReviews);
 
   const handleAddToCart = async () => {
     try {
@@ -233,16 +300,17 @@ export default function ProductDetailsView() {
     }
   };
 
-  const showGalleryControls = product.images.length > 1;
+  const imageList = product.images?.length
+    ? product.images
+    : [product.image || "https://placehold.co/800x800?text=Product"];
+  const showGalleryControls = imageList.length > 1;
 
   const goToPrevImage = () => {
-    setActiveImage((prev) =>
-      prev === 0 ? product.images.length - 1 : prev - 1,
-    );
+    setActiveImage((prev) => (prev === 0 ? imageList.length - 1 : prev - 1));
   };
 
   const goToNextImage = () => {
-    setActiveImage((prev) => (prev + 1) % product.images.length);
+    setActiveImage((prev) => (prev + 1) % imageList.length);
   };
 
   const submitReview = async () => {
@@ -270,7 +338,7 @@ export default function ProductDetailsView() {
         toast.success("Review submitted", { position: "bottom-right" });
       }
 
-      const refreshed = await api.listProductReviews(product.id);
+      const refreshed = await api.getPublicProductReviews(product.id);
       setReviews(
         (refreshed || []).map((review) => ({
           id: review.id,
@@ -330,7 +398,7 @@ export default function ProductDetailsView() {
           { label: "Products", to: "/products" },
           {
             label: product.category,
-            to: `/products?category=${product.category}`,
+            to: `/products?category=${product.categoryId}`,
           },
           { label: product.name },
         ]}
@@ -341,7 +409,7 @@ export default function ProductDetailsView() {
         <div>
           <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <img
-              src={product.images[activeImage]}
+              src={imageList[activeImage]}
               alt={product.name}
               className="aspect-square w-full object-cover"
             />
@@ -373,7 +441,7 @@ export default function ProductDetailsView() {
           </div>
           {showGalleryControls && (
             <div className="mt-4 flex gap-3">
-              {product.images.map((img, idx) => (
+              {imageList.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}

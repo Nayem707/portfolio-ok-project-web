@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import toast from "react-hot-toast";
 import {
   FunnelIcon,
   XMarkIcon,
@@ -12,123 +11,108 @@ import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectProducts, setProducts } from "@/features/products";
-import { selectCategories, setCategories } from "@/features/categories";
+import ErrorState from "@/components/common/ErrorState";
+import {
+  fetchProducts,
+  selectProductListMeta,
+  selectProducts,
+  selectProductsError,
+  selectProductsLoading,
+} from "@/features/products";
+import {
+  fetchCategories,
+  selectCategories,
+  selectCategoriesLoading,
+} from "@/features/categories";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
-import { getDiscountedPrice, classNames } from "@/utils";
-import { api } from "@/services/api";
+import { classNames } from "@/utils";
+import useDebounce from "@/hooks/useDebounce";
 
 export default function ProductsView() {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
+  const productsLoading = useSelector(selectProductsLoading);
+  const productsError = useSelector(selectProductsError);
+  const productsMeta = useSelector(selectProductListMeta);
   const categories = useSelector(selectCategories);
+  const categoriesLoading = useSelector(selectCategoriesLoading);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "featured");
-  const [maxPrice, setMaxPrice] = useState(300);
-  const [page, setPage] = useState(1);
+  const [maxPrice, setMaxPrice] = useState(
+    Number(searchParams.get("maxPrice")) || 300,
+  );
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [showFilters, setShowFilters] = useState(false);
+  const debouncedSearch = useDebounce(search, 350);
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
     setCategory(searchParams.get("category") || "");
     setSort(searchParams.get("sort") || "featured");
-    setPage(1);
+    setMaxPrice(Number(searchParams.get("maxPrice")) || 300);
+    setPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
   useEffect(() => {
-    let mounted = true;
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
-    const loadProducts = async () => {
-      try {
-        const response = await api.getProducts({
-          page: 1,
-          limit: 100,
-          search: search || undefined,
-          category: category || undefined,
-          sort: sort || undefined,
-        });
-
-        if (!mounted) return;
-
-        const items = response?.data?.items || response?.data || [];
-        dispatch(setProducts(items));
-
-        if (!categories.length) {
-          const categoryResponse = await api.getCategories();
-          const nextCategories =
-            categoryResponse?.items || categoryResponse || [];
-          dispatch(setCategories(nextCategories));
-        }
-      } catch (error) {
-        toast.error("Unable to load products right now.");
-      }
-    };
-
-    loadProducts();
-
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch, search, category, sort, categories.length]);
-
-  const filtered = useMemo(() => {
-    let list = [...products];
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q),
-      );
-    }
-    if (category) list = list.filter((p) => p.category === category);
-    list = list.filter(
-      (p) => getDiscountedPrice(p.price, p.discount) <= maxPrice,
+  useEffect(() => {
+    dispatch(
+      fetchProducts({
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch || undefined,
+        category: category || undefined,
+        maxPrice: maxPrice || undefined,
+        sort: sort || undefined,
+      }),
     );
-
-    switch (sort) {
-      case "price-asc":
-        list.sort(
-          (a, b) =>
-            getDiscountedPrice(a.price, a.discount) -
-            getDiscountedPrice(b.price, b.discount),
-        );
-        break;
-      case "price-desc":
-        list.sort(
-          (a, b) =>
-            getDiscountedPrice(b.price, b.discount) -
-            getDiscountedPrice(a.price, a.discount),
-        );
-        break;
-      case "rating":
-        list.sort((a, b) => b.rating - a.rating);
-        break;
-      case "newest":
-        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-      default:
-        list.sort((a, b) => Number(b.featured) - Number(a.featured));
-    }
-    return list;
-  }, [products, search, category, sort, maxPrice]);
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  }, [dispatch, page, debouncedSearch, category, maxPrice, sort]);
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(key, value);
     else next.delete(key);
+
+    if (key !== "page") {
+      next.set("page", "1");
+    }
+
     setSearchParams(next);
   };
 
   const clearFilters = () => {
     setMaxPrice(300);
-    setSearchParams({});
+    setSearch("");
+    setSearchParams({ page: "1", sort: "featured" });
+  };
+
+  const selectedCategoryName = useMemo(() => {
+    if (!category) return "All Products";
+    const match = categories.find(
+      (cat) => cat.slug === category || cat.id === category,
+    );
+    return match?.name || "Products";
+  }, [category, categories]);
+
+  const totalItems = productsMeta?.total ?? products.length;
+  const totalPages = productsMeta?.totalPages ?? 1;
+
+  const retryProducts = () => {
+    dispatch(
+      fetchProducts({
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch || undefined,
+        category: category || undefined,
+        maxPrice: maxPrice || undefined,
+        sort: sort || undefined,
+      }),
+    );
   };
 
   const FilterPanel = (
@@ -141,7 +125,7 @@ export default function ProductsView() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1);
+              updateParam("search", e.target.value.trim());
             }}
             placeholder="Search products…"
             className="input-base pl-9"
@@ -164,19 +148,17 @@ export default function ProductsView() {
             )}
           >
             All Products
-            <span className="text-xs text-slate-400">{products.length}</span>
+            <span className="text-xs text-slate-400">{totalItems}</span>
           </button>
           {categories.map((cat) => {
-            const count = products.filter(
-              (p) => p.category === cat.name,
-            ).length;
+            const count = cat._count?.products ?? 0;
             return (
               <button
                 key={cat.id}
-                onClick={() => updateParam("category", cat.name)}
+                onClick={() => updateParam("category", cat.slug || cat.id)}
                 className={classNames(
                   "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
-                  category === cat.name
+                  category === (cat.slug || cat.id)
                     ? "bg-primary-50 text-primary-700 font-medium"
                     : "text-slate-600 hover:bg-slate-50",
                 )}
@@ -198,8 +180,9 @@ export default function ProductsView() {
           step="10"
           value={maxPrice}
           onChange={(e) => {
-            setMaxPrice(Number(e.target.value));
-            setPage(1);
+            const value = Number(e.target.value);
+            setMaxPrice(value);
+            updateParam("maxPrice", String(value));
           }}
           className="accent-primary-600 w-full"
         />
@@ -222,10 +205,10 @@ export default function ProductsView() {
       <div className="mt-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {category || "All Products"}
+            {selectedCategoryName}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            {filtered.length} product{filtered.length !== 1 && "s"} found
+            {totalItems} product{totalItems !== 1 && "s"} found
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -269,6 +252,7 @@ export default function ProductsView() {
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Filters</h2>
                 <button
+                  type="button"
                   onClick={() => setShowFilters(false)}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
                 >
@@ -281,13 +265,24 @@ export default function ProductsView() {
         )}
 
         <div className="min-w-0">
-          <ProductGrid products={paged} />
+          {productsError ? (
+            <ErrorState
+              title="Could not load products"
+              description={productsError}
+              onRetry={retryProducts}
+            />
+          ) : (
+            <ProductGrid products={products} loading={productsLoading} />
+          )}
           {totalPages > 1 && (
             <div className="mt-10">
               <Pagination
                 page={page}
                 totalPages={totalPages}
-                onChange={setPage}
+                onChange={(nextPage) => {
+                  setPage(nextPage);
+                  updateParam("page", String(nextPage));
+                }}
               />
             </div>
           )}

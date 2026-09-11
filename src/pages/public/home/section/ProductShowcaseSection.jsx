@@ -6,11 +6,12 @@ export default function ProductShowcaseSection({
   subtitle,
   to,
   products,
+  loading = false,
 }) {
   return (
     <section>
       <SectionHeader title={title} subtitle={subtitle} to={to} />
-      <ProductGrid products={products} />
+      <ProductGrid products={products} loading={loading} skeletonCount={4} />
     </section>
   );
 }

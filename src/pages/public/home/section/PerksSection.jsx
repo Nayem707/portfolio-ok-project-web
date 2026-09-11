@@ -16,11 +16,31 @@ const perks = [
   { icon: CreditCardIcon, title: "Flexible Payment", desc: "Multiple methods" },
 ];
 
-export default function PerksSection() {
+const iconByName = {
+  TruckIcon,
+  ArrowPathIcon,
+  ShieldCheckIcon,
+  CreditCardIcon,
+};
+
+export default function PerksSection({ perks: incomingPerks = perks }) {
+  const resolvedPerks = (incomingPerks || [])
+    .filter((item) => item?.active !== false)
+    .map((item) => ({
+      ...item,
+      icon:
+        typeof item.icon === "string"
+          ? iconByName[item.icon] || TruckIcon
+          : item.icon || TruckIcon,
+      desc: item.desc || item.description,
+    }));
+
+  const finalPerks = resolvedPerks.length > 0 ? resolvedPerks : perks;
+
   return (
     <section className="bg-primary-600 border-b border-slate-200">
       <div className="container-app grid grid-cols-2 gap-4 py-6 lg:grid-cols-4">
-        {perks.map(({ icon: Icon, title, desc }) => (
+        {finalPerks.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="flex items-center gap-3">
             <span className="bg-primary-50 text-primary-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
               <Icon className="h-6 w-6" />

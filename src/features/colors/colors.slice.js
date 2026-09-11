@@ -1,5 +1,6 @@
-import { createSlice, nanoid } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, nanoid } from "@reduxjs/toolkit";
 import { slugify } from "@/utils";
+import { api } from "@/services/api";
 
 const seedColors = [
   {
@@ -68,8 +69,23 @@ const seedColors = [
   },
 ];
 
+export const fetchColors = createAsyncThunk(
+  "color/fetchColors",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await api.getColors();
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load colors",
+      );
+    }
+  },
+);
+
 const initialState = {
   items: seedColors,
+  loading: false,
+  error: null,
 };
 
 const colorSlice = createSlice({
@@ -102,6 +118,22 @@ const colorSlice = createSlice({
     deleteColor(state, action) {
       state.items = state.items.filter((c) => c.id !== action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchColors.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchColors.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload || [];
+        state.error = null;
+      })
+      .addCase(fetchColors.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to load colors";
+      });
   },
 });
 

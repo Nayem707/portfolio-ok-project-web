@@ -1,10 +1,25 @@
 import { useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { selectProducts, setProducts } from "@/features/products";
-import { selectCategories, setCategories } from "@/features/categories";
+import {
+  fetchPublicHomepage,
+  selectFeaturedCollection,
+  selectHeroSlides,
+  selectHomePageError,
+  selectHomePageLoading,
+  selectHomePageSections,
+  selectNewArrivalsCollection,
+  selectPopularCollection,
+} from "@/features/homepage";
+import {
+  fetchCategories,
+  selectCategories,
+  selectCategoriesError,
+  selectCategoriesLoading,
+} from "@/features/categories";
 import { PUBLIC_PATHS } from "@/routes/public/public.paths";
-import { api } from "@/services/api";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 import HeroSection from "@/pages/public/home/section/HeroSection";
 import PerksSection from "@/pages/public/home/section/PerksSection";
@@ -35,83 +50,90 @@ const productSections = [
 
 export default function HomeView() {
   const dispatch = useDispatch();
-  const products = useSelector(selectProducts);
+  const sections = useSelector(selectHomePageSections);
+  const slides = useSelector(selectHeroSlides);
+  const featuredProducts = useSelector(selectFeaturedCollection);
+  const popularProducts = useSelector(selectPopularCollection);
+  const newArrivalProducts = useSelector(selectNewArrivalsCollection);
+  const homepageLoading = useSelector(selectHomePageLoading);
+  const homepageError = useSelector(selectHomePageError);
+
   const categories = useSelector(selectCategories);
+  const categoriesLoading = useSelector(selectCategoriesLoading);
+  const categoriesError = useSelector(selectCategoriesError);
 
   useEffect(() => {
-    let mounted = true;
-
-    const loadHomeData = async () => {
-      try {
-        const [productsResponse, categoriesResponse] = await Promise.all([
-          api.getProducts({ limit: 12, sort: "featured" }),
-          api.getCategories(),
-        ]);
-
-        if (!mounted) return;
-
-        const nextProducts =
-          productsResponse?.data?.items || productsResponse?.data || [];
-        const nextCategories =
-          categoriesResponse?.items || categoriesResponse || [];
-
-        dispatch(setProducts(nextProducts));
-        dispatch(setCategories(nextCategories));
-      } catch (error) {
-        console.error("Failed to load homepage data", error);
-      }
-    };
-
-    if (!products.length || !categories.length) {
-      loadHomeData();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch, products.length, categories.length]);
+    dispatch(fetchPublicHomepage());
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const productCollections = useMemo(
     () => ({
-      featured: products.filter((product) => product.featured).slice(0, 4),
-      popular: products.filter((product) => product.popular).slice(0, 4),
-      newArrival: products.filter((product) => product.newArrival).slice(0, 4),
+      featured: featuredProducts.slice(0, 4),
+      popular: popularProducts.slice(0, 4),
+      newArrival: newArrivalProducts.slice(0, 4),
     }),
-    [products],
+    [featuredProducts, popularProducts, newArrivalProducts],
   );
 
   const categoryCounts = useMemo(
     () =>
-      products.reduce((accumulator, product) => {
-        accumulator[product.category] =
-          (accumulator[product.category] ?? 0) + 1;
-        return accumulator;
-      }, {}),
-    [products],
+      Object.fromEntries(
+        categories.map((cat) => [cat.name, cat._count?.products ?? 0]),
+      ),
+    [categories],
   );
+
+  if (homepageLoading && !slides.length) {
+    return <LoadingSpinner className="py-16" label="Loading homepage..." />;
+  }
+
+  if (homepageError) {
+    return (
+      <div className="container-app py-8">
+        <ErrorState
+          title="Could not load homepage"
+          description={homepageError}
+          onRetry={() => dispatch(fetchPublicHomepage())}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <HeroSection />
-      <PerksSection />
+      <HeroSection slides={slides} />
+      <PerksSection perks={sections.perks?.items || []} />
 
       <div className="container-app space-y-16 py-14">
-        <CategorySection
-          categories={categories}
-          categoryCounts={categoryCounts}
-        />
-
-        {productSections.map(({ key, title, subtitle, to }) => (
-          <ProductShowcaseSection
-            key={key}
-            title={title}
-            subtitle={subtitle}
-            to={to}
-            products={productCollections[key]}
+        {sections.category?.active !== false && (
+          <CategorySection
+            title={sections.category?.title}
+            subtitle={sections.category?.subtitle}
+            categories={categories}
+            categoryCounts={categoryCounts}
+            loading={categoriesLoading}
+            error={categoriesError}
+            onRetry={() => dispatch(fetchCategories())}
           />
-        ))}
+        )}
 
-        <PromoSection />
+        {productSections
+          .filter(({ key }) => sections[key]?.active !== false)
+          .map(({ key, title, subtitle, to }) => (
+            <ProductShowcaseSection
+              key={key}
+              title={sections[key]?.title || title}
+              subtitle={sections[key]?.subtitle || subtitle}
+              to={sections[key]?.to || to}
+              products={productCollections[key]}
+              loading={homepageLoading}
+            />
+          ))}
+
+        {sections.promo?.active !== false && (
+          <PromoSection promo={sections.promo} />
+        )}
       </div>
     </div>
   );

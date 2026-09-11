@@ -1,5 +1,6 @@
-import { createSlice, nanoid } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, nanoid } from "@reduxjs/toolkit";
 import { slugify } from "@/utils";
+import { api } from "@/services/api";
 
 const seedSizes = [
   {
@@ -52,8 +53,23 @@ const seedSizes = [
   },
 ];
 
+export const fetchSizes = createAsyncThunk(
+  "size/fetchSizes",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await api.getSizes();
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load sizes",
+      );
+    }
+  },
+);
+
 const initialState = {
   items: seedSizes,
+  loading: false,
+  error: null,
 };
 
 const sizeSlice = createSlice({
@@ -86,6 +102,22 @@ const sizeSlice = createSlice({
     deleteSize(state, action) {
       state.items = state.items.filter((s) => s.id !== action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchSizes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSizes.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload || [];
+        state.error = null;
+      })
+      .addCase(fetchSizes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to load sizes";
+      });
   },
 });
 
