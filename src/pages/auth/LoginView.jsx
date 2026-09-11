@@ -65,41 +65,12 @@ export default function LoginView() {
     }
   };
 
-  const quickFill = (role) => {
-    const sample = {
-      USER: { email: "user@example.com", password: "password123" },
-      ADMIN: { email: "admin@example.com", password: "password123" },
-    };
-    const account = sample[role] || sample.USER;
-    setForm({ email: account.email, password: account.password });
-  };
-
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
       <p className="mt-1.5 text-sm text-slate-500">
         Sign in to your account to continue shopping.
       </p>
-
-      <div className="border-primary-100 bg-primary-50/60 text-primary-700 mt-4 rounded-lg border p-3 text-xs">
-        <p className="font-medium">Demo accounts — click to autofill:</p>
-        <div className="mt-2 flex gap-2">
-          <button
-            type="button"
-            onClick={() => quickFill("USER")}
-            className="ring-primary-100 hover:bg-primary-50 rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1"
-          >
-            User
-          </button>
-          <button
-            type="button"
-            onClick={() => quickFill("ADMIN")}
-            className="ring-primary-100 hover:bg-primary-50 rounded-md bg-white px-2.5 py-1 font-medium shadow-sm ring-1"
-          >
-            Admin
-          </button>
-        </div>
-      </div>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
         <Input
