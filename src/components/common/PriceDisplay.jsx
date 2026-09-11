@@ -6,9 +6,23 @@ export default function PriceDisplay({
   discount = 0,
   size = "md",
   className,
+  hideDecimals = false,
 }) {
   const final = getDiscountedPrice(price, discount);
   const hasDiscount = discount > 0;
+  const formatWholeCurrency = (value) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number(value) || 0);
+  const displayedFinal = hideDecimals
+    ? formatWholeCurrency(Math.trunc(final))
+    : formatCurrency(final);
+  const displayedOriginal = hideDecimals
+    ? formatWholeCurrency(Math.trunc(price))
+    : formatCurrency(price);
   const sizes = {
     sm: "text-sm",
     md: "text-base",
@@ -18,11 +32,11 @@ export default function PriceDisplay({
   return (
     <div className={classNames("flex items-baseline gap-1", className)}>
       <span className={classNames("font-bold text-slate-900", sizes[size])}>
-        {formatCurrency(final)}
+        {displayedFinal}
       </span>
       {hasDiscount && (
         <span className="text-xs font-medium text-slate-400 line-through">
-          {formatCurrency(price)}
+          {displayedOriginal}
         </span>
       )}
     </div>

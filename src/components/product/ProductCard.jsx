@@ -83,7 +83,11 @@ export default function ProductCard({ product }) {
           <Rating value={product.rating} reviews={product.reviews} />
         </div>
         <div className="mt-3 flex items-end justify-between gap-2">
-          <PriceDisplay price={product.price} discount={product.discount} />
+          <PriceDisplay
+            price={product.price}
+            discount={product.discount}
+            hideDecimals
+          />
           <button
             onClick={handleAddToCart}
             disabled={outOfStock}
