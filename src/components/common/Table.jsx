@@ -26,7 +26,7 @@ export default function Table({
                 <th
                   key={col.key}
                   className={classNames(
-                    "px-5 py-3.5 font-semibold",
+                    "px-5 py-3.5 align-middle font-semibold whitespace-nowrap",
                     col.className,
                   )}
                 >
@@ -42,7 +42,7 @@ export default function Table({
                   <td
                     key={col.key}
                     className={classNames(
-                      "px-5 py-3.5 text-slate-700",
+                      "px-5 py-3.5 align-middle whitespace-nowrap text-slate-700",
                       col.cellClassName,
                     )}
                   >
