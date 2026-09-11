@@ -8,6 +8,7 @@ import AdminProductDetailsView from "@/pages/admin/AdminProductDetailsView";
 import AdminCategoryListView from "@/pages/admin/AdminCategoryListView";
 import AdminColorListView from "@/pages/admin/AdminColorListView";
 import AdminSizeListView from "@/pages/admin/AdminSizeListView";
+import ProductAttributesView from "@/pages/admin/ProductAttributesView";
 import HomePageManagementView from "@/pages/admin/HomePageManagementView";
 import AdminOrderListView from "@/pages/admin/AdminOrderListView";
 import AdminOrderDetailsView from "@/pages/admin/AdminOrderDetailsView";
@@ -33,7 +34,19 @@ export const adminRoutes = (
     <Route path={ADMIN_PATHS.CATEGORIES} element={<AdminCategoryListView />} />
     <Route path={ADMIN_PATHS.COLORS} element={<AdminColorListView />} />
     <Route path={ADMIN_PATHS.SIZES} element={<AdminSizeListView />} />
-    <Route path={ADMIN_PATHS.ATTRIBUTES} element={<AdminCategoryListView />} />
+    <Route path={ADMIN_PATHS.ATTRIBUTES} element={<ProductAttributesView />} />
+    <Route
+      path={ADMIN_PATHS.ATTRIBUTES_CATEGORIES}
+      element={<AdminCategoryListView />}
+    />
+    <Route
+      path={ADMIN_PATHS.ATTRIBUTES_COLORS}
+      element={<AdminColorListView />}
+    />
+    <Route
+      path={ADMIN_PATHS.ATTRIBUTES_SIZES}
+      element={<AdminSizeListView />}
+    />
     <Route
       path={ADMIN_PATHS.HOME_PAGE_MANAGEMENT}
       element={<HomePageManagementView />}
