@@ -179,7 +179,7 @@ export default function Navbar() {
             Categories
           </NavLink>
           <span className="h-4 w-px bg-slate-200" />
-          {categories.slice(0, 5).map((cat) => (
+          {categories.slice(0, 6).map((cat) => (
             <Link
               key={cat.id}
               to={`/products?category=${encodeURIComponent(cat.name)}`}

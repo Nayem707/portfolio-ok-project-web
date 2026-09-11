@@ -1,9 +1,11 @@
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ArrowLeftIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
 import Rating from "@/components/common/Rating";
+import Pagination from "@/components/common/Pagination";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import EmptyState from "@/components/common/EmptyState";
 import { selectProducts } from "@/features/products";
@@ -12,9 +14,57 @@ import { formatDate, formatCurrency } from "@/utils";
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
 
 export default function AdminProductDetailsView() {
+  const REVIEWS_PER_PAGE = 4;
   const { id } = useParams();
   const navigate = useNavigate();
   const product = useSelector(selectProducts).find((p) => p.id === id);
+  const [reviewPage, setReviewPage] = useState(1);
+
+  const productReviews = useMemo(() => {
+    if (!product) return [];
+
+    const reviewers = [
+      { name: "Alex Morgan", avatar: "https://i.pravatar.cc/80?img=12" },
+      { name: "Jordan Lee", avatar: "https://i.pravatar.cc/80?img=32" },
+      { name: "Casey Nguyen", avatar: "https://i.pravatar.cc/80?img=47" },
+      { name: "Riley Patel", avatar: "https://i.pravatar.cc/80?img=8" },
+      { name: "Taylor Brooks", avatar: "https://i.pravatar.cc/80?img=5" },
+      { name: "Maya Chen", avatar: "https://i.pravatar.cc/80?img=24" },
+      { name: "Noah Kim", avatar: "https://i.pravatar.cc/80?img=33" },
+      { name: "Liam Scott", avatar: "https://i.pravatar.cc/80?img=41" },
+    ];
+
+    const comments = [
+      `Great quality and exactly as described. Highly recommend this ${product.category.toLowerCase()} product.`,
+      "Build quality feels premium and delivery was fast.",
+      "Worth the price. I have been using it daily with no issues.",
+      "Looks even better in person and performs well.",
+      "Packaging was neat and product condition was perfect.",
+      "Really happy with this purchase. Will buy again.",
+      "Good value for money and reliable so far.",
+      "Comfortable to use and the finish is excellent.",
+    ];
+
+    const count = Math.min(8, Math.max(6, reviewers.length));
+    return reviewers.slice(0, count).map((reviewer, idx) => ({
+      id: `${product.id}-review-${idx + 1}`,
+      author: reviewer.name,
+      avatar: reviewer.avatar,
+      rating: Math.max(4, Math.min(5, Math.round(product.rating))),
+      comment: comments[idx],
+      date: formatDate(new Date(Date.now() - (idx + 1) * 86400000)),
+    }));
+  }, [product]);
+
+  const totalReviewPages = Math.ceil(productReviews.length / REVIEWS_PER_PAGE);
+  const pagedReviews = productReviews.slice(
+    (reviewPage - 1) * REVIEWS_PER_PAGE,
+    reviewPage * REVIEWS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setReviewPage(1);
+  }, [id]);
 
   if (!product) {
     return (
@@ -102,6 +152,56 @@ export default function AdminProductDetailsView() {
           </dl>
         </div>
       </div>
+
+      <section className="card p-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Customer Reviews
+          </h2>
+          <p className="text-sm text-slate-500">
+            Showing {(reviewPage - 1) * REVIEWS_PER_PAGE + 1}-
+            {Math.min(reviewPage * REVIEWS_PER_PAGE, productReviews.length)} of{" "}
+            {product.reviews}
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {pagedReviews.map((review) => (
+            <article
+              key={review.id}
+              className="rounded-xl border border-slate-200 bg-white p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={review.avatar}
+                    alt={review.author}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {review.author}
+                    </p>
+                    <p className="text-xs text-slate-400">{review.date}</p>
+                  </div>
+                </div>
+                <Rating value={review.rating} showValue={false} />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {review.comment}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-6">
+          <Pagination
+            page={reviewPage}
+            totalPages={totalReviewPages}
+            onChange={setReviewPage}
+          />
+        </div>
+      </section>
     </div>
   );
 }
