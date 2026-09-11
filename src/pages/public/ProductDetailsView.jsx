@@ -126,10 +126,10 @@ export default function ProductDetailsView() {
           <span className="text-primary-600 text-sm font-medium">
             {product.category}
           </span>
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
             {product.name}
           </h1>
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
             <Rating
               value={product.rating}
               reviews={product.reviews}
@@ -179,13 +179,13 @@ export default function ProductDetailsView() {
             </div>
           )}
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 sm:flex sm:flex-wrap">
             <Button
               size="lg"
               leftIcon={ShoppingBagIcon}
               onClick={handleAddToCart}
               disabled={outOfStock}
-              className="flex-1"
+              className="min-w-0 justify-center whitespace-nowrap px-4 py-2.5 text-sm sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
             >
               Add to Cart
             </Button>
@@ -195,7 +195,7 @@ export default function ProductDetailsView() {
               leftIcon={BoltIcon}
               onClick={handleBuyNow}
               disabled={outOfStock}
-              className="flex-1"
+              className="min-w-0 justify-center whitespace-nowrap px-4 py-2.5 text-sm sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
             >
               Buy Now
             </Button>
@@ -209,6 +209,7 @@ export default function ProductDetailsView() {
                 );
               }}
               className={classNames(
+                "shrink-0 px-3 py-2.5 sm:px-5 sm:py-3",
                 isWishlisted && "border-red-200 text-red-500",
               )}
             >
