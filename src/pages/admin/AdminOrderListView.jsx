@@ -1,20 +1,62 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { MagnifyingGlassIcon, EyeIcon } from "@heroicons/react/24/outline";
+import {
+  MagnifyingGlassIcon,
+  EyeIcon,
+  ShoppingCartIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  TruckIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import StatCard from "@/components/common/StatCard";
 import Table from "@/components/common/Table";
+import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { selectOrders } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
-import { ORDER_STATUS } from "@/constants";
+import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
+
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 export default function AdminOrderListView() {
   const orders = useSelector(selectOrders);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
+
+  const overview = useMemo(() => {
+    const pending = orders.filter(
+      (o) => o.status === ORDER_STATUS.PENDING,
+    ).length;
+    const processing = orders.filter(
+      (o) => o.status === ORDER_STATUS.PROCESSING,
+    ).length;
+    const shipped = orders.filter(
+      (o) => o.status === ORDER_STATUS.SHIPPED,
+    ).length;
+    const delivered = orders.filter(
+      (o) => o.status === ORDER_STATUS.DELIVERED,
+    ).length;
+    const cancelled = orders.filter(
+      (o) => o.status === ORDER_STATUS.CANCELLED,
+    ).length;
+
+    return {
+      total: orders.length,
+      pending,
+      processing,
+      shipped,
+      delivered,
+      cancelled,
+    };
+  }, [orders]);
 
   const filtered = useMemo(
     () =>
@@ -22,10 +64,25 @@ export default function AdminOrderListView() {
         (o) =>
           (o.id.toLowerCase().includes(search.toLowerCase()) ||
             o.customer.name.toLowerCase().includes(search.toLowerCase())) &&
-          (!status || o.status === status),
+          (!status || o.status === status) &&
+          (!paymentStatus || o.paymentStatus === paymentStatus),
       ),
-    [orders, search, status],
+    [orders, search, status, paymentStatus],
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedOrders = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, status, paymentStatus, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const columns = [
     {
@@ -108,6 +165,45 @@ export default function AdminOrderListView() {
         subtitle={`${orders.length} total orders`}
       />
 
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <StatCard
+          label="Total Orders"
+          value={overview.total}
+          icon={ShoppingCartIcon}
+          tone="primary"
+        />
+        <StatCard
+          label="Pending"
+          value={overview.pending}
+          icon={ClockIcon}
+          tone="yellow"
+        />
+        <StatCard
+          label="Processing"
+          value={overview.processing}
+          icon={ClockIcon}
+          tone="orange"
+        />
+        <StatCard
+          label="Shipped"
+          value={overview.shipped}
+          icon={TruckIcon}
+          tone="blue"
+        />
+        <StatCard
+          label="Delivered"
+          value={overview.delivered}
+          icon={CheckCircleIcon}
+          tone="green"
+        />
+        <StatCard
+          label="Cancelled"
+          value={overview.cancelled}
+          icon={XCircleIcon}
+          tone="purple"
+        />
+      </div>
+
       <div className="card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -127,12 +223,37 @@ export default function AdminOrderListView() {
               ))}
             </Select>
           </div>
+          <div className="sm:w-44">
+            <Select
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+            >
+              <option value="">All payment</option>
+              {Object.values(PAYMENT_STATUS).map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="sm:w-36">
+            <Select
+              value={String(pageSize)}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  Show {size}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
       </div>
 
       <Table
         columns={columns}
-        data={filtered}
+        data={pagedOrders}
         rowKey="id"
         renderCard={renderCard}
         emptyState={
@@ -142,6 +263,8 @@ export default function AdminOrderListView() {
           />
         }
       />
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );
 }
