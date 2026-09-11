@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  MagnifyingGlassIcon,
   HeartIcon,
   ShoppingBagIcon,
   UserCircleIcon,
@@ -31,6 +33,7 @@ const navLinkClass = ({ isActive }) =>
 export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const cartCount = useSelector(selectCartCount);
   const wishlistCount = useSelector(selectWishlistCount);
   const { user, isAuthenticated } = useSelector(selectAuth);
@@ -62,6 +65,20 @@ export default function Navbar() {
           </div>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen((prev) => !prev)}
+              className={classNames(
+                "hover:text-primary-600 rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 md:hidden",
+                mobileSearchOpen && "text-primary-600 bg-slate-100",
+              )}
+              aria-label={mobileSearchOpen ? "Hide search" : "Show search"}
+              aria-expanded={mobileSearchOpen}
+              aria-controls="mobile-search"
+            >
+              <MagnifyingGlassIcon className="h-6 w-6" />
+            </button>
+
             <Link
               to="/wishlist"
               className="hover:text-primary-600 relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
@@ -144,9 +161,11 @@ export default function Navbar() {
         </div>
 
         {/* Mobile search */}
-        <div className="pb-3 md:hidden">
-          <SearchBar />
-        </div>
+        {mobileSearchOpen && (
+          <div id="mobile-search" className="pb-3 md:hidden">
+            <SearchBar autoFocus />
+          </div>
+        )}
 
         {/* Category nav */}
         <nav className="hidden items-center gap-6 border-t border-slate-100 py-3 lg:flex">
