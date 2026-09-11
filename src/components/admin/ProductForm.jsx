@@ -4,6 +4,8 @@ import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import { selectCategories } from "@/features/categories";
+import { selectColors } from "@/features/colors";
+import { selectSizes } from "@/features/sizes";
 import { PRODUCT_STATUS } from "@/constants";
 
 const empty = {
@@ -20,8 +22,17 @@ const empty = {
   status: PRODUCT_STATUS.ACTIVE,
 };
 
-const toCsv = (value) =>
-  Array.isArray(value) ? value.join(", ") : value || "";
+const toArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
 
 export default function ProductForm({
   initial,
@@ -30,17 +41,29 @@ export default function ProductForm({
   loading,
 }) {
   const categories = useSelector(selectCategories);
+  const colors = useSelector(selectColors);
+  const sizes = useSelector(selectSizes);
   const [form, setForm] = useState(() => ({
     ...empty,
     ...initial,
     images: initial?.images || [],
-    availableColors: toCsv(initial?.availableColors),
-    availableSizes: toCsv(initial?.availableSizes),
+    availableColors: toArray(initial?.availableColors),
+    availableSizes: toArray(initial?.availableSizes),
   }));
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  const toggleSelection = (key, value) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev[key]) ? prev[key] : [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+      return { ...prev, [key]: next };
+    });
+  };
 
   const addImage = () => {
     if (!imageUrl.trim()) return;
@@ -74,14 +97,18 @@ export default function ProductForm({
       discount: Number(form.discount) || 0,
       stock: Number(form.stock),
       categoryId: cat?.id,
-      availableColors: form.availableColors
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-      availableSizes: form.availableSizes
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      availableColors: Array.isArray(form.availableColors)
+        ? form.availableColors
+        : form.availableColors
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+      availableSizes: Array.isArray(form.availableSizes)
+        ? form.availableSizes
+        : form.availableSizes
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
     });
   };
 
@@ -210,18 +237,75 @@ export default function ProductForm({
                 <option key={s}>{s}</option>
               ))}
             </Select>
-            <Input
-              label="Available colors"
-              value={form.availableColors}
-              onChange={set("availableColors")}
-              placeholder="Black, White, Navy"
-            />
-            <Input
-              label="Available sizes"
-              value={form.availableSizes}
-              onChange={set("availableSizes")}
-              placeholder="S, M, L, XL"
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Available colors
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {colors.length === 0 && (
+                  <span className="text-sm text-slate-400">
+                    No colors available
+                  </span>
+                )}
+                {colors.map((color) => {
+                  const selected = form.availableColors.includes(color.name);
+                  return (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() =>
+                        toggleSelection("availableColors", color.name)
+                      }
+                      className={[
+                        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
+                        selected
+                          ? "border-primary-600 bg-primary-50 text-primary-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      <span
+                        className="h-3.5 w-3.5 rounded-full border border-slate-200"
+                        style={{ backgroundColor: color.hex || "#111827" }}
+                      />
+                      {color.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Available sizes
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {sizes.length === 0 && (
+                  <span className="text-sm text-slate-400">
+                    No sizes available
+                  </span>
+                )}
+                {sizes.map((size) => {
+                  const selected = form.availableSizes.includes(size.name);
+                  return (
+                    <button
+                      key={size.id}
+                      type="button"
+                      onClick={() =>
+                        toggleSelection("availableSizes", size.name)
+                      }
+                      className={[
+                        "rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                        selected
+                          ? "border-primary-600 bg-primary-50 text-primary-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      {size.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
