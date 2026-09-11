@@ -249,7 +249,7 @@ export default function CheckoutView() {
         </div>
 
         {/* Order summary */}
-        <aside className="h-fit lg:sticky lg:top-24">
+        <aside className="h-fit lg:sticky lg:top-32">
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-slate-900">
               Order Summary
