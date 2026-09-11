@@ -12,6 +12,27 @@ import { selectProducts } from "@/features/products";
 import { formatDate, formatCurrency } from "@/utils";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
+const colorSwatches = {
+  Black: "#111827",
+  White: "#f8fafc",
+  Navy: "#1d4ed8",
+  Sand: "#d6b38c",
+  Olive: "#6b7280",
+  Blue: "#3b82f6",
+  Green: "#22c55e",
+  Red: "#ef4444",
+  Gray: "#9ca3af",
+  Rose: "#f9a8d4",
+  Blush: "#f5b4c5",
+  Ivory: "#f5f5f4",
+  Mocha: "#a16207",
+  Cream: "#f5f5dc",
+  Oak: "#a16207",
+  Charcoal: "#374151",
+  Natural: "#d6d3d1",
+  Silver: "#cbd5e1",
+  "Rose Gold": "#d97706",
+};
 
 export default function AdminProductDetailsView() {
   const REVIEWS_PER_PAGE = 4;
@@ -134,6 +155,57 @@ export default function AdminProductDetailsView() {
           <p className="mt-4 text-sm leading-relaxed text-slate-600">
             {product.description}
           </p>
+
+          <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 text-sm md:grid-cols-2">
+            <div>
+              <p className="mb-2 text-slate-400">Available colors</p>
+              <div className="flex flex-wrap gap-2">
+                {(product.availableColors?.length
+                  ? product.availableColors
+                  : ["Not specified"]
+                ).map((color) =>
+                  color === "Not specified" ? (
+                    <span
+                      key={color}
+                      className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-500"
+                    >
+                      {color}
+                    </span>
+                  ) : (
+                    <span
+                      key={color}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1"
+                    >
+                      <span
+                        className="h-3.5 w-3.5 rounded-full border border-slate-200"
+                        style={{
+                          backgroundColor: colorSwatches[color] || "#111827",
+                        }}
+                      />
+                      {color}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-slate-400">Available sizes</p>
+              <div className="flex flex-wrap gap-2">
+                {(product.availableSizes?.length
+                  ? product.availableSizes
+                  : ["Not specified"]
+                ).map((size) => (
+                  <span
+                    key={size}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-700"
+                  >
+                    {size}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-6 text-sm sm:grid-cols-3">
             {[
