@@ -13,6 +13,9 @@ import {
 } from "@heroicons/react/24/outline";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { logout, selectCurrentUser } from "@/features/auth";
+import { resetCartState } from "@/features/cart";
+import { resetWishlistState } from "@/features/wishlist";
+import { clearMyOrderState } from "@/features/orders";
 import { classNames } from "@/utils";
 
 const navItems = [
@@ -38,7 +41,11 @@ export default function AccountLayout() {
           <div className="card p-5">
             <div className="flex items-center gap-3">
               <img
-                src={user?.avatar || "https://i.pravatar.cc/150?img=12"}
+                src={
+                  user?.avatarUrl ||
+                  user?.avatar ||
+                  "https://i.pravatar.cc/150?img=12"
+                }
                 alt={user?.name}
                 className="h-12 w-12 rounded-full object-cover"
               />
@@ -90,6 +97,9 @@ export default function AccountLayout() {
                       );
                     } finally {
                       dispatch(logout());
+                      dispatch(resetCartState());
+                      dispatch(resetWishlistState());
+                      dispatch(clearMyOrderState());
                       toast.success("Signed out");
                       navigate("/");
                     }

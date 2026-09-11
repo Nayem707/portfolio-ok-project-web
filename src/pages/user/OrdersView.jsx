@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   EyeIcon,
   ClipboardDocumentListIcon,
@@ -8,9 +8,17 @@ import {
 import Tabs from "@/components/common/Tabs";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import Pagination from "@/components/common/Pagination";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
-import { selectCurrentUser } from "@/features/auth";
-import { selectOrders } from "@/features/orders";
+import {
+  fetchMyOrders,
+  selectMyOrders,
+  selectMyOrdersMeta,
+  selectOrdersError,
+  selectOrdersLoading,
+} from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 
 const filters = [
@@ -23,13 +31,23 @@ const filters = [
 ];
 
 export default function OrdersView() {
-  const user = useSelector(selectCurrentUser);
-  const allOrders = useSelector(selectOrders);
+  const dispatch = useDispatch();
+  const orders = useSelector(selectMyOrders);
+  const meta = useSelector(selectMyOrdersMeta);
+  const loading = useSelector(selectOrdersLoading);
+  const error = useSelector(selectOrdersError);
   const [active, setActive] = useState("All");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const orders = allOrders.filter((o) => o.customer?.id === user?.id);
-  const filtered =
-    active === "All" ? orders : orders.filter((o) => o.status === active);
+  useEffect(() => {
+    const status = active === "All" ? undefined : active.toUpperCase();
+    dispatch(fetchMyOrders({ page, limit, status }));
+  }, [dispatch, active, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [active]);
 
   return (
     <div className="space-y-6">
@@ -42,7 +60,18 @@ export default function OrdersView() {
 
       <Tabs tabs={filters} active={active} onChange={setActive} />
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <LoadingSpinner className="py-16" label="Loading your orders..." />
+      ) : error ? (
+        <ErrorState
+          title="Could not load orders"
+          description={error}
+          onRetry={() => {
+            const status = active === "All" ? undefined : active.toUpperCase();
+            dispatch(fetchMyOrders({ page, limit, status }));
+          }}
+        />
+      ) : orders.length === 0 ? (
         <EmptyState
           icon={ClipboardDocumentListIcon}
           title="No orders here"
@@ -55,12 +84,12 @@ export default function OrdersView() {
         />
       ) : (
         <div className="space-y-4">
-          {filtered.map((order) => (
+          {orders.map((order) => (
             <div key={order.id} className="card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-800">
-                    {order.id}
+                    {order.orderNumber || order.id}
                   </p>
                   <p className="text-xs text-slate-400">
                     Placed on {formatDate(order.date)}
@@ -77,14 +106,23 @@ export default function OrdersView() {
 
               <div className="flex items-center justify-between gap-4 pt-4">
                 <div className="flex -space-x-3">
-                  {order.items.slice(0, 4).map((item) => (
-                    <img
-                      key={item.id}
-                      src={item.image}
-                      alt={item.name}
-                      className="h-12 w-12 rounded-lg border-2 border-white object-cover"
-                    />
-                  ))}
+                  {order.items.slice(0, 4).map((item, idx) =>
+                    item.image ? (
+                      <img
+                        key={`${item.id}-${idx}`}
+                        src={item.image}
+                        alt={item.name}
+                        className="h-12 w-12 rounded-lg border-2 border-white object-cover"
+                      />
+                    ) : (
+                      <span
+                        key={`${item.id}-${idx}`}
+                        className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-white bg-slate-100 text-[10px] font-medium text-slate-500"
+                      >
+                        {item.name?.slice(0, 2)?.toUpperCase() || "PR"}
+                      </span>
+                    ),
+                  )}
                   {order.items.length > 4 && (
                     <span className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-white bg-slate-100 text-xs font-medium text-slate-500">
                       +{order.items.length - 4}
@@ -111,6 +149,12 @@ export default function OrdersView() {
               </div>
             </div>
           ))}
+
+          <Pagination
+            page={meta?.page || page}
+            totalPages={meta?.totalPages || 1}
+            onChange={setPage}
+          />
         </div>
       )}
     </div>

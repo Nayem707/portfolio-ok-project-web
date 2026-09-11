@@ -37,12 +37,12 @@ export default function CheckoutView() {
   const [form, setForm] = useState({
     fullName: user?.name || "",
     phone: user?.phone || "",
-    address: "",
+    street: "",
     city: "",
     postalCode: "",
     country: "United States",
   });
-  const [payment, setPayment] = useState(PAYMENT_METHODS.COD);
+  const [payment, setPayment] = useState("COD");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -75,14 +75,14 @@ export default function CheckoutView() {
 
   const validate = () => {
     const next = {};
-    ["fullName", "phone", "address", "city", "postalCode"].forEach((field) => {
+    ["fullName", "phone", "street", "city"].forEach((field) => {
       if (!form[field]?.trim()) next[field] = "Required";
     });
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!validate()) {
       toast.error("Please complete the shipping information", {
@@ -92,38 +92,34 @@ export default function CheckoutView() {
     }
     setLoading(true);
 
-    setTimeout(() => {
-      const order = {
-        customer: {
-          id: user?.id || "guest",
-          name: form.fullName,
-          email: user?.email || "guest@shoply.com",
-        },
-        items: items.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.price,
-          discount: i.discount,
-          quantity: i.quantity,
-          image: i.image,
-        })),
-        shipping: form,
-        paymentMethod: payment,
-        subtotal,
-        shippingCost: shipping,
-        discount: +savings.toFixed(2),
-        total,
-      };
-      const action = dispatch(placeOrder(order));
-      dispatch(clearCart());
-      setLoading(false);
+    try {
+      const order = await dispatch(
+        placeOrder({
+          paymentMethod: payment,
+          shipping: {
+            fullName: form.fullName,
+            phone: form.phone,
+            country: form.country,
+            city: form.city,
+            street: form.street,
+            postalCode: form.postalCode || undefined,
+          },
+        }),
+      ).unwrap();
+      await dispatch(clearCart()).unwrap();
       toast.success("Order placed successfully!", {
         position: "bottom-right",
       });
-      navigate(`/account/orders/${action.payload.id}`, {
+      navigate(`/account/orders/${order.id}`, {
         state: { justPlaced: true },
       });
-    }, 800);
+    } catch (error) {
+      toast.error(error || "Failed to place order", {
+        position: "bottom-right",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -158,10 +154,10 @@ export default function CheckoutView() {
               />
               <div className="sm:col-span-2">
                 <Input
-                  label="Address"
-                  value={form.address}
-                  onChange={set("address")}
-                  error={errors.address}
+                  label="Street"
+                  value={form.street}
+                  onChange={set("street")}
+                  error={errors.street}
                 />
               </div>
               <Input
@@ -198,12 +194,14 @@ export default function CheckoutView() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
                 {
-                  value: PAYMENT_METHODS.COD,
+                  value: "COD",
+                  label: PAYMENT_METHODS.COD,
                   icon: BanknotesIcon,
                   desc: "Pay when your order arrives",
                 },
                 {
-                  value: PAYMENT_METHODS.ONLINE,
+                  value: "ONLINE",
+                  label: PAYMENT_METHODS.ONLINE,
                   icon: CreditCardIcon,
                   desc: "Pay securely online now",
                 },
@@ -222,14 +220,14 @@ export default function CheckoutView() {
                   <method.icon className="text-primary-600 h-6 w-6" />
                   <div>
                     <p className="text-sm font-semibold text-slate-800">
-                      {method.value}
+                      {method.label}
                     </p>
                     <p className="text-xs text-slate-500">{method.desc}</p>
                   </div>
                 </button>
               ))}
             </div>
-            {payment === PAYMENT_METHODS.ONLINE && (
+            {payment === "ONLINE" && (
               <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <Input
@@ -241,7 +239,8 @@ export default function CheckoutView() {
                 <Input label="Expiry" placeholder="MM / YY" />
                 <Input label="CVC" placeholder="123" />
                 <p className="text-xs text-slate-400 sm:col-span-2">
-                  This is a demo — no real payment is processed.
+                  Online payment UI is preview-only in frontend; backend still
+                  records payment method correctly.
                 </p>
               </div>
             )}
@@ -256,7 +255,10 @@ export default function CheckoutView() {
             </h2>
             <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-3">
+                <div
+                  key={item.itemKey || item.cartItemId || item.id}
+                  className="flex gap-3"
+                >
                   <div className="relative shrink-0">
                     <img
                       src={item.image}

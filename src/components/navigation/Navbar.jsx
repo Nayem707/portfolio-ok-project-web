@@ -20,6 +20,9 @@ import { selectCartCount } from "@/features/cart";
 import { selectWishlistCount } from "@/features/wishlist";
 import { toggleMiniCart, toggleMobileMenu } from "@/features/ui";
 import { logout, selectAuth } from "@/features/auth";
+import { resetCartState } from "@/features/cart";
+import { resetWishlistState } from "@/features/wishlist";
+import { clearMyOrderState } from "@/features/orders";
 import { selectCategories } from "@/features/categories";
 import { classNames } from "@/utils";
 import toast from "react-hot-toast";
@@ -55,6 +58,9 @@ export default function Navbar() {
       );
     } finally {
       dispatch(logout());
+      dispatch(resetCartState());
+      dispatch(resetWishlistState());
+      dispatch(clearMyOrderState());
       toast.success("Signed out");
       navigate("/");
     }
@@ -125,7 +131,11 @@ export default function Navbar() {
                 trigger={
                   <span className="flex items-center gap-2 rounded-lg p-1.5 pr-2 transition hover:bg-slate-100">
                     <img
-                      src={user.avatar || "https://i.pravatar.cc/150?img=12"}
+                      src={
+                        user.avatarUrl ||
+                        user.avatar ||
+                        "https://i.pravatar.cc/150?img=12"
+                      }
                       alt={user.name}
                       className="h-8 w-8 rounded-full object-cover"
                     />

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ClipboardDocumentListIcon,
   ClockIcon,
@@ -10,18 +11,31 @@ import {
 import StatCard from "@/components/common/StatCard";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { selectCurrentUser } from "@/features/auth";
-import { selectOrders } from "@/features/orders";
+import {
+  fetchMyOrders,
+  selectMyOrders,
+  selectOrdersError,
+  selectOrdersLoading,
+} from "@/features/orders";
 import { selectWishlistItems } from "@/features/wishlist";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
 export default function DashboardOverviewView() {
+  const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
-  const allOrders = useSelector(selectOrders);
+  const orders = useSelector(selectMyOrders);
+  const loading = useSelector(selectOrdersLoading);
+  const error = useSelector(selectOrdersError);
   const wishlist = useSelector(selectWishlistItems);
 
-  const orders = allOrders.filter((o) => o.customer?.id === user?.id);
+  useEffect(() => {
+    dispatch(fetchMyOrders({ page: 1, limit: 4 }));
+  }, [dispatch]);
+
   const pending = orders.filter((o) =>
     [
       ORDER_STATUS.PENDING,
@@ -84,7 +98,17 @@ export default function DashboardOverviewView() {
             View all <ArrowRightIcon className="h-4 w-4" />
           </Link>
         </div>
-        {recent.length === 0 ? (
+        {loading ? (
+          <LoadingSpinner className="py-10" label="Loading recent orders..." />
+        ) : error ? (
+          <div className="p-6">
+            <ErrorState
+              title="Could not load recent orders"
+              description={error}
+              onRetry={() => dispatch(fetchMyOrders({ page: 1, limit: 4 }))}
+            />
+          </div>
+        ) : recent.length === 0 ? (
           <div className="p-6">
             <EmptyState
               title="No orders yet"
@@ -109,13 +133,16 @@ export default function DashboardOverviewView() {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={order.items[0]?.image}
+                      src={
+                        order.items[0]?.image ||
+                        "https://placehold.co/88x88?text=Item"
+                      }
                       alt=""
                       className="h-11 w-11 rounded-lg border border-slate-100 object-cover"
                     />
                     <div>
                       <p className="text-sm font-semibold text-slate-800">
-                        {order.id}
+                        {order.orderNumber || order.id}
                       </p>
                       <p className="text-xs text-slate-400">
                         {formatDate(order.date)} · {order.items.length} item(s)

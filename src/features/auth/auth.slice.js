@@ -2,6 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 import { loadState, saveState, removeState } from "@/utils/storage";
 import { AUTH_KEY } from "./auth.constants";
 
+const normalizeUser = (user) => {
+  if (!user) return null;
+  return {
+    ...user,
+    avatarUrl: user.avatarUrl ?? user.avatar ?? null,
+    avatar: user.avatar ?? user.avatarUrl ?? null,
+  };
+};
+
 const initialState = {
   user: loadState(AUTH_KEY, null),
   isAuthenticated:
@@ -20,7 +29,7 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess(state, action) {
-      const user = action.payload?.user ?? action.payload;
+      const user = normalizeUser(action.payload?.user ?? action.payload);
       const accessToken = action.payload?.accessToken ?? null;
       const refreshToken = action.payload?.refreshToken ?? null;
 
@@ -40,7 +49,9 @@ const authSlice = createSlice({
       saveState(AUTH_KEY, user);
     },
     restoreAuth(state, action) {
-      const user = action.payload?.user ?? action.payload ?? null;
+      const user = normalizeUser(
+        action.payload?.user ?? action.payload ?? null,
+      );
       state.user = user;
       state.isAuthenticated = !!user;
       state.loading = false;
@@ -73,7 +84,7 @@ const authSlice = createSlice({
     },
     updateProfile(state, action) {
       if (!state.user) return;
-      state.user = { ...state.user, ...action.payload };
+      state.user = normalizeUser({ ...state.user, ...action.payload });
       saveState(AUTH_KEY, state.user);
     },
   },

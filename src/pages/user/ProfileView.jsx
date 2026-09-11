@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { CameraIcon } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { selectCurrentUser, updateProfile } from "@/features/auth";
+import { api } from "@/services/api";
 
 export default function ProfileView() {
   const user = useSelector(selectCurrentUser);
@@ -13,20 +14,39 @@ export default function ProfileView() {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
-    avatar: user?.avatar || "",
+    avatarUrl: user?.avatarUrl || user?.avatar || "",
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setForm({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      avatarUrl: user?.avatarUrl || user?.avatar || "",
+    });
+  }, [user]);
+
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  const save = (e) => {
+  const save = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      dispatch(updateProfile(form));
-      setLoading(false);
+    try {
+      const updated = await api.updateMyProfile({
+        name: form.name,
+        phone: form.phone || undefined,
+        avatarUrl: form.avatarUrl || undefined,
+      });
+      dispatch(updateProfile(updated));
       toast.success("Profile updated");
-    }, 500);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message || "Failed to update profile",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,7 +62,7 @@ export default function ProfileView() {
         <div className="flex items-center gap-5">
           <div className="relative">
             <img
-              src={form.avatar || "https://i.pravatar.cc/150?img=12"}
+              src={form.avatarUrl || "https://i.pravatar.cc/150?img=12"}
               alt={form.name}
               className="h-20 w-20 rounded-full border-2 border-white object-cover shadow"
             />
@@ -62,12 +82,7 @@ export default function ProfileView() {
 
         <form onSubmit={save} className="mt-6 grid gap-4 sm:grid-cols-2">
           <Input label="Full name" value={form.name} onChange={set("name")} />
-          <Input
-            label="Email"
-            type="email"
-            value={form.email}
-            onChange={set("email")}
-          />
+          <Input label="Email" type="email" value={form.email} disabled />
           <Input
             label="Phone"
             value={form.phone}
@@ -76,8 +91,8 @@ export default function ProfileView() {
           />
           <Input
             label="Profile image URL"
-            value={form.avatar}
-            onChange={set("avatar")}
+            value={form.avatarUrl}
+            onChange={set("avatarUrl")}
             placeholder="https://…"
           />
           <div className="sm:col-span-2">

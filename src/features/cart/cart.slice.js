@@ -1,22 +1,12 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { loadState, saveState } from "@/utils/storage";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { api } from "@/services/api";
 
-const CART_KEY = "cart_items";
-
-const initialState = {
-  items: loadState(CART_KEY, []),
-};
-
-const persist = (state) => saveState(CART_KEY, state.items);
-
-const resolveItemKey = (product) => {
-  const color = product.selectedColor || "default";
-  const size = product.selectedSize || "default";
-  return product.itemKey || `${product.id}-${color}-${size}`;
-};
+const resolveItemKey = (productId, color, size) =>
+  `${productId}-${color || "default"}-${size || "default"}`;
 
 const normaliseSelector = (value) => ({
-  id: value?.id ?? null,
+  id: value?.id ?? value?.productId ?? null,
+  cartItemId: value?.cartItemId ?? null,
   itemKey: value?.itemKey ?? null,
   color: value?.color ?? value?.selectedColor ?? null,
   size: value?.size ?? value?.selectedSize ?? null,
@@ -24,6 +14,10 @@ const normaliseSelector = (value) => ({
 
 const matchesCartItem = (item, selector) => {
   if (!selector) return false;
+
+  if (selector.cartItemId) {
+    return item.cartItemId === selector.cartItemId;
+  }
 
   if (selector.itemKey) {
     return item.itemKey === selector.itemKey;
@@ -47,83 +41,217 @@ const matchesCartItem = (item, selector) => {
   return item.id === selector.id && !itemColor && !itemSize;
 };
 
+const mapServerCart = (cart = {}) => ({
+  id: cart.id ?? null,
+  subtotal: Number(cart.subtotal || 0),
+  totalItems: Number(cart.totalItems || 0),
+  items: (cart.items || []).map((item) => ({
+    id: item.productId,
+    cartItemId: item.id,
+    itemKey: resolveItemKey(
+      item.productId,
+      item.selectedColor,
+      item.selectedSize,
+    ),
+    name: item.name,
+    price: Number(item.price || 0),
+    discount: Number(item.discount || 0),
+    image: item.image,
+    stock: item.stock,
+    quantity: item.quantity,
+    selectedColor: item.selectedColor || null,
+    selectedSize: item.selectedSize || null,
+    lineTotal: Number(item.lineTotal || 0),
+  })),
+});
+
+export const fetchCart = createAsyncThunk(
+  "cart/fetchCart",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.getCart();
+      return mapServerCart(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load cart",
+      );
+    }
+  },
+);
+
+export const addToCart = createAsyncThunk(
+  "cart/addToCart",
+  async (product, { rejectWithValue }) => {
+    try {
+      const response = await api.addCartItem({
+        productId: product.id,
+        quantity: Number(product.quantity || 1),
+        selectedColor: product.selectedColor || undefined,
+        selectedSize: product.selectedSize || undefined,
+      });
+      return mapServerCart(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to add item to cart",
+      );
+    }
+  },
+);
+
+export const setQuantity = createAsyncThunk(
+  "cart/setQuantity",
+  async (payload, { getState, rejectWithValue }) => {
+    try {
+      const selector = normaliseSelector(payload);
+      const items = getState().cart.items || [];
+      const target = items.find((item) => matchesCartItem(item, selector));
+      if (!target?.cartItemId) {
+        return rejectWithValue("Cart item not found");
+      }
+      const response = await api.updateCartItem(target.cartItemId, {
+        quantity: Number(payload.quantity),
+      });
+      return mapServerCart(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to update quantity",
+      );
+    }
+  },
+);
+
+export const removeFromCart = createAsyncThunk(
+  "cart/removeFromCart",
+  async (payload, { getState, rejectWithValue }) => {
+    try {
+      const selector = normaliseSelector(payload);
+      const items = getState().cart.items || [];
+      const target = items.find((item) => matchesCartItem(item, selector));
+      if (!target?.cartItemId) {
+        return rejectWithValue("Cart item not found");
+      }
+      const response = await api.removeCartItem(target.cartItemId);
+      return mapServerCart(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to remove item",
+      );
+    }
+  },
+);
+
+export const clearCart = createAsyncThunk(
+  "cart/clearCart",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.clearCart();
+      return mapServerCart(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to clear cart",
+      );
+    }
+  },
+);
+
 const cartSlice = createSlice({
   name: "cart",
-  initialState,
+  initialState: {
+    id: null,
+    items: [],
+    subtotal: 0,
+    totalItems: 0,
+    loading: false,
+    mutating: false,
+    error: null,
+    initialized: false,
+  },
   reducers: {
-    addToCart(state, action) {
-      const product = action.payload;
-      const quantity = Number(product.quantity || 1);
-      const selector = normaliseSelector(product);
-      const itemKey = resolveItemKey(product);
-      const existing = state.items.find(
-        (i) => i.itemKey === itemKey || matchesCartItem(i, selector),
-      );
-
-      if (existing) {
-        existing.quantity = Math.min(
-          existing.quantity + quantity,
-          product.stock || 99,
-        );
-      } else {
-        state.items.push({
-          id: product.id,
-          itemKey,
-          name: product.name,
-          price: product.price,
-          discount: product.discount || 0,
-          image: product.image || product.images?.[0],
-          stock: product.stock,
-          category: product.category,
-          quantity,
-          selectedColor: product.selectedColor || null,
-          selectedSize: product.selectedSize || null,
-        });
-      }
-      persist(state);
-    },
-    removeFromCart(state, action) {
-      const selector = normaliseSelector(action.payload);
-      state.items = state.items.filter(
-        (item) => !matchesCartItem(item, selector),
-      );
-      persist(state);
-    },
-    incrementQty(state, action) {
-      const selector = normaliseSelector(action.payload);
-      const item = state.items.find((i) => matchesCartItem(i, selector));
-      if (item) item.quantity = Math.min(item.quantity + 1, item.stock || 99);
-      persist(state);
-    },
-    decrementQty(state, action) {
-      const selector = normaliseSelector(action.payload);
-      const item = state.items.find((i) => matchesCartItem(i, selector));
-      if (item && item.quantity > 1) item.quantity -= 1;
-      persist(state);
-    },
-    setQuantity(state, action) {
-      const selector = normaliseSelector(action.payload);
-      const item = state.items.find((i) => matchesCartItem(i, selector));
-      if (item)
-        item.quantity = Math.max(
-          1,
-          Math.min(action.payload.quantity, item.stock || 99),
-        );
-      persist(state);
-    },
-    clearCart(state) {
+    resetCartState(state) {
+      state.id = null;
       state.items = [];
-      persist(state);
+      state.subtotal = 0;
+      state.totalItems = 0;
+      state.loading = false;
+      state.mutating = false;
+      state.error = null;
+      state.initialized = true;
     },
+  },
+  extraReducers: (builder) => {
+    const setFromPayload = (state, action) => {
+      state.id = action.payload.id;
+      state.items = action.payload.items;
+      state.subtotal = action.payload.subtotal;
+      state.totalItems = action.payload.totalItems;
+      state.error = null;
+      state.initialized = true;
+    };
+
+    builder
+      .addCase(fetchCart.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.loading = false;
+        setFromPayload(state, action);
+      })
+      .addCase(fetchCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to load cart";
+        state.initialized = true;
+      })
+      .addCase(addToCart.pending, (state) => {
+        state.mutating = true;
+        state.error = null;
+      })
+      .addCase(addToCart.fulfilled, (state, action) => {
+        state.mutating = false;
+        setFromPayload(state, action);
+      })
+      .addCase(addToCart.rejected, (state, action) => {
+        state.mutating = false;
+        state.error = action.payload || "Failed to add item to cart";
+      })
+      .addCase(setQuantity.pending, (state) => {
+        state.mutating = true;
+        state.error = null;
+      })
+      .addCase(setQuantity.fulfilled, (state, action) => {
+        state.mutating = false;
+        setFromPayload(state, action);
+      })
+      .addCase(setQuantity.rejected, (state, action) => {
+        state.mutating = false;
+        state.error = action.payload || "Failed to update quantity";
+      })
+      .addCase(removeFromCart.pending, (state) => {
+        state.mutating = true;
+        state.error = null;
+      })
+      .addCase(removeFromCart.fulfilled, (state, action) => {
+        state.mutating = false;
+        setFromPayload(state, action);
+      })
+      .addCase(removeFromCart.rejected, (state, action) => {
+        state.mutating = false;
+        state.error = action.payload || "Failed to remove item";
+      })
+      .addCase(clearCart.pending, (state) => {
+        state.mutating = true;
+        state.error = null;
+      })
+      .addCase(clearCart.fulfilled, (state, action) => {
+        state.mutating = false;
+        setFromPayload(state, action);
+      })
+      .addCase(clearCart.rejected, (state, action) => {
+        state.mutating = false;
+        state.error = action.payload || "Failed to clear cart";
+      });
   },
 });
 
-export const {
-  addToCart,
-  removeFromCart,
-  incrementQty,
-  decrementQty,
-  setQuantity,
-  clearCart,
-} = cartSlice.actions;
+export const { resetCartState } = cartSlice.actions;
 export default cartSlice.reducer;

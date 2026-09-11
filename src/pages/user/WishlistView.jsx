@@ -13,14 +13,38 @@ import Badge from "@/components/common/Badge";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import {
   selectWishlistItems,
+  fetchWishlist,
   removeFromWishlist,
   clearWishlist,
 } from "@/features/wishlist";
 import { addToCart } from "@/features/cart";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ErrorState from "@/components/common/ErrorState";
 
 export default function WishlistView() {
   const dispatch = useDispatch();
   const items = useSelector(selectWishlistItems);
+  const loading = useSelector((state) => state.wishlist.loading);
+  const mutating = useSelector((state) => state.wishlist.mutating);
+  const error = useSelector((state) => state.wishlist.error);
+
+  if (loading) {
+    return (
+      <LoadingSpinner className="py-16" label="Loading your wishlist..." />
+    );
+  }
+
+  if (error && items.length === 0) {
+    return (
+      <div className="container-app py-8">
+        <ErrorState
+          title="Could not load wishlist"
+          description={error}
+          onRetry={() => dispatch(fetchWishlist())}
+        />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -52,10 +76,15 @@ export default function WishlistView() {
         <Button
           variant="ghost"
           className="text-red-500"
-          onClick={() => {
-            dispatch(clearWishlist());
-            toast.success("Wishlist cleared");
+          onClick={async () => {
+            try {
+              await dispatch(clearWishlist()).unwrap();
+              toast.success("Wishlist cleared");
+            } catch (err) {
+              toast.error(err || "Failed to clear wishlist");
+            }
           }}
+          disabled={mutating}
         >
           Clear all
         </Button>
@@ -99,22 +128,35 @@ export default function WishlistView() {
                     size="sm"
                     leftIcon={ShoppingBagIcon}
                     disabled={outOfStock}
-                    onClick={() => {
-                      dispatch(addToCart(item));
-                      toast.success("Added to cart", {
-                        position: "bottom-right",
-                      });
+                    onClick={async () => {
+                      try {
+                        await dispatch(addToCart(item)).unwrap();
+                        toast.success("Added to cart", {
+                          position: "bottom-right",
+                        });
+                      } catch (err) {
+                        toast.error(err || "Failed to add to cart", {
+                          position: "bottom-right",
+                        });
+                      }
                     }}
                   >
                     Add to cart
                   </Button>
                   <button
-                    onClick={() => {
-                      dispatch(removeFromWishlist(item.id));
-                      toast.success("Removed from wishlist", {
-                        position: "bottom-right",
-                      });
+                    onClick={async () => {
+                      try {
+                        await dispatch(removeFromWishlist(item.id)).unwrap();
+                        toast.success("Removed from wishlist", {
+                          position: "bottom-right",
+                        });
+                      } catch (err) {
+                        toast.error(err || "Failed to remove from wishlist", {
+                          position: "bottom-right",
+                        });
+                      }
                     }}
+                    disabled={mutating}
                     className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                     aria-label="Remove"
                   >

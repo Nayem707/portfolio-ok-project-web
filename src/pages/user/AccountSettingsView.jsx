@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
+import { api } from "@/services/api";
 
 function Toggle({ enabled, onChange }) {
   return (
@@ -41,22 +42,37 @@ export default function AccountSettingsView() {
   const set = (key) => (e) =>
     setPasswords({ ...passwords, [key]: e.target.value });
 
-  const changePassword = (e) => {
+  const changePassword = async (e) => {
     e.preventDefault();
-    if (passwords.next.length < 6) {
-      toast.error("New password must be at least 6 characters");
+    if (passwords.next.length < 8) {
+      toast.error("New password must be at least 8 characters");
       return;
     }
     if (passwords.next !== passwords.confirm) {
       toast.error("Passwords do not match");
       return;
     }
+    if (!passwords.current.trim()) {
+      toast.error("Current password is required");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      await api.changeMyPassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.next,
+      });
       setPasswords({ current: "", next: "", confirm: "" });
       toast.success("Password changed successfully");
-    }, 600);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message || "Failed to change password",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleNotif = (key) => (val) => {

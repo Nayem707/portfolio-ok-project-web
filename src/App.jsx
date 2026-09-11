@@ -1,14 +1,28 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AppRoutes from "@/routes";
-import { finishAuthInitialization, logout, restoreAuth } from "@/features/auth";
+import {
+  finishAuthInitialization,
+  logout,
+  restoreAuth,
+  selectAuth,
+} from "@/features/auth";
+import { fetchCart, resetCartState } from "@/features/cart";
+import { fetchWishlist, resetWishlistState } from "@/features/wishlist";
+import { clearMyOrderState } from "@/features/orders";
 import { api } from "@/services/api";
 
 export default function App() {
   const dispatch = useDispatch();
+  const { isAuthenticated, initialized } = useSelector(selectAuth);
 
   useEffect(() => {
-    const handleAuthLogout = () => dispatch(logout());
+    const handleAuthLogout = () => {
+      dispatch(logout());
+      dispatch(resetCartState());
+      dispatch(resetWishlistState());
+      dispatch(clearMyOrderState());
+    };
 
     window.addEventListener("auth:logout", handleAuthLogout);
 
@@ -23,7 +37,7 @@ export default function App() {
     let isMounted = true;
 
     api
-      .getCurrentUser()
+      .getMyProfile()
       .then((user) => {
         if (isMounted) {
           dispatch(restoreAuth({ user }));
@@ -45,6 +59,12 @@ export default function App() {
       window.removeEventListener("auth:logout", handleAuthLogout);
     };
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!initialized || !isAuthenticated) return;
+    dispatch(fetchCart());
+    dispatch(fetchWishlist());
+  }, [dispatch, initialized, isAuthenticated]);
 
   return <AppRoutes />;
 }

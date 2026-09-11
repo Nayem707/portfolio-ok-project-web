@@ -30,6 +30,7 @@ import { selectProducts } from "@/features/products";
 import { addToCart } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames } from "@/utils";
+import { api } from "@/services/api";
 
 export default function ProductDetailsView() {
   const { id } = useParams();
@@ -95,8 +96,12 @@ export default function ProductDetailsView() {
   );
   const [visibleReviews, setVisibleReviews] = useState(6);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [customReviews, setCustomReviews] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [editingReviewId, setEditingReviewId] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
 
   useEffect(() => {
@@ -136,78 +141,96 @@ export default function ProductDetailsView() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4);
 
-  const seededReviews = useMemo(() => {
-    const reviewers = [
-      { name: "Alex Morgan", avatar: "https://i.pravatar.cc/80?img=12" },
-      { name: "Jordan Lee", avatar: "https://i.pravatar.cc/80?img=32" },
-      { name: "Casey Nguyen", avatar: "https://i.pravatar.cc/80?img=47" },
-      { name: "Riley Patel", avatar: "https://i.pravatar.cc/80?img=8" },
-      { name: "Taylor Brooks", avatar: "https://i.pravatar.cc/80?img=5" },
-      { name: "Maya Chen", avatar: "https://i.pravatar.cc/80?img=24" },
-      { name: "Noah Kim", avatar: "https://i.pravatar.cc/80?img=33" },
-      { name: "Liam Scott", avatar: "https://i.pravatar.cc/80?img=41" },
-    ];
-    const comments = [
-      `Great quality and exactly as described. Highly recommend this ${product.category.toLowerCase()} product.`,
-      "Build quality feels premium and delivery was fast.",
-      "Worth the price. I have been using it daily with no issues.",
-      "Looks even better in person and performs well.",
-      "Packaging was neat and product condition was perfect.",
-      "Really happy with this purchase. Will buy again.",
-      "Good value for money and reliable so far.",
-      "Comfortable to use and the finish is excellent.",
-    ];
-
-    return reviewers.map((reviewer, idx) => ({
-      id: `${product.id}-seed-${idx + 1}`,
-      productId: product.id,
-      author: reviewer.name,
-      avatar: reviewer.avatar,
-      rating: Math.max(4, Math.min(5, Math.round(product.rating))),
-      comment: comments[idx],
-      date: new Date(Date.now() - (idx + 2) * 86400000)
-        .toISOString()
-        .slice(0, 10),
-    }));
-  }, [product.id, product.category, product.rating]);
-
-  const productReviews = [...customReviews, ...seededReviews];
+  const productReviews = reviews;
   const visibleReviewItems = productReviews.slice(0, visibleReviews);
 
   useEffect(() => {
+    if (!product?.id) return;
     setVisibleReviews(6);
-    setCustomReviews([]);
     setIsReviewModalOpen(false);
     setReviewForm({ rating: 5, comment: "" });
-  }, [product.id]);
+    setEditingReviewId("");
+  }, [product?.id]);
 
-  const handleAddToCart = () => {
-    dispatch(
-      addToCart({
-        ...product,
-        quantity,
-        selectedColor,
-        selectedSize,
-      }),
-    );
-    toast.success(
-      `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
-      {
+  useEffect(() => {
+    if (!product?.id) return;
+    let mounted = true;
+
+    const loadReviews = async () => {
+      setReviewsLoading(true);
+      setReviewsError("");
+      try {
+        const response = await api.listProductReviews(product.id);
+        if (!mounted) return;
+        setReviews(
+          (response || []).map((review) => ({
+            id: review.id,
+            author: review.user?.name || "Anonymous",
+            avatar: review.user?.avatarUrl || "https://i.pravatar.cc/80?img=15",
+            rating: review.rating,
+            comment: review.comment || "",
+            date: review.createdAt,
+            userId: review.userId,
+          })),
+        );
+      } catch (error) {
+        if (!mounted) return;
+        setReviewsError(
+          error?.response?.data?.error?.message || "Failed to load reviews",
+        );
+      } finally {
+        if (mounted) {
+          setReviewsLoading(false);
+        }
+      }
+    };
+
+    loadReviews();
+
+    return () => {
+      mounted = false;
+    };
+  }, [product?.id]);
+
+  const handleAddToCart = async () => {
+    try {
+      await dispatch(
+        addToCart({
+          ...product,
+          quantity,
+          selectedColor,
+          selectedSize,
+        }),
+      ).unwrap();
+      toast.success(
+        `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
+        {
+          position: "bottom-right",
+        },
+      );
+    } catch (error) {
+      toast.error(error || "Failed to add to cart", {
         position: "bottom-right",
-      },
-    );
+      });
+    }
   };
 
-  const handleBuyNow = () => {
-    dispatch(
-      addToCart({
-        ...product,
-        quantity,
-        selectedColor,
-        selectedSize,
-      }),
-    );
-    navigate("/checkout");
+  const handleBuyNow = async () => {
+    try {
+      await dispatch(
+        addToCart({
+          ...product,
+          quantity,
+          selectedColor,
+          selectedSize,
+        }),
+      ).unwrap();
+      navigate("/checkout");
+    } catch (error) {
+      toast.error(error || "Failed to add to cart", {
+        position: "bottom-right",
+      });
+    }
   };
 
   const showGalleryControls = product.images.length > 1;
@@ -222,7 +245,7 @@ export default function ProductDetailsView() {
     setActiveImage((prev) => (prev + 1) % product.images.length);
   };
 
-  const submitReview = () => {
+  const submitReview = async () => {
     const comment = reviewForm.comment.trim();
     if (!comment) {
       toast.error("Please write your review before submitting", {
@@ -231,21 +254,64 @@ export default function ProductDetailsView() {
       return;
     }
 
-    const newReview = {
-      id: `${product.id}-custom-${Date.now()}`,
-      productId: product.id,
-      author: user?.name || "Guest User",
-      avatar: user?.avatar || "https://i.pravatar.cc/80?img=15",
-      rating: reviewForm.rating,
-      comment,
-      date: new Date().toISOString().slice(0, 10),
-    };
+    setSubmittingReview(true);
+    try {
+      if (editingReviewId) {
+        await api.updateMyReview(editingReviewId, {
+          rating: reviewForm.rating,
+          comment,
+        });
+        toast.success("Review updated", { position: "bottom-right" });
+      } else {
+        await api.createProductReview(product.id, {
+          rating: reviewForm.rating,
+          comment,
+        });
+        toast.success("Review submitted", { position: "bottom-right" });
+      }
 
-    setCustomReviews((prev) => [newReview, ...prev]);
-    setReviewForm({ rating: 5, comment: "" });
-    setIsReviewModalOpen(false);
-    setVisibleReviews((prev) => Math.max(prev, 6));
-    toast.success("Review submitted", { position: "bottom-right" });
+      const refreshed = await api.listProductReviews(product.id);
+      setReviews(
+        (refreshed || []).map((review) => ({
+          id: review.id,
+          author: review.user?.name || "Anonymous",
+          avatar: review.user?.avatarUrl || "https://i.pravatar.cc/80?img=15",
+          rating: review.rating,
+          comment: review.comment || "",
+          date: review.createdAt,
+          userId: review.userId,
+        })),
+      );
+
+      setReviewForm({ rating: 5, comment: "" });
+      setIsReviewModalOpen(false);
+      setEditingReviewId("");
+      setVisibleReviews((prev) => Math.max(prev, 6));
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message || "Failed to submit review",
+        {
+          position: "bottom-right",
+        },
+      );
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await api.deleteMyReview(reviewId);
+      setReviews((prev) => prev.filter((review) => review.id !== reviewId));
+      toast.success("Review deleted", { position: "bottom-right" });
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message || "Failed to delete review",
+        {
+          position: "bottom-right",
+        },
+      );
+    }
   };
 
   const currentProductUrl =
@@ -468,14 +534,22 @@ export default function ProductDetailsView() {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => {
-                dispatch(toggleWishlist(product));
-                toast.success(
-                  isWishlisted ? "Removed from wishlist" : "Added to wishlist",
-                  {
+              onClick={async () => {
+                try {
+                  await dispatch(toggleWishlist(product)).unwrap();
+                  toast.success(
+                    isWishlisted
+                      ? "Removed from wishlist"
+                      : "Added to wishlist",
+                    {
+                      position: "bottom-right",
+                    },
+                  );
+                } catch (error) {
+                  toast.error(error || "Failed to update wishlist", {
                     position: "bottom-right",
-                  },
-                );
+                  });
+                }
               }}
               className={classNames(
                 "shrink-0 px-3 py-2.5 sm:px-5 sm:py-3",
@@ -561,38 +635,84 @@ export default function ProductDetailsView() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsReviewModalOpen(true)}
+              onClick={() => {
+                setEditingReviewId("");
+                setReviewForm({ rating: 5, comment: "" });
+                setIsReviewModalOpen(true);
+              }}
             >
               Write a Review
             </Button>
           )}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {visibleReviewItems.map((review) => (
-            <article key={review.id} className="card p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={review.avatar}
-                    alt={review.author}
-                    className="h-9 w-9 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {review.author}
-                    </p>
-                    <p className="text-xs text-slate-400">{review.date}</p>
+        {reviewsLoading ? (
+          <div className="py-10 text-center text-sm text-slate-500">
+            Loading reviews...
+          </div>
+        ) : reviewsError ? (
+          <div className="py-10 text-center text-sm text-red-600">
+            {reviewsError}
+          </div>
+        ) : productReviews.length === 0 ? (
+          <div className="py-10 text-center text-sm text-slate-500">
+            No reviews yet.
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {visibleReviewItems.map((review) => {
+              const isMine = isAuthenticated && review.userId === user?.id;
+              return (
+                <article key={review.id} className="card p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={review.avatar}
+                        alt={review.author}
+                        className="h-9 w-9 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {review.author}
+                        </p>
+                        <p className="text-xs text-slate-400">{review.date}</p>
+                      </div>
+                    </div>
+                    <Rating value={review.rating} showValue={false} />
                   </div>
-                </div>
-                <Rating value={review.rating} showValue={false} />
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                {review.comment}
-              </p>
-            </article>
-          ))}
-        </div>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                    {review.comment}
+                  </p>
+                  {isMine && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingReviewId(review.id);
+                          setReviewForm({
+                            rating: review.rating,
+                            comment: review.comment,
+                          });
+                          setIsReviewModalOpen(true);
+                        }}
+                        className="text-primary-600 hover:text-primary-700 text-xs font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReview(review.id)}
+                        className="text-xs font-medium text-red-600 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         {visibleReviews < productReviews.length && (
           <div className="mt-5 flex justify-center">
@@ -625,7 +745,9 @@ export default function ProductDetailsView() {
             >
               Cancel
             </Button>
-            <Button onClick={submitReview}>Submit Review</Button>
+            <Button onClick={submitReview} loading={submittingReview}>
+              {editingReviewId ? "Update Review" : "Submit Review"}
+            </Button>
           </>
         }
       >

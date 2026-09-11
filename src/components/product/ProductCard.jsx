@@ -16,22 +16,34 @@ export default function ProductCard({ product }) {
   const isWishlisted = wishlist.some((i) => i.id === product.id);
   const outOfStock = product.stock === 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (outOfStock) return;
-    dispatch(addToCart(product));
-    toast.success(`${product.name} added to cart`, {
-      position: "bottom-right",
-    });
+    try {
+      await dispatch(addToCart(product)).unwrap();
+      toast.success(`${product.name} added to cart`, {
+        position: "bottom-right",
+      });
+    } catch (error) {
+      toast.error(error || "Failed to add to cart", {
+        position: "bottom-right",
+      });
+    }
   };
 
-  const handleWishlist = () => {
-    dispatch(toggleWishlist(product));
-    toast.success(
-      isWishlisted ? "Removed from wishlist" : "Added to wishlist",
-      {
+  const handleWishlist = async () => {
+    try {
+      await dispatch(toggleWishlist(product)).unwrap();
+      toast.success(
+        isWishlisted ? "Removed from wishlist" : "Added to wishlist",
+        {
+          position: "bottom-right",
+        },
+      );
+    } catch (error) {
+      toast.error(error || "Failed to update wishlist", {
         position: "bottom-right",
-      },
-    );
+      });
+    }
   };
 
   return (

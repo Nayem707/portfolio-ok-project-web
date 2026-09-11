@@ -1,19 +1,51 @@
+import { useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { CheckCircleIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ErrorState from "@/components/common/ErrorState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import OrderStatusTimeline from "@/components/order/OrderStatusTimeline";
-import { selectOrders } from "@/features/orders";
+import {
+  fetchMyOrderById,
+  selectCurrentOrder,
+  selectOrderDetailsLoading,
+  selectOrdersError,
+} from "@/features/orders";
 import { formatCurrency, formatDate, getDiscountedPrice } from "@/utils";
 
 export default function OrderDetailsView() {
+  const dispatch = useDispatch();
   const { id } = useParams();
   const location = useLocation();
-  const orders = useSelector(selectOrders);
-  const order = orders.find((o) => o.id === id);
+  const order = useSelector(selectCurrentOrder);
+  const loading = useSelector(selectOrderDetailsLoading);
+  const error = useSelector(selectOrdersError);
   const justPlaced = location.state?.justPlaced;
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchMyOrderById(id));
+    }
+  }, [dispatch, id]);
+
+  if (loading) {
+    return (
+      <LoadingSpinner className="py-16" label="Loading order details..." />
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Could not load order"
+        description={error}
+        onRetry={() => id && dispatch(fetchMyOrderById(id))}
+      />
+    );
+  }
 
   if (!order) {
     return (
@@ -54,7 +86,7 @@ export default function OrderDetailsView() {
             <ArrowLeftIcon className="h-4 w-4" /> Back to orders
           </Link>
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
-            Order {order.id}
+            Order {order.orderNumber || order.id}
           </h1>
           <p className="mt-0.5 text-sm text-slate-400">
             Placed on {formatDate(order.date)}
@@ -85,7 +117,7 @@ export default function OrderDetailsView() {
                 className="flex items-start gap-3 py-3 sm:items-center sm:gap-4"
               >
                 <img
-                  src={item.image}
+                  src={item.image || "https://placehold.co/88x88?text=Item"}
                   alt={item.name}
                   className="h-14 w-14 rounded-lg border border-slate-100 object-cover sm:h-16 sm:w-16"
                 />
@@ -142,9 +174,9 @@ export default function OrderDetailsView() {
             <h2 className="font-semibold text-slate-900">Customer</h2>
             <div className="mt-3 space-y-1 text-sm text-slate-600">
               <p className="font-medium text-slate-800">
-                {order.customer.name}
+                {order.customer?.name || "N/A"}
               </p>
-              <p>{order.customer.email}</p>
+              <p>{order.customer?.email || "N/A"}</p>
             </div>
           </div>
           <div className="card p-4 sm:p-6">
