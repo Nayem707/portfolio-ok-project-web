@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -8,10 +8,17 @@ import {
   EyeIcon,
   PencilSquareIcon,
   TrashIcon,
+  CubeIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  ArchiveBoxIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
+import StatCard from "@/components/common/StatCard";
 import Table from "@/components/common/Table";
+import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
@@ -19,8 +26,10 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { selectProducts, deleteProduct } from "@/features/products";
 import { selectCategories } from "@/features/categories";
 import { formatCurrency, formatDate } from "@/utils";
+import { PRODUCT_STATUS } from "@/constants";
 
 const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 export default function AdminProductListView() {
   const products = useSelector(selectProducts);
@@ -30,6 +39,9 @@ export default function AdminProductListView() {
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
 
   const filtered = useMemo(
@@ -37,10 +49,46 @@ export default function AdminProductListView() {
       products.filter(
         (p) =>
           p.name.toLowerCase().includes(search.toLowerCase()) &&
-          (!category || p.category === category),
+          (!category || p.category === category) &&
+          (!status || p.status === status),
       ),
-    [products, search, category],
+    [products, search, category, status],
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedProducts = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
+
+  const overview = useMemo(() => {
+    const active = products.filter(
+      (p) => p.status === PRODUCT_STATUS.ACTIVE,
+    ).length;
+    const draft = products.filter(
+      (p) => p.status === PRODUCT_STATUS.DRAFT,
+    ).length;
+    const archived = products.filter(
+      (p) => p.status === PRODUCT_STATUS.ARCHIVED,
+    ).length;
+    const outOfStock = products.filter((p) => p.stock === 0).length;
+
+    return {
+      total: products.length,
+      active,
+      draft,
+      archived,
+      outOfStock,
+    };
+  }, [products]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, category, status, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const columns = [
     {
@@ -85,7 +133,7 @@ export default function AdminProductListView() {
                 : "text-slate-600"
           }
         >
-          {p.stock}
+          {p.stock === 0 ? "Out of stock" : p.stock}
         </span>
       ),
     },
@@ -193,6 +241,39 @@ export default function AdminProductListView() {
         }
       />
 
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
+        <StatCard
+          label="Total Products"
+          value={overview.total}
+          icon={CubeIcon}
+          tone="blue"
+        />
+        <StatCard
+          label="Active"
+          value={overview.active}
+          icon={CheckCircleIcon}
+          tone="green"
+        />
+        <StatCard
+          label="Draft"
+          value={overview.draft}
+          icon={DocumentTextIcon}
+          tone="yellow"
+        />
+        <StatCard
+          label="Archived"
+          value={overview.archived}
+          icon={ArchiveBoxIcon}
+          tone="purple"
+        />
+        <StatCard
+          label="Out of Stock"
+          value={overview.outOfStock}
+          icon={ExclamationTriangleIcon}
+          tone="orange"
+        />
+      </div>
+
       <div className="card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -215,12 +296,34 @@ export default function AdminProductListView() {
               ))}
             </Select>
           </div>
+          <div className="sm:w-44">
+            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">All status</option>
+              {Object.values(PRODUCT_STATUS).map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="sm:w-36">
+            <Select
+              value={String(pageSize)}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  Show {size}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
       </div>
 
       <Table
         columns={columns}
-        data={filtered}
+        data={pagedProducts}
         rowKey="id"
         renderCard={renderCard}
         emptyState={
@@ -230,6 +333,8 @@ export default function AdminProductListView() {
           />
         }
       />
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
       <ConfirmDialog
         open={!!toDelete}
