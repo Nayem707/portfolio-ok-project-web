@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -13,16 +12,20 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { useEffect, useMemo, useState } from "react";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { StarIcon } from "@heroicons/react/24/solid";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import Rating from "@/components/common/Rating";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import Modal from "@/components/common/Modal";
 import QuantitySelector from "@/components/common/QuantitySelector";
 import SectionHeader from "@/components/common/SectionHeader";
 import ProductGrid from "@/components/product/ProductGrid";
 import EmptyState from "@/components/common/EmptyState";
+import useAuth from "@/hooks/useAuth";
 import { selectProducts } from "@/features/products";
 import { addToCart } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
@@ -33,12 +36,17 @@ export default function ProductDetailsView() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { user, isAuthenticated } = useAuth();
   const products = useSelector(selectProducts);
   const wishlist = useSelector(selectWishlistItems);
 
   const product = products.find((p) => p.id === id);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [visibleReviews, setVisibleReviews] = useState(6);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [customReviews, setCustomReviews] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
 
   useEffect(() => {
@@ -72,6 +80,51 @@ export default function ProductDetailsView() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4);
 
+  const seededReviews = useMemo(() => {
+    const reviewers = [
+      { name: "Alex Morgan", avatar: "https://i.pravatar.cc/80?img=12" },
+      { name: "Jordan Lee", avatar: "https://i.pravatar.cc/80?img=32" },
+      { name: "Casey Nguyen", avatar: "https://i.pravatar.cc/80?img=47" },
+      { name: "Riley Patel", avatar: "https://i.pravatar.cc/80?img=8" },
+      { name: "Taylor Brooks", avatar: "https://i.pravatar.cc/80?img=5" },
+      { name: "Maya Chen", avatar: "https://i.pravatar.cc/80?img=24" },
+      { name: "Noah Kim", avatar: "https://i.pravatar.cc/80?img=33" },
+      { name: "Liam Scott", avatar: "https://i.pravatar.cc/80?img=41" },
+    ];
+    const comments = [
+      `Great quality and exactly as described. Highly recommend this ${product.category.toLowerCase()} product.`,
+      "Build quality feels premium and delivery was fast.",
+      "Worth the price. I have been using it daily with no issues.",
+      "Looks even better in person and performs well.",
+      "Packaging was neat and product condition was perfect.",
+      "Really happy with this purchase. Will buy again.",
+      "Good value for money and reliable so far.",
+      "Comfortable to use and the finish is excellent.",
+    ];
+
+    return reviewers.map((reviewer, idx) => ({
+      id: `${product.id}-seed-${idx + 1}`,
+      productId: product.id,
+      author: reviewer.name,
+      avatar: reviewer.avatar,
+      rating: Math.max(4, Math.min(5, Math.round(product.rating))),
+      comment: comments[idx],
+      date: new Date(Date.now() - (idx + 2) * 86400000)
+        .toISOString()
+        .slice(0, 10),
+    }));
+  }, [product.id, product.category, product.rating]);
+
+  const productReviews = [...customReviews, ...seededReviews];
+  const visibleReviewItems = productReviews.slice(0, visibleReviews);
+
+  useEffect(() => {
+    setVisibleReviews(6);
+    setCustomReviews([]);
+    setIsReviewModalOpen(false);
+    setReviewForm({ rating: 5, comment: "" });
+  }, [product.id]);
+
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product, quantity }));
     toast.success(`${product.name} added to cart`, {
@@ -94,6 +147,32 @@ export default function ProductDetailsView() {
 
   const goToNextImage = () => {
     setActiveImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const submitReview = () => {
+    const comment = reviewForm.comment.trim();
+    if (!comment) {
+      toast.error("Please write your review before submitting", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    const newReview = {
+      id: `${product.id}-custom-${Date.now()}`,
+      productId: product.id,
+      author: user?.name || "Guest User",
+      avatar: user?.avatar || "https://i.pravatar.cc/80?img=15",
+      rating: reviewForm.rating,
+      comment,
+      date: new Date().toISOString().slice(0, 10),
+    };
+
+    setCustomReviews((prev) => [newReview, ...prev]);
+    setReviewForm({ rating: 5, comment: "" });
+    setIsReviewModalOpen(false);
+    setVisibleReviews((prev) => Math.max(prev, 6));
+    toast.success("Review submitted", { position: "bottom-right" });
   };
 
   const currentProductUrl =
@@ -341,12 +420,131 @@ export default function ProductDetailsView() {
       </div>
 
       {/* Related products */}
+      <section className="mt-12">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <SectionHeader
+            title="Customer Reviews"
+            subtitle={`Real feedback for ${product.name}`}
+          />
+          {isAuthenticated && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsReviewModalOpen(true)}
+            >
+              Write a Review
+            </Button>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {visibleReviewItems.map((review) => (
+            <article key={review.id} className="card p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={review.avatar}
+                    alt={review.author}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {review.author}
+                    </p>
+                    <p className="text-xs text-slate-400">{review.date}</p>
+                  </div>
+                </div>
+                <Rating value={review.rating} showValue={false} />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {review.comment}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        {visibleReviews < productReviews.length && (
+          <div className="mt-5 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setVisibleReviews((prev) => prev + 3)}
+            >
+              Show More
+            </Button>
+          </div>
+        )}
+      </section>
+
       {related.length > 0 && (
         <section className="mt-14">
           <SectionHeader title="Related Products" />
           <ProductGrid products={related} />
         </section>
       )}
+
+      <Modal
+        open={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        title="Write a Review"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsReviewModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitReview}>Submit Review</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-medium text-slate-500">Product</p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">
+              {product.name}
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Rating</p>
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewForm((prev) => ({ ...prev, rating: star }))}
+                  className="rounded p-1"
+                  aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                >
+                  <StarIcon
+                    className={classNames(
+                      "h-6 w-6 transition",
+                      star <= reviewForm.rating ? "text-amber-400" : "text-slate-200",
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="review-comment"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              Review
+            </label>
+            <textarea
+              id="review-comment"
+              rows={4}
+              value={reviewForm.comment}
+              onChange={(e) =>
+                setReviewForm((prev) => ({ ...prev, comment: e.target.value }))
+              }
+              placeholder="Share your experience with this product"
+              className="input-base resize-none"
+            />
+          </div>
+        </div>
+      </Modal>
 
       <a
         href={whatsappHref}
