@@ -215,7 +215,7 @@ export default function ProductsView() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* Desktop filters */}
-        <aside className="hidden h-fit lg:sticky lg:top-24 lg:block">
+        <aside className="hidden h-fit lg:sticky lg:top-32 lg:block">
           <div className="card p-5">{FilterPanel}</div>
         </aside>
 
