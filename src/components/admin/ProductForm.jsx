@@ -20,7 +20,8 @@ const empty = {
   status: PRODUCT_STATUS.ACTIVE,
 };
 
-const toCsv = (value) => (Array.isArray(value) ? value.join(", ") : value || "");
+const toCsv = (value) =>
+  Array.isArray(value) ? value.join(", ") : value || "";
 
 export default function ProductForm({
   initial,
