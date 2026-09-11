@@ -7,6 +7,7 @@ export const ADMIN_PATHS = {
   PRODUCT_EDIT: "products/:id/edit",
   CATEGORIES: "categories",
   ATTRIBUTES: "product-attributes",
+  HOME_PAGE_MANAGEMENT: "home-page-management",
   ORDERS: "orders",
   ORDER_DETAILS: "orders/:id",
   USERS: "users",

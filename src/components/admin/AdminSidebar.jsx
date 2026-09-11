@@ -15,14 +15,19 @@ import { classNames } from "@/utils";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: Squares2X2Icon, end: true },
+  { to: "/admin/orders", label: "Orders", icon: ShoppingCartIcon },
   {
     to: "/admin/product-attributes",
     label: "Attributes",
     icon: TagIcon,
   },
   { to: "/admin/products", label: "Products", icon: CubeIcon },
-  { to: "/admin/orders", label: "Orders", icon: ShoppingCartIcon },
   { to: "/admin/users", label: "Users", icon: UsersIcon },
+  {
+    to: "/admin/home-page-management",
+    label: "Page",
+    icon: CubeIcon,
+  },
   { to: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
 ];
 

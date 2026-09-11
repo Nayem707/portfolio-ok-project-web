@@ -8,6 +8,7 @@ import productReducer from "@/features/products/products.slice";
 import categoryReducer from "@/features/categories/categories.slice";
 import colorReducer from "@/features/colors/colors.slice";
 import sizeReducer from "@/features/sizes/sizes.slice";
+import homePageReducer from "@/features/homepage/homepage.slice";
 import orderReducer from "@/features/orders/orders.slice";
 
 export const store = configureStore({
@@ -20,6 +21,7 @@ export const store = configureStore({
     category: categoryReducer,
     color: colorReducer,
     size: sizeReducer,
+    homePage: homePageReducer,
     order: orderReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
