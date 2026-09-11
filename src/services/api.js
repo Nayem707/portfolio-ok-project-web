@@ -187,8 +187,8 @@ export const api = {
     return getData(response);
   },
 
-  getCategories: async () => {
-    const response = await axiosInstance.get("/categories");
+  getCategories: async (params = {}) => {
+    const response = await axiosInstance.get("/categories", { params });
     return getData(response);
   },
 
@@ -197,13 +197,69 @@ export const api = {
     return getData(response);
   },
 
+  createCategory: async (payload) => {
+    const response = await axiosInstance.post("/categories", payload);
+    return getData(response);
+  },
+
+  updateCategory: async (categoryId, payload) => {
+    const response = await axiosInstance.patch(
+      `/categories/${categoryId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deleteCategory: async (categoryId) => {
+    const response = await axiosInstance.delete(`/categories/${categoryId}`);
+    return getData(response);
+  },
+
   getColors: async () => {
     const response = await axiosInstance.get("/attributes/colors");
     return getData(response);
   },
 
+  createColor: async (payload) => {
+    const response = await axiosInstance.post("/attributes/colors", payload);
+    return getData(response);
+  },
+
+  updateColor: async (colorId, payload) => {
+    const response = await axiosInstance.patch(
+      `/attributes/colors/${colorId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deleteColor: async (colorId) => {
+    const response = await axiosInstance.delete(
+      `/attributes/colors/${colorId}`,
+    );
+    return getData(response);
+  },
+
   getSizes: async () => {
     const response = await axiosInstance.get("/attributes/sizes");
+    return getData(response);
+  },
+
+  createSize: async (payload) => {
+    const response = await axiosInstance.post("/attributes/sizes", payload);
+    return getData(response);
+  },
+
+  updateSize: async (sizeId, payload) => {
+    const response = await axiosInstance.patch(
+      `/attributes/sizes/${sizeId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deleteSize: async (sizeId) => {
+    const response = await axiosInstance.delete(`/attributes/sizes/${sizeId}`);
     return getData(response);
   },
 

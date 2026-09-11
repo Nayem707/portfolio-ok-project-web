@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,7 +23,7 @@ import { logout, selectAuth } from "@/features/auth";
 import { resetCartState } from "@/features/cart";
 import { resetWishlistState } from "@/features/wishlist";
 import { clearMyOrderState } from "@/features/orders";
-import { selectCategories } from "@/features/categories";
+import { fetchCategories, selectCategories } from "@/features/categories";
 import { classNames } from "@/utils";
 import toast from "react-hot-toast";
 
@@ -41,6 +41,12 @@ export default function Navbar() {
   const wishlistCount = useSelector(selectWishlistCount);
   const { user, isAuthenticated } = useSelector(selectAuth);
   const categories = useSelector(selectCategories);
+
+  useEffect(() => {
+    if (!categories.length) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
 
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem("refresh_token");
@@ -204,15 +210,18 @@ export default function Navbar() {
             Categories
           </NavLink>
           <span className="h-4 w-px bg-slate-200" />
-          {categories.slice(0, 6).map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/products?category=${encodeURIComponent(cat.name)}`}
-              className="hover:text-primary-600 text-sm font-medium text-slate-500 transition"
-            >
-              {cat.name}
-            </Link>
-          ))}
+          {categories.slice(0, 8).map((cat) => {
+            const categoryKey = cat.slug || cat.id;
+            return (
+              <Link
+                key={cat.id}
+                to={`/products?category=${encodeURIComponent(categoryKey)}`}
+                className="hover:text-primary-600 text-sm font-medium text-slate-500 transition"
+              >
+                {cat.name}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </header>

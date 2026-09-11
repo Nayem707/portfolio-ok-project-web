@@ -24,9 +24,17 @@ import {
   selectCategories,
   selectCategoriesLoading,
 } from "@/features/categories";
+import { fetchColors, selectColors } from "@/features/colors";
+import { fetchSizes, selectSizes } from "@/features/sizes";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
 import { classNames } from "@/utils";
 import useDebounce from "@/hooks/useDebounce";
+
+const parseMultiParam = (value) =>
+  (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 export default function ProductsView() {
   const dispatch = useDispatch();
@@ -36,6 +44,8 @@ export default function ProductsView() {
   const productsMeta = useSelector(selectProductListMeta);
   const categories = useSelector(selectCategories);
   const categoriesLoading = useSelector(selectCategoriesLoading);
+  const colors = useSelector(selectColors);
+  const sizes = useSelector(selectSizes);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -43,6 +53,12 @@ export default function ProductsView() {
   const [sort, setSort] = useState(searchParams.get("sort") || "featured");
   const [maxPrice, setMaxPrice] = useState(
     Number(searchParams.get("maxPrice")) || 300,
+  );
+  const [selectedColors, setSelectedColors] = useState(
+    parseMultiParam(searchParams.get("color")),
+  );
+  const [selectedSizes, setSelectedSizes] = useState(
+    parseMultiParam(searchParams.get("size")),
   );
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [showFilters, setShowFilters] = useState(false);
@@ -53,11 +69,15 @@ export default function ProductsView() {
     setCategory(searchParams.get("category") || "");
     setSort(searchParams.get("sort") || "featured");
     setMaxPrice(Number(searchParams.get("maxPrice")) || 300);
+    setSelectedColors(parseMultiParam(searchParams.get("color")));
+    setSelectedSizes(parseMultiParam(searchParams.get("size")));
     setPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
   useEffect(() => {
     dispatch(fetchCategories());
+    dispatch(fetchColors());
+    dispatch(fetchSizes());
   }, [dispatch]);
 
   useEffect(() => {
@@ -68,10 +88,21 @@ export default function ProductsView() {
         search: debouncedSearch || undefined,
         category: category || undefined,
         maxPrice: maxPrice || undefined,
+        color: selectedColors.length ? selectedColors.join(",") : undefined,
+        size: selectedSizes.length ? selectedSizes.join(",") : undefined,
         sort: sort || undefined,
       }),
     );
-  }, [dispatch, page, debouncedSearch, category, maxPrice, sort]);
+  }, [
+    dispatch,
+    page,
+    debouncedSearch,
+    category,
+    maxPrice,
+    selectedColors,
+    selectedSizes,
+    sort,
+  ]);
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
@@ -85,9 +116,33 @@ export default function ProductsView() {
     setSearchParams(next);
   };
 
+  const updateMultiParam = (key, values) => {
+    const next = new URLSearchParams(searchParams);
+    if (values.length) next.set(key, values.join(","));
+    else next.delete(key);
+    next.set("page", "1");
+    setSearchParams(next);
+  };
+
+  const toggleColor = (value) => {
+    const nextValues = selectedColors.includes(value)
+      ? selectedColors.filter((item) => item !== value)
+      : [...selectedColors, value];
+    updateMultiParam("color", nextValues);
+  };
+
+  const toggleSize = (value) => {
+    const nextValues = selectedSizes.includes(value)
+      ? selectedSizes.filter((item) => item !== value)
+      : [...selectedSizes, value];
+    updateMultiParam("size", nextValues);
+  };
+
   const clearFilters = () => {
     setMaxPrice(300);
     setSearch("");
+    setSelectedColors([]);
+    setSelectedSizes([]);
     setSearchParams({ page: "1", sort: "featured" });
   };
 
@@ -110,6 +165,8 @@ export default function ProductsView() {
         search: debouncedSearch || undefined,
         category: category || undefined,
         maxPrice: maxPrice || undefined,
+        color: selectedColors.length ? selectedColors.join(",") : undefined,
+        size: selectedSizes.length ? selectedSizes.join(",") : undefined,
         sort: sort || undefined,
       }),
     );
@@ -150,22 +207,72 @@ export default function ProductsView() {
             All Products
             <span className="text-xs text-slate-400">{totalItems}</span>
           </button>
-          {categories.map((cat) => {
-            const count = cat._count?.products ?? 0;
+          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+            {categories.map((cat) => {
+              const count = cat._count?.products ?? 0;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => updateParam("category", cat.slug || cat.id)}
+                  className={classNames(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
+                    category === (cat.slug || cat.id)
+                      ? "bg-primary-50 text-primary-700 font-medium"
+                      : "text-slate-600 hover:bg-slate-50",
+                  )}
+                >
+                  {cat.name}
+                  <span className="text-xs text-slate-400">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-slate-800">Colors</h3>
+        <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+          {colors.map((color) => {
+            const optionKey = color.id || color.name;
+            const optionValue = color.id || color.name;
             return (
-              <button
-                key={cat.id}
-                onClick={() => updateParam("category", cat.slug || cat.id)}
-                className={classNames(
-                  "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
-                  category === (cat.slug || cat.id)
-                    ? "bg-primary-50 text-primary-700 font-medium"
-                    : "text-slate-600 hover:bg-slate-50",
-                )}
+              <label
+                key={optionKey}
+                className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
               >
-                {cat.name}
-                <span className="text-xs text-slate-400">{count}</span>
-              </button>
+                <input
+                  type="checkbox"
+                  checked={selectedColors.includes(optionValue)}
+                  onChange={() => toggleColor(optionValue)}
+                  className="accent-primary-600 h-4 w-4 rounded border-slate-300"
+                />
+                <span>{color.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-slate-800">Sizes</h3>
+        <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+          {sizes.map((size) => {
+            const optionKey = size.id || size.name;
+            const optionValue = size.id || size.name;
+            return (
+              <label
+                key={optionKey}
+                className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSizes.includes(optionValue)}
+                  onChange={() => toggleSize(optionValue)}
+                  className="accent-primary-600 h-4 w-4 rounded border-slate-300"
+                />
+                <span>{size.name}</span>
+              </label>
             );
           })}
         </div>
@@ -237,8 +344,8 @@ export default function ProductsView() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* Desktop filters */}
-        <aside className="hidden h-fit lg:sticky lg:top-32 lg:block">
-          <div className="card p-5">{FilterPanel}</div>
+        <aside className="hidden lg:block">
+          <div className="card sticky top-32 min-h-112 p-5">{FilterPanel}</div>
         </aside>
 
         {/* Mobile filter drawer */}

@@ -16,12 +16,14 @@ import { classNames } from "@/utils";
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: Squares2X2Icon, end: true },
   { to: "/admin/orders", label: "Orders", icon: ShoppingCartIcon },
+  { to: "/admin/categories", label: "Categories", icon: TagIcon },
+  { to: "/admin/colors", label: "Colors", icon: TagIcon },
+  { to: "/admin/sizes", label: "Sizes", icon: TagIcon },
   {
-    to: "/admin/product-attributes",
-    label: "Attributes",
-    icon: TagIcon,
+    to: "/admin/products",
+    label: "Products",
+    icon: CubeIcon,
   },
-  { to: "/admin/products", label: "Products", icon: CubeIcon },
   { to: "/admin/users", label: "Users", icon: UsersIcon },
   {
     to: "/admin/home-page-management",

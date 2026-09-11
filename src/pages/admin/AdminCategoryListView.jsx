@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
+  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
@@ -14,19 +15,28 @@ import Select from "@/components/common/Select";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import {
-  selectCategories,
-  addCategory,
-  updateCategory,
+  createCategory,
   deleteCategory,
+  fetchCategories,
+  selectCategories,
+  selectCategoriesLoading,
+  toggleCategoryStatus,
+  updateCategory,
 } from "@/features/categories";
-import { selectProducts } from "@/features/products";
 import { formatDate } from "@/utils";
 
-const emptyForm = { name: "", description: "", image: "", status: "Active" };
+const emptyForm = { name: "", description: "", image: "", status: "ACTIVE" };
+
+const statusLabel = (status) => (status === "INACTIVE" ? "Inactive" : "Active");
+const badgeColor = (status) => (status === "INACTIVE" ? "gray" : "green");
 
 export default function AdminCategoryListView() {
   const categories = useSelector(selectCategories);
-  const products = useSelector(selectProducts);
+  const categoriesLoading = useSelector(selectCategoriesLoading);
+  const categoriesError = useSelector((state) => state.category.error);
+  const mutationLoading = useSelector(
+    (state) => state.category.mutationLoading,
+  );
   const dispatch = useDispatch();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -35,7 +45,10 @@ export default function AdminCategoryListView() {
   const [toDelete, setToDelete] = useState(null);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
-  const count = (name) => products.filter((p) => p.category === name).length;
+
+  useEffect(() => {
+    dispatch(fetchCategories({ all: true }));
+  }, [dispatch]);
 
   const openAdd = () => {
     setEditing(null);
@@ -49,19 +62,53 @@ export default function AdminCategoryListView() {
     setModalOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!form.name.trim()) {
       toast.error("Category name is required");
       return;
     }
-    if (editing) {
-      dispatch(updateCategory({ id: editing, ...form }));
-      toast.success("Category updated");
-    } else {
-      dispatch(addCategory(form));
-      toast.success("Category created");
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description?.trim() || undefined,
+      image: form.image?.trim() || undefined,
+      status: form.status,
+    };
+
+    try {
+      if (editing) {
+        await dispatch(updateCategory({ id: editing, payload })).unwrap();
+        toast.success("Category updated");
+      } else {
+        await dispatch(createCategory(payload)).unwrap();
+        toast.success("Category created");
+      }
+      setModalOpen(false);
+    } catch (error) {
+      toast.error(error || "Failed to save category");
     }
-    setModalOpen(false);
+  };
+
+  const onToggleStatus = async (cat) => {
+    try {
+      await dispatch(toggleCategoryStatus(cat)).unwrap();
+      toast.success(
+        `Category is now ${statusLabel(cat.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")}`,
+      );
+    } catch (error) {
+      toast.error(error || "Failed to toggle category status");
+    }
+  };
+
+  const onDelete = async () => {
+    if (!toDelete) return;
+    try {
+      await dispatch(deleteCategory(toDelete.id)).unwrap();
+      toast.success("Category deleted");
+      setToDelete(null);
+    } catch (error) {
+      toast.error(error || "Failed to delete category");
+    }
   };
 
   return (
@@ -76,58 +123,77 @@ export default function AdminCategoryListView() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((cat) => (
-          <div key={cat.id} className="card overflow-hidden">
-            <div className="relative h-32 bg-slate-100">
-              {cat.image ? (
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-slate-300">
-                  No image
+      {categoriesError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {categoriesError}
+        </div>
+      )}
+
+      {categoriesLoading ? (
+        <div className="card p-6 text-sm text-slate-500">
+          Loading categories...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => (
+            <div key={cat.id} className="card overflow-hidden">
+              <div className="relative h-32 bg-slate-100">
+                {cat.image ? (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-slate-300">
+                    No image
+                  </div>
+                )}
+                <div className="absolute top-3 right-3">
+                  <Badge color={badgeColor(cat.status)}>
+                    {statusLabel(cat.status)}
+                  </Badge>
                 </div>
-              )}
-              <div className="absolute top-3 right-3">
-                <Badge color={cat.status === "Active" ? "green" : "gray"}>
-                  {cat.status}
-                </Badge>
+              </div>
+              <div className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold text-slate-800">{cat.name}</h3>
+                  <span className="text-xs text-slate-400">
+                    {cat._count?.products ?? 0} products
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                  {cat.description || "No description"}
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  Created {formatDate(cat.createdAt)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1 border-t border-slate-100 pt-3">
+                  <button
+                    onClick={() => openEdit(cat)}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  >
+                    <PencilSquareIcon className="h-4 w-4" /> Edit
+                  </button>
+                  <button
+                    onClick={() => onToggleStatus(cat)}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50"
+                  >
+                    <ArrowsRightLeftIcon className="h-4 w-4" />
+                    {cat.status === "ACTIVE" ? "Set Inactive" : "Set Active"}
+                  </button>
+                  <button
+                    onClick={() => setToDelete(cat)}
+                    className="ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
+                  >
+                    <TrashIcon className="h-4 w-4" /> Delete
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-800">{cat.name}</h3>
-                <span className="text-xs text-slate-400">
-                  {count(cat.name)} products
-                </span>
-              </div>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                {cat.description}
-              </p>
-              <p className="mt-2 text-xs text-slate-400">
-                Created {formatDate(cat.createdAt)}
-              </p>
-              <div className="mt-3 flex gap-1 border-t border-slate-100 pt-3">
-                <button
-                  onClick={() => openEdit(cat)}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
-                >
-                  <PencilSquareIcon className="h-4 w-4" /> Edit
-                </button>
-                <button
-                  onClick={() => setToDelete(cat)}
-                  className="ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
-                >
-                  <TrashIcon className="h-4 w-4" /> Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <Modal
         open={modalOpen}
@@ -138,7 +204,9 @@ export default function AdminCategoryListView() {
             <Button variant="outline" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={save}>Save category</Button>
+            <Button onClick={save} loading={mutationLoading}>
+              Save category
+            </Button>
           </>
         }
       >
@@ -166,8 +234,8 @@ export default function AdminCategoryListView() {
             placeholder="https://…"
           />
           <Select label="Status" value={form.status} onChange={set("status")}>
-            <option>Active</option>
-            <option>Inactive</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
           </Select>
         </div>
       </Modal>
@@ -175,11 +243,7 @@ export default function AdminCategoryListView() {
       <ConfirmDialog
         open={!!toDelete}
         onClose={() => setToDelete(null)}
-        onConfirm={() => {
-          dispatch(deleteCategory(toDelete.id));
-          toast.success("Category deleted");
-          setToDelete(null);
-        }}
+        onConfirm={onDelete}
         title="Delete category?"
         message={`"${toDelete?.name}" will be permanently removed.`}
         confirmText="Delete"

@@ -1,57 +1,5 @@
-import { createAsyncThunk, createSlice, nanoid } from "@reduxjs/toolkit";
-import { slugify } from "@/utils";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
-
-const seedSizes = [
-  {
-    id: "size-xs",
-    name: "XS",
-    slug: "xs",
-    code: "XS",
-    status: "Active",
-    createdAt: "2025-11-02",
-  },
-  {
-    id: "size-s",
-    name: "S",
-    slug: "s",
-    code: "S",
-    status: "Active",
-    createdAt: "2025-11-02",
-  },
-  {
-    id: "size-m",
-    name: "M",
-    slug: "m",
-    code: "M",
-    status: "Active",
-    createdAt: "2025-11-03",
-  },
-  {
-    id: "size-l",
-    name: "L",
-    slug: "l",
-    code: "L",
-    status: "Active",
-    createdAt: "2025-11-04",
-  },
-  {
-    id: "size-xl",
-    name: "XL",
-    slug: "xl",
-    code: "XL",
-    status: "Active",
-    createdAt: "2025-11-05",
-  },
-  {
-    id: "size-standard",
-    name: "Standard",
-    slug: "standard",
-    code: "Standard",
-    status: "Active",
-    createdAt: "2025-11-06",
-  },
-];
 
 export const fetchSizes = createAsyncThunk(
   "size/fetchSizes",
@@ -66,43 +14,57 @@ export const fetchSizes = createAsyncThunk(
   },
 );
 
+export const createSize = createAsyncThunk(
+  "size/createSize",
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await api.createSize(payload);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to create size",
+      );
+    }
+  },
+);
+
+export const updateSize = createAsyncThunk(
+  "size/updateSize",
+  async ({ id, payload }, { rejectWithValue }) => {
+    try {
+      return await api.updateSize(id, payload);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to update size",
+      );
+    }
+  },
+);
+
+export const deleteSize = createAsyncThunk(
+  "size/deleteSize",
+  async (id, { rejectWithValue }) => {
+    try {
+      await api.deleteSize(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to delete size",
+      );
+    }
+  },
+);
+
 const initialState = {
-  items: seedSizes,
+  items: [],
   loading: false,
+  mutationLoading: false,
   error: null,
 };
 
 const sizeSlice = createSlice({
   name: "size",
   initialState,
-  reducers: {
-    addSize: {
-      reducer(state, action) {
-        state.items.unshift(action.payload);
-      },
-      prepare(data) {
-        return {
-          payload: {
-            id: nanoid(),
-            slug: slugify(data.name || ""),
-            status: "Active",
-            createdAt: new Date().toISOString().slice(0, 10),
-            code: data.name || "",
-            ...data,
-          },
-        };
-      },
-    },
-    updateSize(state, action) {
-      const index = state.items.findIndex((s) => s.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = { ...state.items[index], ...action.payload };
-      }
-    },
-    deleteSize(state, action) {
-      state.items = state.items.filter((s) => s.id !== action.payload);
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchSizes.pending, (state) => {
@@ -117,9 +79,48 @@ const sizeSlice = createSlice({
       .addCase(fetchSizes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to load sizes";
+      })
+      .addCase(createSize.pending, (state) => {
+        state.mutationLoading = true;
+        state.error = null;
+      })
+      .addCase(createSize.fulfilled, (state, action) => {
+        state.mutationLoading = false;
+        state.items.unshift(action.payload);
+      })
+      .addCase(createSize.rejected, (state, action) => {
+        state.mutationLoading = false;
+        state.error = action.payload || "Failed to create size";
+      })
+      .addCase(updateSize.pending, (state) => {
+        state.mutationLoading = true;
+        state.error = null;
+      })
+      .addCase(updateSize.fulfilled, (state, action) => {
+        state.mutationLoading = false;
+        const index = state.items.findIndex((s) => s.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(updateSize.rejected, (state, action) => {
+        state.mutationLoading = false;
+        state.error = action.payload || "Failed to update size";
+      })
+      .addCase(deleteSize.pending, (state) => {
+        state.mutationLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteSize.fulfilled, (state, action) => {
+        state.mutationLoading = false;
+        state.items = state.items.filter((s) => s.id !== action.payload);
+      })
+      .addCase(deleteSize.rejected, (state, action) => {
+        state.mutationLoading = false;
+        state.error = action.payload || "Failed to delete size";
       });
   },
 });
 
-export const { addSize, updateSize, deleteSize } = sizeSlice.actions;
 export default sizeSlice.reducer;
+export const addSize = createSize;
