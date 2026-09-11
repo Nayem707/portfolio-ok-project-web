@@ -185,7 +185,7 @@ export default function ProductDetailsView() {
               leftIcon={ShoppingBagIcon}
               onClick={handleAddToCart}
               disabled={outOfStock}
-              className="min-w-0 justify-center whitespace-nowrap px-4 py-2.5 text-sm sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
+              className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
             >
               Add to Cart
             </Button>
@@ -195,7 +195,7 @@ export default function ProductDetailsView() {
               leftIcon={BoltIcon}
               onClick={handleBuyNow}
               disabled={outOfStock}
-              className="min-w-0 justify-center whitespace-nowrap px-4 py-2.5 text-sm sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
+              className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
             >
               Buy Now
             </Button>
