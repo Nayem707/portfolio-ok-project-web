@@ -79,7 +79,7 @@ const HeroSection = ({ slides = [] }) => {
       />
 
       {/* Overlay */}
-      <div className="absolute inset-0" />
+      <div className="absolute inset-0 bg-black/50" />
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-90 max-w-7xl items-center px-4 sm:min-h-107.5 sm:px-6 lg:min-h-137.5">
@@ -88,11 +88,11 @@ const HeroSection = ({ slides = [] }) => {
             {slide.subtitle}
           </p>
 
-          <h1 className="text-2xl leading-tight font-bold sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="text-2xl leading-tight font-bold text-white sm:text-4xl md:text-5xl lg:text-6xl">
             {slide.title}
           </h1>
 
-          <p className="mt-3 max-w-sm text-sm text-gray-500 sm:mt-4 sm:max-w-md sm:text-base md:mt-5 md:max-w-lg md:text-lg">
+          <p className="mt-3 max-w-sm text-sm text-gray-200 sm:mt-4 sm:max-w-md sm:text-base md:mt-5 md:max-w-lg md:text-lg">
             {slide.description}
           </p>
 
