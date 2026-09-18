@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -24,7 +25,7 @@ import StatCard from "@/components/common/StatCard";
 import Badge from "@/components/common/Badge";
 import Avatar from "@/components/common/Avatar";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
-import { selectOrders } from "@/features/orders";
+import { fetchAdminOrders, selectOrders } from "@/features/orders";
 import { selectProducts } from "@/features/products";
 import { users } from "@/data/users";
 import { salesByMonth, topProducts } from "@/data/orders";
@@ -32,8 +33,13 @@ import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
 export default function AdminDashboardView() {
+  const dispatch = useDispatch();
   const orders = useSelector(selectOrders);
   const products = useSelector(selectProducts);
+
+  useEffect(() => {
+    dispatch(fetchAdminOrders({ page: 1, limit: 100 }));
+  }, [dispatch]);
 
   const revenue = orders
     .filter((o) => o.status !== ORDER_STATUS.CANCELLED)
@@ -256,7 +262,7 @@ export default function AdminDashboardView() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-slate-800">
-                      {order.id}
+                      {order.orderNumber || order.id}
                     </p>
                     <p className="text-xs text-slate-400">
                       {order.customer.name} · {formatDate(order.date)}

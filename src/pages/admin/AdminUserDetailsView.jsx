@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
@@ -12,14 +13,19 @@ import Avatar from "@/components/common/Avatar";
 import EmptyState from "@/components/common/EmptyState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import { getUserById } from "@/data/users";
-import { selectOrders } from "@/features/orders";
+import { fetchAdminOrders, selectOrders } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 
 export default function AdminUserDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = getUserById(id);
   const orders = useSelector(selectOrders).filter((o) => o.customer?.id === id);
+
+  useEffect(() => {
+    dispatch(fetchAdminOrders({ page: 1, limit: 100 }));
+  }, [dispatch]);
 
   if (!user) {
     return (

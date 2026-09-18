@@ -28,6 +28,34 @@ export const PAYMENT_STATUS = {
   REFUNDED: "Refunded",
 };
 
+export const toOrderStatusKey = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const upper = raw.toUpperCase().replace(/\s+/g, "_");
+  if (ORDER_STATUS[upper]) return upper;
+  const match = Object.entries(ORDER_STATUS).find(
+    ([, label]) => label.toLowerCase() === raw.toLowerCase(),
+  );
+  return match?.[0] || upper;
+};
+
+export const toOrderStatusLabel = (value) =>
+  ORDER_STATUS[toOrderStatusKey(value)] || value || "";
+
+export const toPaymentStatusKey = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const upper = raw.toUpperCase().replace(/\s+/g, "_");
+  if (PAYMENT_STATUS[upper]) return upper;
+  const match = Object.entries(PAYMENT_STATUS).find(
+    ([, label]) => label.toLowerCase() === raw.toLowerCase(),
+  );
+  return match?.[0] || upper;
+};
+
+export const toPaymentStatusLabel = (value) =>
+  PAYMENT_STATUS[toPaymentStatusKey(value)] || value || "";
+
 export const PAYMENT_METHODS = {
   COD: "Cash on Delivery",
   ONLINE: "Online Payment",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
@@ -16,27 +16,45 @@ import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { selectOrders } from "@/features/orders";
+import {
+  fetchAdminOrders,
+  selectOrders,
+  selectOrdersError,
+  selectOrdersLoading,
+} from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+const ADMIN_ORDER_LIMIT = 100;
 
 export default function AdminOrderListView() {
+  const dispatch = useDispatch();
   const orders = useSelector(selectOrders);
+  const loading = useSelector(selectOrdersLoading);
+  const error = useSelector(selectOrdersError);
+
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    dispatch(fetchAdminOrders({ page: 1, limit: ADMIN_ORDER_LIMIT }));
+  }, [dispatch]);
+
   const overview = useMemo(() => {
     const pending = orders.filter(
       (o) => o.status === ORDER_STATUS.PENDING,
     ).length;
     const processing = orders.filter(
-      (o) => o.status === ORDER_STATUS.PROCESSING,
+      (o) =>
+        o.status === ORDER_STATUS.PROCESSING ||
+        o.status === ORDER_STATUS.CONFIRMED,
     ).length;
     const shipped = orders.filter(
       (o) => o.status === ORDER_STATUS.SHIPPED,
@@ -58,17 +76,21 @@ export default function AdminOrderListView() {
     };
   }, [orders]);
 
-  const filtered = useMemo(
-    () =>
-      orders.filter(
-        (o) =>
-          (o.id.toLowerCase().includes(search.toLowerCase()) ||
-            o.customer.name.toLowerCase().includes(search.toLowerCase())) &&
-          (!status || o.status === status) &&
-          (!paymentStatus || o.paymentStatus === paymentStatus),
-      ),
-    [orders, search, status, paymentStatus],
-  );
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return orders.filter((o) => {
+      const matchesSearch =
+        !q ||
+        o.orderNumber?.toLowerCase().includes(q) ||
+        o.id?.toLowerCase().includes(q) ||
+        o.customer?.name?.toLowerCase().includes(q) ||
+        o.customer?.email?.toLowerCase().includes(q);
+      const matchesStatus = !status || o.status === status;
+      const matchesPayment =
+        !paymentStatus || o.paymentStatus === paymentStatus;
+      return matchesSearch && matchesStatus && matchesPayment;
+    });
+  }, [orders, search, status, paymentStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pagedOrders = useMemo(
@@ -89,7 +111,9 @@ export default function AdminOrderListView() {
       key: "id",
       header: "Order",
       render: (o) => (
-        <span className="font-semibold text-slate-800">{o.id}</span>
+        <span className="font-semibold text-slate-800">
+          {o.orderNumber || o.id}
+        </span>
       ),
     },
     {
@@ -97,8 +121,10 @@ export default function AdminOrderListView() {
       header: "Customer",
       render: (o) => (
         <div>
-          <p className="font-medium text-slate-700">{o.customer.name}</p>
-          <p className="text-xs text-slate-400">{o.customer.email}</p>
+          <p className="font-medium text-slate-700">
+            {o.customer?.name || "—"}
+          </p>
+          <p className="text-xs text-slate-400">{o.customer?.email || ""}</p>
         </div>
       ),
     },
@@ -145,10 +171,14 @@ export default function AdminOrderListView() {
   const renderCard = (o) => (
     <Link to={`/admin/orders/${o.id}`} className="card block p-4">
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-slate-800">{o.id}</span>
+        <span className="font-semibold text-slate-800">
+          {o.orderNumber || o.id}
+        </span>
         <OrderStatusBadge status={o.status} />
       </div>
-      <p className="mt-1 text-sm text-slate-600">{o.customer.name}</p>
+      <p className="mt-1 text-sm text-slate-600">
+        {o.customer?.name || "Customer"}
+      </p>
       <div className="mt-2 flex items-center justify-between text-sm">
         <span className="text-slate-400">{formatDate(o.date)}</span>
         <span className="font-semibold text-slate-900">
@@ -157,6 +187,22 @@ export default function AdminOrderListView() {
       </div>
     </Link>
   );
+
+  if (loading && orders.length === 0) {
+    return <LoadingSpinner className="py-16" label="Loading orders..." />;
+  }
+
+  if (error && orders.length === 0) {
+    return (
+      <ErrorState
+        title="Could not load orders"
+        description={error}
+        onRetry={() =>
+          dispatch(fetchAdminOrders({ page: 1, limit: ADMIN_ORDER_LIMIT }))
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

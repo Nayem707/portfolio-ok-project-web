@@ -1,25 +1,25 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { orders as seedOrders } from "@/data/orders";
 import { clearCart } from "@/features/cart/cart.slice";
 import { api } from "@/services/api";
+import {
+  toOrderStatusKey,
+  toOrderStatusLabel,
+  toPaymentStatusKey,
+  toPaymentStatusLabel,
+} from "@/constants";
 import { getProductImage } from "@/utils";
-
-const toTitleCase = (value) => {
-  if (!value) return "";
-  const text = String(value).toLowerCase();
-  return text.charAt(0).toUpperCase() + text.slice(1);
-};
 
 const normalizeOrder = (order) => ({
   id: order.id,
   orderNumber: order.orderNumber,
   date: order.createdAt,
-  status: toTitleCase(order.status),
-  paymentStatus: toTitleCase(order.paymentStatus),
+  status: toOrderStatusLabel(order.status),
+  paymentStatus: toPaymentStatusLabel(order.paymentStatus),
   paymentMethod:
     order.paymentMethod === "ONLINE" ? "Online Payment" : "Cash on Delivery",
   items: (order.items || []).map((item) => ({
-    id: item.productId,
+    id: item.productId || item.id,
+    productId: item.productId,
     name: item.productName,
     price: Number(item.unitPrice || 0),
     discount: 0,
@@ -39,8 +39,8 @@ const normalizeOrder = (order) => ({
   },
   customer: {
     id: order.user?.id || order.userId,
-    name: order.user?.name,
-    email: order.user?.email,
+    name: order.user?.name || order.shipFullName || "Customer",
+    email: order.user?.email || "",
   },
   subtotal: Number(order.subtotal || 0),
   discount: Number(order.discount || 0),
@@ -48,11 +48,76 @@ const normalizeOrder = (order) => ({
   total: Number(order.totalAmount || 0),
 });
 
+export const fetchAdminOrders = createAsyncThunk(
+  "order/fetchAdminOrders",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const statusKey = params.status
+        ? toOrderStatusKey(params.status)
+        : undefined;
+      const response = await api.getOrders({
+        page: params.page || 1,
+        limit: params.limit || 100,
+        ...(statusKey ? { status: statusKey } : {}),
+        ...(params.search ? { search: params.search } : {}),
+      });
+      return {
+        items: (response?.data || []).map(normalizeOrder),
+        meta: response?.meta || null,
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load orders",
+      );
+    }
+  },
+);
+
+export const fetchAdminOrderById = createAsyncThunk(
+  "order/fetchAdminOrderById",
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const response = await api.getOrderById(orderId);
+      return normalizeOrder(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load order",
+      );
+    }
+  },
+);
+
+export const updateAdminOrderStatus = createAsyncThunk(
+  "order/updateAdminOrderStatus",
+  async ({ id, status, paymentStatus }, { rejectWithValue }) => {
+    try {
+      const payload = {
+        status: toOrderStatusKey(status),
+        ...(paymentStatus
+          ? { paymentStatus: toPaymentStatusKey(paymentStatus) }
+          : {}),
+      };
+      const response = await api.updateOrderStatus(id, payload);
+      return normalizeOrder(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to update order",
+      );
+    }
+  },
+);
+
 export const fetchMyOrders = createAsyncThunk(
   "order/fetchMyOrders",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await api.getMyOrders(params);
+      const statusKey = params.status
+        ? toOrderStatusKey(params.status)
+        : undefined;
+      const response = await api.getMyOrders({
+        ...params,
+        ...(statusKey ? { status: statusKey } : {}),
+      });
       return {
         items: (response?.data || []).map(normalizeOrder),
         meta: response?.meta || null,
@@ -109,7 +174,6 @@ export const placeOrder = createAsyncThunk(
         items,
       });
 
-      // Clear local cart only after the order is successfully created.
       dispatch(clearCart());
       return normalizeOrder(response);
     } catch (error) {
@@ -120,13 +184,23 @@ export const placeOrder = createAsyncThunk(
   },
 );
 
+const upsertOrder = (list = [], order) => {
+  const index = list.findIndex((item) => item.id === order.id);
+  if (index === -1) return [order, ...list];
+  const next = [...list];
+  next[index] = order;
+  return next;
+};
+
 const initialState = {
-  items: seedOrders,
+  items: [],
+  adminMeta: null,
   myItems: [],
   myMeta: null,
   currentOrder: null,
   loading: false,
   loadingDetails: false,
+  updatingStatus: false,
   placingOrder: false,
   error: null,
 };
@@ -135,16 +209,6 @@ const orderSlice = createSlice({
   name: "order",
   initialState,
   reducers: {
-    updateOrderStatus(state, action) {
-      const { id, status } = action.payload;
-      const order = state.items.find((o) => o.id === id);
-      if (order) order.status = status;
-    },
-    updatePaymentStatus(state, action) {
-      const { id, paymentStatus } = action.payload;
-      const order = state.items.find((o) => o.id === id);
-      if (order) order.paymentStatus = paymentStatus;
-    },
     clearMyOrderState(state) {
       state.myItems = [];
       state.myMeta = null;
@@ -154,12 +218,59 @@ const orderSlice = createSlice({
       state.placingOrder = false;
       state.error = null;
     },
-    addLocalOrder(state, action) {
-      state.items.unshift(action.payload);
+    clearAdminOrderState(state) {
+      state.items = [];
+      state.adminMeta = null;
+      state.currentOrder = null;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAdminOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAdminOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload.items;
+        state.adminMeta = action.payload.meta;
+        state.error = null;
+      })
+      .addCase(fetchAdminOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to load orders";
+      })
+      .addCase(fetchAdminOrderById.pending, (state) => {
+        state.loadingDetails = true;
+        state.error = null;
+      })
+      .addCase(fetchAdminOrderById.fulfilled, (state, action) => {
+        state.loadingDetails = false;
+        state.currentOrder = action.payload;
+        state.items = upsertOrder(state.items, action.payload);
+        state.error = null;
+      })
+      .addCase(fetchAdminOrderById.rejected, (state, action) => {
+        state.loadingDetails = false;
+        state.currentOrder = null;
+        state.error = action.payload || "Failed to load order";
+      })
+      .addCase(updateAdminOrderStatus.pending, (state) => {
+        state.updatingStatus = true;
+        state.error = null;
+      })
+      .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
+        state.updatingStatus = false;
+        state.currentOrder = action.payload;
+        state.items = upsertOrder(state.items, action.payload);
+        state.myItems = upsertOrder(state.myItems, action.payload);
+        state.error = null;
+      })
+      .addCase(updateAdminOrderStatus.rejected, (state, action) => {
+        state.updatingStatus = false;
+        state.error = action.payload || "Failed to update order";
+      })
       .addCase(fetchMyOrders.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -205,10 +316,5 @@ const orderSlice = createSlice({
   },
 });
 
-export const {
-  updateOrderStatus,
-  updatePaymentStatus,
-  clearMyOrderState,
-  addLocalOrder,
-} = orderSlice.actions;
+export const { clearMyOrderState, clearAdminOrderState } = orderSlice.actions;
 export default orderSlice.reducer;

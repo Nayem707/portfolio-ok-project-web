@@ -110,6 +110,11 @@ export const api = {
     return getData(response);
   },
 
+  getOrders: async (params = {}) => {
+    const response = await axiosInstance.get("/orders", { params });
+    return response?.data ?? { data: [], meta: null };
+  },
+
   getMyOrders: async (params = {}) => {
     const response = await axiosInstance.get("/orders/my-orders", { params });
     return response?.data ?? { data: [], meta: null };
@@ -117,6 +122,19 @@ export const api = {
 
   getMyOrderById: async (orderId) => {
     const response = await axiosInstance.get(`/orders/${orderId}`);
+    return getData(response);
+  },
+
+  getOrderById: async (orderId) => {
+    const response = await axiosInstance.get(`/orders/${orderId}`);
+    return getData(response);
+  },
+
+  updateOrderStatus: async (orderId, payload) => {
+    const response = await axiosInstance.patch(
+      `/orders/${orderId}/status`,
+      payload,
+    );
     return getData(response);
   },
 
