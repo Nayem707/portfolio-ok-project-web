@@ -98,7 +98,7 @@ const HeroSection = ({ slides = [] }) => {
 
           <Link
             to={slide.buttonUrl || "/products"}
-            className="mt-5 inline-flex rounded-lg bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-yellow-300 sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
+            className="bg-primary-600 hover:bg-primary-300 mt-5 inline-flex rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-900 text-white transition sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
           >
             {slide.buttonText || "Explore"}
           </Link>
