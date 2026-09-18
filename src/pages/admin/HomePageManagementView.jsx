@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
+  ArrowUpTrayIcon,
   PencilSquareIcon,
+  PhotoIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -13,6 +15,7 @@ import Input from "@/components/common/Input";
 import Modal from "@/components/common/Modal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { resolveMediaUrl } from "@/utils";
+import { api } from "@/services/api";
 import {
   fetchHomepageSections,
   saveHomePageSection,
@@ -21,6 +24,15 @@ import {
   selectHomePageSaving,
   selectHomePageSections,
 } from "@/features/homepage";
+
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
+const MAX_IMAGE_SIZE_MB = 5;
 
 const sectionOrder = [
   "hero",
@@ -70,6 +82,9 @@ export default function HomePageManagementView() {
   const hydrated = useSelector(selectHomePageHydrated);
   const [editorKey, setEditorKey] = useState(null);
   const [draft, setDraft] = useState(null);
+  const [uploadingSlideIndex, setUploadingSlideIndex] = useState(null);
+  const heroFileInputRef = useRef(null);
+  const heroUploadIndexRef = useRef(null);
 
   useEffect(() => {
     dispatch(fetchHomepageSections());
@@ -83,17 +98,77 @@ export default function HomePageManagementView() {
   const openEditor = (key) => {
     setEditorKey(key);
     setDraft(JSON.parse(JSON.stringify(sections[key])));
+    setUploadingSlideIndex(null);
   };
 
   const closeEditor = () => {
+    if (uploadingSlideIndex !== null) {
+      toast.error("Please wait for the image upload to finish");
+      return;
+    }
     setEditorKey(null);
     setDraft(null);
+    setUploadingSlideIndex(null);
   };
 
   const updateDraft = (next) => setDraft(next);
 
+  const updateHeroSlide = (index, patch) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const nextSlides = [...(prev.slides || [])];
+      nextSlides[index] = { ...nextSlides[index], ...patch };
+      return { ...prev, slides: nextSlides };
+    });
+  };
+
+  const openHeroUpload = (index) => {
+    if (uploadingSlideIndex !== null) return;
+    heroUploadIndexRef.current = index;
+    heroFileInputRef.current?.click();
+  };
+
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const index = heroUploadIndexRef.current;
+    heroUploadIndexRef.current = null;
+    if (!file || index == null || !draft) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Please select a JPG, PNG, WebP, GIF, or AVIF image");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_IMAGE_SIZE_MB}MB`);
+      return;
+    }
+
+    setUploadingSlideIndex(index);
+    try {
+      const uploaded = await api.uploadImages(file);
+      const first = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      const url = first?.url;
+      if (!url) throw new Error("Upload did not return an image URL");
+      updateHeroSlide(index, { image: url });
+      toast.success("Slide image uploaded");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to upload image",
+      );
+    } finally {
+      setUploadingSlideIndex(null);
+    }
+  };
+
   const saveSection = async () => {
     if (!editorKey || !draft || saving) return;
+    if (uploadingSlideIndex !== null) {
+      toast.error("Please wait for the image upload to finish");
+      return;
+    }
     try {
       await dispatch(
         saveHomePageSection({ sectionKey: editorKey, data: draft }),
@@ -101,6 +176,7 @@ export default function HomePageManagementView() {
       toast.success(`${sectionMeta[editorKey]?.label ?? "Section"} saved`);
       setEditorKey(null);
       setDraft(null);
+      setUploadingSlideIndex(null);
     } catch (err) {
       toast.error(err || "Failed to save section");
     }
@@ -159,8 +235,7 @@ export default function HomePageManagementView() {
                     ...draft.slides,
                     {
                       id: makeId(),
-                      image:
-                        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=900&q=80",
+                      image: "",
                       subtitle: "New Slide",
                       title: "New Hero Slide",
                       description: "Describe this slide",
@@ -218,69 +293,98 @@ export default function HomePageManagementView() {
               </div>
 
               <div className="space-y-3">
-                <Input
-                  label="Image URL"
-                  value={slide.image || ""}
-                  onChange={(e) => {
-                    const nextSlides = [...draft.slides];
-                    nextSlides[index] = { ...slide, image: e.target.value };
-                    updateDraft({ ...draft, slides: nextSlides });
-                  }}
-                />
+                <div className="space-y-3">
+                  <Input
+                    label="Image URL"
+                    value={slide.image || ""}
+                    onChange={(e) =>
+                      updateHeroSlide(index, { image: e.target.value })
+                    }
+                    placeholder="https://… or upload below"
+                  />
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      leftIcon={ArrowUpTrayIcon}
+                      loading={uploadingSlideIndex === index}
+                      onClick={() => openHeroUpload(index)}
+                    >
+                      {uploadingSlideIndex === index
+                        ? "Uploading…"
+                        : "Upload image"}
+                    </Button>
+                    {slide.image ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={uploadingSlideIndex === index}
+                        onClick={() => updateHeroSlide(index, { image: "" })}
+                      >
+                        Clear image
+                      </Button>
+                    ) : null}
+                    <p className="text-xs text-slate-400">
+                      JPG, PNG, WebP, GIF, or AVIF · max {MAX_IMAGE_SIZE_MB}MB
+                    </p>
+                  </div>
+
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    {slide.image ? (
+                      <img
+                        src={resolveMediaUrl(slide.image)}
+                        alt={slide.title || `Slide ${index + 1}`}
+                        className="h-40 w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-40 flex-col items-center justify-center gap-2 text-slate-400">
+                        <PhotoIcon className="h-8 w-8" />
+                        <p className="text-xs">Slide image preview</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <Input
                   label="Subtitle"
                   value={slide.subtitle || ""}
-                  onChange={(e) => {
-                    const nextSlides = [...draft.slides];
-                    nextSlides[index] = { ...slide, subtitle: e.target.value };
-                    updateDraft({ ...draft, slides: nextSlides });
-                  }}
+                  onChange={(e) =>
+                    updateHeroSlide(index, { subtitle: e.target.value })
+                  }
                 />
                 <Input
                   label="Title"
                   value={slide.title || ""}
-                  onChange={(e) => {
-                    const nextSlides = [...draft.slides];
-                    nextSlides[index] = { ...slide, title: e.target.value };
-                    updateDraft({ ...draft, slides: nextSlides });
-                  }}
+                  onChange={(e) =>
+                    updateHeroSlide(index, { title: e.target.value })
+                  }
                 />
                 <Input
                   label="Description"
                   value={slide.description || ""}
-                  onChange={(e) => {
-                    const nextSlides = [...draft.slides];
-                    nextSlides[index] = {
-                      ...slide,
-                      description: e.target.value,
-                    };
-                    updateDraft({ ...draft, slides: nextSlides });
-                  }}
+                  onChange={(e) =>
+                    updateHeroSlide(index, { description: e.target.value })
+                  }
                 />
                 <div className="grid gap-3 md:grid-cols-2">
                   <Input
                     label="Button text"
                     value={slide.buttonText || ""}
-                    onChange={(e) => {
-                      const nextSlides = [...draft.slides];
-                      nextSlides[index] = {
-                        ...slide,
-                        buttonText: e.target.value,
-                      };
-                      updateDraft({ ...draft, slides: nextSlides });
-                    }}
+                    onChange={(e) =>
+                      updateHeroSlide(index, { buttonText: e.target.value })
+                    }
                   />
                   <Input
                     label="Button URL"
                     value={slide.buttonUrl || ""}
-                    onChange={(e) => {
-                      const nextSlides = [...draft.slides];
-                      nextSlides[index] = {
-                        ...slide,
-                        buttonUrl: e.target.value,
-                      };
-                      updateDraft({ ...draft, slides: nextSlides });
-                    }}
+                    onChange={(e) =>
+                      updateHeroSlide(index, { buttonUrl: e.target.value })
+                    }
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -636,15 +740,32 @@ export default function HomePageManagementView() {
         size="lg"
         footer={
           <>
-            <Button variant="outline" onClick={closeEditor} disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={closeEditor}
+              disabled={saving || uploadingSlideIndex !== null}
+            >
               Cancel
             </Button>
-            <Button onClick={saveSection} loading={saving}>
+            <Button
+              onClick={saveSection}
+              loading={saving}
+              disabled={uploadingSlideIndex !== null}
+            >
               Save / Update
             </Button>
           </>
         }
       >
+        {editorKey === "hero" && (
+          <input
+            ref={heroFileInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            className="hidden"
+            onChange={handleHeroImageUpload}
+          />
+        )}
         {renderSectionEditor()}
       </Modal>
     </div>
