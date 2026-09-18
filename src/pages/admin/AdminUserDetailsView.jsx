@@ -11,36 +11,56 @@ import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
 import Avatar from "@/components/common/Avatar";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
-import { getUserById } from "@/data/users";
+import {
+  fetchAdminUserById,
+  selectAdminCurrentUser,
+  selectAdminUserDetailsLoading,
+  selectAdminUsersError,
+} from "@/features/users";
 import { fetchAdminOrders, selectOrders } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
+import { USER_STATUS } from "@/constants";
 
 export default function AdminUserDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const user = getUserById(id);
+  const user = useSelector(selectAdminCurrentUser);
+  const loading = useSelector(selectAdminUserDetailsLoading);
+  const error = useSelector(selectAdminUsersError);
   const orders = useSelector(selectOrders).filter((o) => o.customer?.id === id);
 
   useEffect(() => {
+    if (id) dispatch(fetchAdminUserById(id));
     dispatch(fetchAdminOrders({ page: 1, limit: 100 }));
-  }, [dispatch]);
+  }, [dispatch, id]);
 
-  if (!user) {
+  if (loading && (!user || user.id !== id)) {
+    return <LoadingSpinner className="py-16" label="Loading user..." />;
+  }
+
+  if ((error && (!user || user.id !== id)) || (!loading && !user)) {
     return (
-      <EmptyState
-        title="User not found"
-        action={
-          <Button as={Link} to="/admin/users">
+      <div className="space-y-4">
+        <ErrorState
+          title="User not found"
+          description={error || "This user could not be loaded."}
+          onRetry={() => id && dispatch(fetchAdminUserById(id))}
+        />
+        <div className="flex justify-center">
+          <Button as={Link} to="/admin/users" variant="outline">
             Back to users
           </Button>
-        }
-      />
+        </div>
+      </div>
     );
   }
 
   const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
+  const orderCount = user.orders ?? orders.length;
 
   return (
     <div className="space-y-6">
@@ -52,7 +72,6 @@ export default function AdminUserDetailsView() {
       </button>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Profile */}
         <div className="card p-6 text-center">
           <Avatar user={user} size="2xl" className="mx-auto" />
           <h1 className="mt-4 text-xl font-bold text-slate-900">{user.name}</h1>
@@ -60,7 +79,10 @@ export default function AdminUserDetailsView() {
             <Badge color={user.role === "ADMIN" ? "indigo" : "gray"}>
               {user.role}
             </Badge>
-            <Badge color={user.status === "Active" ? "green" : "red"} dot>
+            <Badge
+              color={user.status === USER_STATUS.ACTIVE ? "green" : "red"}
+              dot
+            >
               {user.status}
             </Badge>
           </div>
@@ -71,7 +93,8 @@ export default function AdminUserDetailsView() {
               {user.email}
             </p>
             <p className="flex items-center gap-2.5 text-slate-600">
-              <PhoneIcon className="h-4.5 w-4.5 text-slate-400" /> {user.phone}
+              <PhoneIcon className="h-4.5 w-4.5 text-slate-400" />{" "}
+              {user.phone || "—"}
             </p>
             <p className="flex items-center gap-2.5 text-slate-600">
               <CalendarDaysIcon className="h-4.5 w-4.5 text-slate-400" /> Joined{" "}
@@ -81,9 +104,7 @@ export default function AdminUserDetailsView() {
 
           <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-6">
             <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {orders.length}
-              </p>
+              <p className="text-2xl font-bold text-slate-900">{orderCount}</p>
               <p className="text-xs text-slate-400">Orders</p>
             </div>
             <div>
@@ -95,7 +116,6 @@ export default function AdminUserDetailsView() {
           </div>
         </div>
 
-        {/* Orders */}
         <div className="card lg:col-span-2">
           <div className="border-b border-slate-100 px-6 py-4">
             <h2 className="font-semibold text-slate-900">Order History</h2>
@@ -117,7 +137,7 @@ export default function AdminUserDetailsView() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-slate-800">
-                        {order.id}
+                        {order.orderNumber || order.id}
                       </p>
                       <p className="text-xs text-slate-400">
                         {formatDate(order.date)} · {order.items.length} item(s)

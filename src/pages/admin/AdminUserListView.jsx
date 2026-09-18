@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   MagnifyingGlassIcon,
@@ -13,28 +14,50 @@ import {
 import Table from "@/components/common/Table";
 import Select from "@/components/common/Select";
 import Badge from "@/components/common/Badge";
-import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StatCard from "@/components/common/StatCard";
 import Pagination from "@/components/common/Pagination";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import Avatar from "@/components/common/Avatar";
-import { users as seedUsers } from "@/data/users";
+import {
+  fetchAdminUsers,
+  selectAdminUsers,
+  selectAdminUsersError,
+  selectAdminUsersLoading,
+  updateAdminUserStatus,
+} from "@/features/users";
 import { formatDate } from "@/utils";
+import { USER_STATUS } from "@/constants";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+const ADMIN_USER_LIMIT = 100;
 
 export default function AdminUserListView() {
-  const [users, setUsers] = useState(seedUsers);
+  const dispatch = useDispatch();
+  const users = useSelector(selectAdminUsers);
+  const loading = useSelector(selectAdminUsersLoading);
+  const error = useSelector(selectAdminUsersError);
+
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchAdminUsers({ page: 1, limit: ADMIN_USER_LIMIT }));
+  }, [dispatch]);
 
   const overview = useMemo(() => {
-    const active = users.filter((u) => u.status === "Active").length;
-    const inactive = users.filter((u) => u.status === "Inactive").length;
+    const active = users.filter(
+      (u) => u.status === USER_STATUS.ACTIVE,
+    ).length;
+    const inactive = users.filter(
+      (u) => u.status === USER_STATUS.INACTIVE,
+    ).length;
     const admins = users.filter((u) => u.role === "ADMIN").length;
     const customers = users.filter((u) => u.role === "USER").length;
 
@@ -47,17 +70,18 @@ export default function AdminUserListView() {
     };
   }, [users]);
 
-  const filtered = useMemo(
-    () =>
-      users.filter(
-        (u) =>
-          (u.name.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase())) &&
-          (!role || u.role === role) &&
-          (!statusFilter || u.status === statusFilter),
-      ),
-    [users, search, role, statusFilter],
-  );
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return users.filter((u) => {
+      const matchesSearch =
+        !q ||
+        u.name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q);
+      const matchesRole = !role || u.role === role;
+      const matchesStatus = !statusFilter || u.status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, search, role, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pagedUsers = useMemo(
@@ -73,15 +97,22 @@ export default function AdminUserListView() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  const toggleStatus = (id) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" }
-          : u,
-      ),
-    );
-    toast.success("User status updated");
+  const toggleStatus = async (user) => {
+    const nextStatus =
+      user.status === USER_STATUS.ACTIVE
+        ? USER_STATUS.INACTIVE
+        : USER_STATUS.ACTIVE;
+    setUpdatingId(user.id);
+    try {
+      await dispatch(
+        updateAdminUserStatus({ id: user.id, status: nextStatus }),
+      ).unwrap();
+      toast.success(`User marked as ${nextStatus}`);
+    } catch (err) {
+      toast.error(err || "Failed to update user status");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const columns = [
@@ -114,7 +145,7 @@ export default function AdminUserListView() {
       key: "status",
       header: "Status",
       render: (u) => (
-        <Badge color={u.status === "Active" ? "green" : "red"} dot>
+        <Badge color={u.status === USER_STATUS.ACTIVE ? "green" : "red"} dot>
           {u.status}
         </Badge>
       ),
@@ -141,17 +172,24 @@ export default function AdminUserListView() {
           </Link>
           <button
             type="button"
-            onClick={() => toggleStatus(u.id)}
+            disabled={updatingId === u.id}
+            onClick={() => toggleStatus(u)}
             aria-label={
-              u.status === "Active" ? "Deactivate user" : "Activate user"
+              u.status === USER_STATUS.ACTIVE
+                ? "Deactivate user"
+                : "Activate user"
             }
-            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 ${
-              u.status === "Active" ? "bg-primary-500" : "bg-slate-300"
+            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              u.status === USER_STATUS.ACTIVE
+                ? "bg-primary-500"
+                : "bg-slate-300"
             }`}
           >
             <span
               className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                u.status === "Active" ? "translate-x-5" : "translate-x-1"
+                u.status === USER_STATUS.ACTIVE
+                  ? "translate-x-5"
+                  : "translate-x-1"
               }`}
             />
           </button>
@@ -168,7 +206,7 @@ export default function AdminUserListView() {
           <p className="font-medium text-slate-800">{u.name}</p>
           <p className="truncate text-xs text-slate-400">{u.email}</p>
         </div>
-        <Badge color={u.status === "Active" ? "green" : "red"} dot>
+        <Badge color={u.status === USER_STATUS.ACTIVE ? "green" : "red"} dot>
           {u.status}
         </Badge>
       </div>
@@ -183,17 +221,24 @@ export default function AdminUserListView() {
           </Link>
           <button
             type="button"
-            onClick={() => toggleStatus(u.id)}
+            disabled={updatingId === u.id}
+            onClick={() => toggleStatus(u)}
             aria-label={
-              u.status === "Active" ? "Deactivate user" : "Activate user"
+              u.status === USER_STATUS.ACTIVE
+                ? "Deactivate user"
+                : "Activate user"
             }
-            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 ${
-              u.status === "Active" ? "bg-primary-500" : "bg-slate-300"
+            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              u.status === USER_STATUS.ACTIVE
+                ? "bg-primary-500"
+                : "bg-slate-300"
             }`}
           >
             <span
               className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                u.status === "Active" ? "translate-x-5" : "translate-x-1"
+                u.status === USER_STATUS.ACTIVE
+                  ? "translate-x-5"
+                  : "translate-x-1"
               }`}
             />
           </button>
@@ -201,6 +246,22 @@ export default function AdminUserListView() {
       </div>
     </div>
   );
+
+  if (loading && users.length === 0) {
+    return <LoadingSpinner className="py-16" label="Loading users..." />;
+  }
+
+  if (error && users.length === 0) {
+    return (
+      <ErrorState
+        title="Could not load users"
+        description={error}
+        onRetry={() =>
+          dispatch(fetchAdminUsers({ page: 1, limit: ADMIN_USER_LIMIT }))
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -266,8 +327,8 @@ export default function AdminUserListView() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="">All status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value={USER_STATUS.ACTIVE}>Active</option>
+              <option value={USER_STATUS.INACTIVE}>Inactive</option>
             </Select>
           </div>
           <div className="sm:w-36">

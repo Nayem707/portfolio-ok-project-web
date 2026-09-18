@@ -78,6 +78,20 @@ export const USER_STATUS = {
   INACTIVE: "Inactive",
 };
 
+export const toUserStatusKey = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const upper = raw.toUpperCase().replace(/\s+/g, "_");
+  if (USER_STATUS[upper]) return upper;
+  const match = Object.entries(USER_STATUS).find(
+    ([, label]) => label.toLowerCase() === raw.toLowerCase(),
+  );
+  return match?.[0] || upper;
+};
+
+export const toUserStatusLabel = (value) =>
+  USER_STATUS[toUserStatusKey(value)] || value || "";
+
 export const SORT_OPTIONS = [
   { label: "Featured", value: "featured" },
   { label: "Newest", value: "newest" },

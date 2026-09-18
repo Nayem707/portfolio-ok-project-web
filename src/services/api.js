@@ -90,6 +90,23 @@ export const api = {
     return getData(response);
   },
 
+  getUsers: async (params = {}) => {
+    const response = await axiosInstance.get("/users", { params });
+    return response?.data ?? { data: [], meta: null };
+  },
+
+  getUserById: async (userId) => {
+    const response = await axiosInstance.get(`/users/${userId}`);
+    return getData(response);
+  },
+
+  updateUserStatus: async (userId, status) => {
+    const response = await axiosInstance.patch(`/users/${userId}/status`, {
+      status,
+    });
+    return getData(response);
+  },
+
   getWishlist: async () => {
     const response = await axiosInstance.get("/wishlist");
     return getData(response);

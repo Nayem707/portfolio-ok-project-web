@@ -26,8 +26,8 @@ import Badge from "@/components/common/Badge";
 import Avatar from "@/components/common/Avatar";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import { fetchAdminOrders, selectOrders } from "@/features/orders";
+import { fetchAdminUsers, selectAdminUsers } from "@/features/users";
 import { selectProducts } from "@/features/products";
-import { users } from "@/data/users";
 import { salesByMonth, topProducts } from "@/data/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
@@ -36,9 +36,11 @@ export default function AdminDashboardView() {
   const dispatch = useDispatch();
   const orders = useSelector(selectOrders);
   const products = useSelector(selectProducts);
+  const users = useSelector(selectAdminUsers);
 
   useEffect(() => {
     dispatch(fetchAdminOrders({ page: 1, limit: 100 }));
+    dispatch(fetchAdminUsers({ page: 1, limit: 100 }));
   }, [dispatch]);
 
   const revenue = orders
