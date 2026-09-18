@@ -360,11 +360,9 @@ const homePageSlice = createSlice({
           defaultSections(),
           action.payload,
         );
-        if (state.heroSlides.length > 0) {
-          state.sections.hero = {
-            ...state.sections.hero,
-            slides: state.heroSlides,
-          };
+        // Keep admin hero editor on section content slides (source of truth for CMS).
+        if (Array.isArray(state.sections.hero?.slides)) {
+          state.heroSlides = state.sections.hero.slides;
         }
       })
       .addCase(fetchHomepageSections.rejected, (state, action) => {
@@ -396,6 +394,12 @@ const homePageSlice = createSlice({
           active:
             saved?.active ?? data.active ?? state.sections[sectionKey].active,
         };
+        if (
+          sectionKey === "hero" &&
+          Array.isArray(state.sections.hero?.slides)
+        ) {
+          state.heroSlides = state.sections.hero.slides;
+        }
       })
       .addCase(saveHomePageSection.rejected, (state, action) => {
         state.saving = false;
