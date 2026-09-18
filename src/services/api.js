@@ -46,6 +46,20 @@ export const api = {
     return getData(response);
   },
 
+  uploadMyAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const response = await axiosInstance.post("/users/me/avatar", formData, {
+      timeout: 30000,
+    });
+    return getData(response);
+  },
+
+  removeMyAvatar: async () => {
+    const response = await axiosInstance.delete("/users/me/avatar");
+    return getData(response);
+  },
+
   changeMyPassword: async (payload) => {
     const response = await axiosInstance.patch("/users/me/password", payload);
     return getData(response);

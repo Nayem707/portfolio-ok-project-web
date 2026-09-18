@@ -83,8 +83,14 @@ export default function AddressesView() {
   };
 
   const save = async () => {
-    if (!form.fullName.trim() || !form.phone.trim() || !form.street.trim()) {
-      toast.error("Please fill in required fields");
+    if (
+      !form.fullName.trim() ||
+      !form.phone.trim() ||
+      !form.street.trim() ||
+      !form.city.trim() ||
+      !form.country.trim()
+    ) {
+      toast.error("Please fill in all required fields (name, phone, street, city, country)");
       return;
     }
 
