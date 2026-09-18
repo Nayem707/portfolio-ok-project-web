@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
+  EllipsisVerticalIcon,
+  CheckIcon,
   ShoppingCartIcon,
   ClockIcon,
   CheckCircleIcon,
@@ -18,18 +21,142 @@ import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import {
   fetchAdminOrders,
   selectOrders,
   selectOrdersError,
   selectOrdersLoading,
+  updateAdminOrderStatus,
 } from "@/features/orders";
 import { formatCurrency, formatDate } from "@/utils";
 import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 const ADMIN_ORDER_LIMIT = 100;
+const ORDER_STATUS_OPTIONS = Object.values(ORDER_STATUS);
+
+function OrderRowActions({ order }) {
+  const dispatch = useDispatch();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [pendingCancel, setPendingCancel] = useState(false);
+
+  const applyStatusUpdate = async (nextStatus) => {
+    if (!nextStatus || nextStatus === order.status) return;
+    setUpdating(true);
+    try {
+      await dispatch(
+        updateAdminOrderStatus({
+          id: order.id,
+          status: nextStatus,
+          paymentStatus: order.paymentStatus,
+        }),
+      ).unwrap();
+      toast.success(`Order marked as ${nextStatus}`);
+      setMenuOpen(false);
+      setPendingCancel(false);
+    } catch (err) {
+      toast.error(err || "Failed to update order");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSelectStatus = (nextStatus) => {
+    if (updating || nextStatus === order.status) return;
+    if (nextStatus === ORDER_STATUS.CANCELLED) {
+      setMenuOpen(false);
+      setPendingCancel(true);
+      return;
+    }
+    applyStatusUpdate(nextStatus);
+  };
+
+  return (
+    <>
+      <div className="inline-flex items-center gap-0.5">
+        <Link
+          to={`/admin/orders/${order.id}`}
+          className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+          title="View order"
+          aria-label={`View order ${order.orderNumber || order.id}`}
+        >
+          <EyeIcon className="h-4.5 w-4.5" />
+        </Link>
+
+        <Dropdown
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          closeOnSelect={false}
+          portal
+          align="right"
+          disabled={updating}
+          trigger={
+            <span
+              className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+              title="Update status"
+              aria-label={`Update status for ${order.orderNumber || order.id}`}
+            >
+              {updating ? (
+                <span
+                  className="border-primary-200 border-t-primary-600 h-4.5 w-4.5 animate-spin rounded-full border-2"
+                  aria-hidden
+                />
+              ) : (
+                <EllipsisVerticalIcon className="h-4.5 w-4.5" />
+              )}
+            </span>
+          }
+        >
+          <div className="px-4 py-1.5 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+            Order status
+          </div>
+          {ORDER_STATUS_OPTIONS.map((status) => {
+            const isCurrent = status === order.status;
+            return (
+              <DropdownItem
+                key={status}
+                disabled={updating || isCurrent}
+                onClick={() => handleSelectStatus(status)}
+                className={
+                  isCurrent
+                    ? "bg-primary-50 text-primary-700 hover:bg-primary-50 hover:text-primary-700"
+                    : undefined
+                }
+              >
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                  {isCurrent ? (
+                    <CheckIcon className="text-primary-600 h-4 w-4" />
+                  ) : null}
+                </span>
+                {status}
+                {isCurrent ? (
+                  <span className="ml-auto text-[11px] font-medium text-slate-400">
+                    Current
+                  </span>
+                ) : null}
+              </DropdownItem>
+            );
+          })}
+        </Dropdown>
+      </div>
+
+      <ConfirmDialog
+        open={pendingCancel}
+        onClose={() => !updating && setPendingCancel(false)}
+        onConfirm={() => applyStatusUpdate(ORDER_STATUS.CANCELLED)}
+        title="Cancel this order?"
+        message="Cancelling restores stock for items in this order. This cannot be undone from the list."
+        confirmText="Cancel order"
+        cancelText="Keep order"
+        loading={updating}
+      />
+    </>
+  );
+}
 
 export default function AdminOrderListView() {
   const dispatch = useDispatch();
@@ -157,14 +284,8 @@ export default function AdminOrderListView() {
     {
       key: "actions",
       header: "Actions",
-      render: (o) => (
-        <Link
-          to={`/admin/orders/${o.id}`}
-          className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-        >
-          <EyeIcon className="h-4.5 w-4.5" />
-        </Link>
-      ),
+      cellClassName: "relative overflow-visible",
+      render: (o) => <OrderRowActions order={o} />,
     },
   ];
 
