@@ -1,5 +1,7 @@
 export const selectHomePageSections = (state) => state.homePage.sections;
 export const selectHomePageLoading = (state) => state.homePage.loading;
+export const selectHomePageSaving = (state) => state.homePage.saving;
+export const selectHomePageHydrated = (state) => state.homePage.hydrated;
 export const selectHomePageError = (state) => state.homePage.error;
 export const selectHeroSlides = (state) =>
   Array.isArray(state.homePage.heroSlides) ? state.homePage.heroSlides : [];
@@ -11,3 +13,5 @@ export const selectPopularCollection = (state) =>
   Array.isArray(state.homePage.popular) ? state.homePage.popular : [];
 export const selectNewArrivalsCollection = (state) =>
   Array.isArray(state.homePage.newArrivals) ? state.homePage.newArrivals : [];
+export const selectFirstVisitPopup = (state) =>
+  state.homePage.sections?.firstVisitPopup || null;

@@ -315,6 +315,14 @@ export const api = {
     return getData(response);
   },
 
+  updateHomepageSection: async (sectionKey, payload) => {
+    const response = await axiosInstance.patch(
+      `/homepage/sections/${sectionKey}`,
+      payload,
+    );
+    return getData(response);
+  },
+
   getHeroSlides: async () => {
     const response = await axiosInstance.get("/homepage/hero/slides");
     return getData(response);

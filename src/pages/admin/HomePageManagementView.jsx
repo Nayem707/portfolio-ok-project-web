@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -11,9 +11,14 @@ import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Modal from "@/components/common/Modal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
+  fetchHomepageSections,
+  saveHomePageSection,
+  selectHomePageHydrated,
+  selectHomePageLoading,
+  selectHomePageSaving,
   selectHomePageSections,
-  updateHomePageSection,
 } from "@/features/homepage";
 
 const sectionOrder = [
@@ -24,6 +29,7 @@ const sectionOrder = [
   "popular",
   "newArrival",
   "promo",
+  "firstVisitPopup",
 ];
 
 const sectionMeta = {
@@ -44,6 +50,13 @@ const sectionMeta = {
     summary: (section) =>
       `${section.left?.title ?? "Promo"} / ${section.right?.title ?? "Promo"}`,
   },
+  firstVisitPopup: {
+    label: "First Visit Popup",
+    summary: (section) =>
+      section.active === false
+        ? "Disabled"
+        : section.buttonText || "Promotional popup",
+  },
 };
 
 const makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -51,8 +64,15 @@ const makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 export default function HomePageManagementView() {
   const dispatch = useDispatch();
   const sections = useSelector(selectHomePageSections);
+  const loading = useSelector(selectHomePageLoading);
+  const saving = useSelector(selectHomePageSaving);
+  const hydrated = useSelector(selectHomePageHydrated);
   const [editorKey, setEditorKey] = useState(null);
   const [draft, setDraft] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchHomepageSections());
+  }, [dispatch]);
 
   const sectionItems = useMemo(
     () => sectionOrder.map((key) => ({ key, ...sections[key] })),
@@ -71,11 +91,18 @@ export default function HomePageManagementView() {
 
   const updateDraft = (next) => setDraft(next);
 
-  const saveSection = () => {
-    if (!editorKey || !draft) return;
-    dispatch(updateHomePageSection({ sectionKey: editorKey, data: draft }));
-    toast.success(`${sectionMeta[editorKey]?.label ?? "Section"} updated`);
-    closeEditor();
+  const saveSection = async () => {
+    if (!editorKey || !draft || saving) return;
+    try {
+      await dispatch(
+        saveHomePageSection({ sectionKey: editorKey, data: draft }),
+      ).unwrap();
+      toast.success(`${sectionMeta[editorKey]?.label ?? "Section"} saved`);
+      setEditorKey(null);
+      setDraft(null);
+    } catch (err) {
+      toast.error(err || "Failed to save section");
+    }
   };
 
   const renderFieldValue = (sectionKey, field, value) => {
@@ -477,8 +504,67 @@ export default function HomePageManagementView() {
       );
     }
 
+    if (editorKey === "firstVisitPopup") {
+      return (
+        <div className="space-y-4">
+          <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <span>Popup active</span>
+            <input
+              type="checkbox"
+              checked={draft.active ?? true}
+              onChange={(e) =>
+                updateDraft({ ...draft, active: e.target.checked })
+              }
+              className="h-4 w-4"
+            />
+          </label>
+          <Input
+            label="Image URL"
+            value={draft.image || ""}
+            onChange={(e) => updateDraft({ ...draft, image: e.target.value })}
+          />
+          {draft.image ? (
+            <div className="overflow-hidden rounded-xl border border-slate-200">
+              <img
+                src={draft.image}
+                alt={draft.alt || "Popup preview"}
+                className="h-40 w-full object-cover"
+              />
+            </div>
+          ) : null}
+          <Input
+            label="Image alt text"
+            value={draft.alt || ""}
+            onChange={(e) => updateDraft({ ...draft, alt: e.target.value })}
+          />
+          <Input
+            label="Button text"
+            value={draft.buttonText || ""}
+            onChange={(e) =>
+              updateDraft({ ...draft, buttonText: e.target.value })
+            }
+          />
+          <Input
+            label="Button URL"
+            value={draft.buttonUrl || ""}
+            onChange={(e) =>
+              updateDraft({ ...draft, buttonUrl: e.target.value })
+            }
+          />
+          <p className="text-xs text-slate-500">
+            Shown once per browser tab/session. Closing it stores dismissal in
+            sessionStorage only.
+          </p>
+        </div>
+      );
+    }
+
     return null;
   };
+
+  if (loading && !hydrated) {
+    return <LoadingSpinner className="py-16" label="Loading homepage..." />;
+  }
 
   return (
     <div className="space-y-6">
@@ -525,6 +611,9 @@ export default function HomePageManagementView() {
                   {section.left?.title} · {section.right?.title}
                 </p>
               )}
+              {section.key === "firstVisitPopup" && (
+                <p className="truncate">{section.image || "No image set"}</p>
+              )}
             </div>
 
             <button
@@ -546,10 +635,12 @@ export default function HomePageManagementView() {
         size="lg"
         footer={
           <>
-            <Button variant="outline" onClick={closeEditor}>
+            <Button variant="outline" onClick={closeEditor} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={saveSection}>Save / Update</Button>
+            <Button onClick={saveSection} loading={saving}>
+              Save / Update
+            </Button>
           </>
         }
       >

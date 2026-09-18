@@ -4,6 +4,7 @@ import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 import MobileMenu from "@/components/navigation/MobileMenu";
 import MiniCart from "@/components/cart/MiniCart";
+import FirstVisitPopup from "@/components/common/FirstVisitPopup";
 
 export default function MainLayout() {
   const { mobileMenuOpen, miniCartOpen } = useSelector((state) => state.ui);
@@ -17,6 +18,7 @@ export default function MainLayout() {
         <Outlet />
       </main>
       <Footer />
+      <FirstVisitPopup />
     </div>
   );
 }

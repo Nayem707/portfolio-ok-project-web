@@ -17,6 +17,8 @@ export default function Modal({
   children,
   footer,
   size = "md",
+  flush = false,
+  className,
 }) {
   useEffect(() => {
     if (!open) return undefined;
@@ -44,6 +46,7 @@ export default function Modal({
         className={classNames(
           "animate-fade-in relative z-10 w-full overflow-hidden rounded-2xl bg-white shadow-xl",
           sizes[size],
+          className,
         )}
       >
         {title && (
@@ -58,7 +61,15 @@ export default function Modal({
             </button>
           </div>
         )}
-        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
+        <div
+          className={
+            flush
+              ? "overflow-hidden"
+              : "max-h-[70vh] overflow-y-auto px-6 py-5"
+          }
+        >
+          {children}
+        </div>
         {footer && (
           <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
             {footer}

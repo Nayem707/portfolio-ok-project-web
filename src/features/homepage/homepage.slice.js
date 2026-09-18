@@ -75,7 +75,15 @@ const defaultPerks = [
   },
 ];
 
-const defaultSections = () => ({
+const defaultFirstVisitPopup = {
+  image:
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=80",
+  buttonText: "Shop Now",
+  buttonUrl: "/products",
+  alt: "Welcome promotion",
+};
+
+export const defaultSections = () => ({
   hero: {
     key: "hero",
     label: "Hero Section",
@@ -142,6 +150,13 @@ const defaultSections = () => ({
         "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80",
     },
   },
+  firstVisitPopup: {
+    key: "firstVisitPopup",
+    label: "First Visit Popup",
+    active: true,
+    title: "First visit popup",
+    ...defaultFirstVisitPopup,
+  },
 });
 
 const mapSectionKey = (key) => {
@@ -150,7 +165,13 @@ const mapSectionKey = (key) => {
   return key;
 };
 
-const mapHomepageSectionData = (baseSections, sections = []) => {
+const mapApiSectionKey = (key) => {
+  if (key === "category") return "categories";
+  if (key === "newArrival") return "newArrivals";
+  return key;
+};
+
+export const mapHomepageSectionData = (baseSections, sections = []) => {
   const sectionList = asArray(sections);
   const next = { ...baseSections };
 
@@ -176,6 +197,31 @@ const mapHomepageSectionData = (baseSections, sections = []) => {
   return next;
 };
 
+const META_DRAFT_KEYS = new Set([
+  "key",
+  "label",
+  "title",
+  "subtitle",
+  "active",
+  "sortOrder",
+]);
+
+export const toHomepageSectionPayload = (draft = {}) => {
+  const content = {};
+  Object.entries(draft).forEach(([field, value]) => {
+    if (META_DRAFT_KEYS.has(field)) return;
+    content[field] = value;
+  });
+
+  return {
+    ...(draft.title !== undefined ? { title: draft.title } : {}),
+    ...(draft.subtitle !== undefined ? { subtitle: draft.subtitle } : {}),
+    ...(draft.active !== undefined ? { active: Boolean(draft.active) } : {}),
+    ...(draft.sortOrder !== undefined ? { sortOrder: draft.sortOrder } : {}),
+    content,
+  };
+};
+
 export const fetchPublicHomepage = createAsyncThunk(
   "homePage/fetchPublicHomepage",
   async (_, { rejectWithValue }) => {
@@ -191,8 +237,9 @@ export const fetchPublicHomepage = createAsyncThunk(
       const homeSlides = asArray(homePayload?.heroSlides);
       const fallbackSlides = asArray(slidesPayload);
 
+      // Prefer the full sections list so inactive sections stay controllable.
       const sections =
-        homeSections.length > 0 ? homeSections : fallbackSections;
+        fallbackSections.length > 0 ? fallbackSections : homeSections;
 
       return {
         sections,
@@ -210,6 +257,36 @@ export const fetchPublicHomepage = createAsyncThunk(
   },
 );
 
+export const fetchHomepageSections = createAsyncThunk(
+  "homePage/fetchHomepageSections",
+  async (_, { rejectWithValue }) => {
+    try {
+      const sections = await api.getHomepageSections();
+      return asArray(sections);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to load sections",
+      );
+    }
+  },
+);
+
+export const saveHomePageSection = createAsyncThunk(
+  "homePage/saveHomePageSection",
+  async ({ sectionKey, data }, { rejectWithValue }) => {
+    try {
+      const apiKey = mapApiSectionKey(sectionKey);
+      const payload = toHomepageSectionPayload(data);
+      const saved = await api.updateHomepageSection(apiKey, payload);
+      return { sectionKey, data, saved };
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.message || "Failed to save section",
+      );
+    }
+  },
+);
+
 const initialState = {
   sections: defaultSections(),
   heroSlides,
@@ -218,6 +295,8 @@ const initialState = {
   popular: [],
   newArrivals: [],
   loading: false,
+  saving: false,
+  hydrated: false,
   error: null,
 };
 
@@ -245,6 +324,7 @@ const homePageSlice = createSlice({
       })
       .addCase(fetchPublicHomepage.fulfilled, (state, action) => {
         state.loading = false;
+        state.hydrated = true;
         state.error = null;
         state.sections = mapHomepageSectionData(
           defaultSections(),
@@ -265,7 +345,61 @@ const homePageSlice = createSlice({
       })
       .addCase(fetchPublicHomepage.rejected, (state, action) => {
         state.loading = false;
+        state.hydrated = true;
         state.error = action.payload || "Failed to load homepage";
+      })
+      .addCase(fetchHomepageSections.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchHomepageSections.fulfilled, (state, action) => {
+        state.loading = false;
+        state.hydrated = true;
+        state.error = null;
+        state.sections = mapHomepageSectionData(
+          defaultSections(),
+          action.payload,
+        );
+        if (state.heroSlides.length > 0) {
+          state.sections.hero = {
+            ...state.sections.hero,
+            slides: state.heroSlides,
+          };
+        }
+      })
+      .addCase(fetchHomepageSections.rejected, (state, action) => {
+        state.loading = false;
+        state.hydrated = true;
+        state.error = action.payload || "Failed to load sections";
+      })
+      .addCase(saveHomePageSection.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(saveHomePageSection.fulfilled, (state, action) => {
+        state.saving = false;
+        const { sectionKey, data, saved } = action.payload;
+        if (!state.sections[sectionKey]) return;
+        const content =
+          saved?.content && typeof saved.content === "object"
+            ? saved.content
+            : {};
+        state.sections[sectionKey] = {
+          ...state.sections[sectionKey],
+          ...data,
+          ...content,
+          title: saved?.title ?? data.title ?? state.sections[sectionKey].title,
+          subtitle:
+            saved?.subtitle ??
+            data.subtitle ??
+            state.sections[sectionKey].subtitle,
+          active:
+            saved?.active ?? data.active ?? state.sections[sectionKey].active,
+        };
+      })
+      .addCase(saveHomePageSection.rejected, (state, action) => {
+        state.saving = false;
+        state.error = action.payload || "Failed to save section";
       });
   },
 });
