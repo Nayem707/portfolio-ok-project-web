@@ -26,6 +26,7 @@ import SectionHeader from "@/components/common/SectionHeader";
 import ProductGrid from "@/components/product/ProductGrid";
 import ErrorState from "@/components/common/ErrorState";
 import Skeleton from "@/components/common/Skeleton";
+import Avatar from "@/components/common/Avatar";
 import useAuth from "@/hooks/useAuth";
 import {
   clearCurrentProduct,
@@ -264,7 +265,7 @@ export default function ProductDetailsView() {
           (response || []).map((review) => ({
             id: review.id,
             author: review.user?.name || "Anonymous",
-            avatar: review.user?.avatarUrl || "https://i.pravatar.cc/80?img=15",
+            avatarUrl: review.user?.avatarUrl || null,
             rating: review.rating,
             comment: review.comment || "",
             date: review.createdAt,
@@ -417,7 +418,7 @@ export default function ProductDetailsView() {
         (refreshed || []).map((review) => ({
           id: review.id,
           author: review.user?.name || "Anonymous",
-          avatar: review.user?.avatarUrl || "https://i.pravatar.cc/80?img=15",
+          avatarUrl: review.user?.avatarUrl || null,
           rating: review.rating,
           comment: review.comment || "",
           date: review.createdAt,
@@ -821,10 +822,10 @@ export default function ProductDetailsView() {
                 <article key={review.id} className="card p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={review.avatar}
-                        alt={review.author}
-                        className="h-9 w-9 rounded-full object-cover"
+                      <Avatar
+                        src={review.avatarUrl}
+                        name={review.author}
+                        size="md"
                       />
                       <div>
                         <p className="text-sm font-semibold text-slate-800">

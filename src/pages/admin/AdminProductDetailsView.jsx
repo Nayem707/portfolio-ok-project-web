@@ -10,6 +10,7 @@ import PriceDisplay from "@/components/common/PriceDisplay";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import Avatar from "@/components/common/Avatar";
 import {
   fetchProductByIdOrSlug,
   selectCurrentProduct,
@@ -78,11 +79,7 @@ export default function AdminProductDetailsView() {
       reviews.map((review) => ({
         id: review.id,
         author: review.user?.name || "Customer",
-        avatar:
-          review.user?.avatarUrl ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            review.user?.name || "Customer",
-          )}&background=e2e8f0&color=0f172a`,
+        avatarUrl: review.user?.avatarUrl || null,
         rating: review.rating,
         comment: review.comment || "No comment provided.",
         date: formatDate(review.createdAt),
@@ -300,10 +297,10 @@ export default function AdminProductDetailsView() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={review.avatar}
-                        alt={review.author}
-                        className="h-9 w-9 rounded-full object-cover"
+                      <Avatar
+                        src={review.avatarUrl}
+                        name={review.author}
+                        size="md"
                       />
                       <div>
                         <p className="text-sm font-semibold text-slate-800">

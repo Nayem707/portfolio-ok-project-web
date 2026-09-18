@@ -10,6 +10,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
+import Avatar from "@/components/common/Avatar";
 import { toggleAdminSidebar } from "@/features/ui";
 import { logout, selectCurrentUser } from "@/features/auth";
 
@@ -81,11 +82,7 @@ export default function AdminTopbar() {
           <Dropdown
             trigger={
               <span className="flex items-center gap-2 rounded-lg p-1.5 pr-2 hover:bg-slate-100">
-                <img
-                  src={user?.avatar || "https://i.pravatar.cc/150?img=15"}
-                  alt={user?.name}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
+                <Avatar user={user} size="sm" />
                 <span className="hidden text-sm font-medium text-slate-700 sm:block">
                   {user?.name}
                 </span>

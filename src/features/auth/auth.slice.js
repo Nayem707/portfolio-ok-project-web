@@ -4,10 +4,18 @@ import { AUTH_KEY } from "./auth.constants";
 
 const normalizeUser = (user) => {
   if (!user) return null;
+
+  // Prefer explicit avatarUrl from the API (including null/"" to clear).
+  // Fall back to legacy `avatar` only when avatarUrl was not provided.
+  const hasAvatarUrl = Object.prototype.hasOwnProperty.call(user, "avatarUrl");
+  const avatarUrl = hasAvatarUrl
+    ? user.avatarUrl || null
+    : user.avatar || user.image || null;
+
   return {
     ...user,
-    avatarUrl: user.avatarUrl ?? user.avatar ?? null,
-    avatar: user.avatar ?? user.avatarUrl ?? null,
+    avatarUrl,
+    avatar: avatarUrl,
   };
 };
 

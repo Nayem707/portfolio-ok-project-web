@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { orders as seedOrders } from "@/data/orders";
 import { clearCart } from "@/features/cart/cart.slice";
 import { api } from "@/services/api";
+import { getProductImage } from "@/utils";
 
 const toTitleCase = (value) => {
   if (!value) return "";
@@ -25,7 +26,7 @@ const normalizeOrder = (order) => ({
     quantity: item.quantity,
     selectedColor: item.selectedColor || null,
     selectedSize: item.selectedSize || null,
-    image: null,
+    image: getProductImage(item) || null,
     subtotal: Number(item.subtotal || 0),
   })),
   shipping: {

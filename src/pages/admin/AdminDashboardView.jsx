@@ -22,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 import StatCard from "@/components/common/StatCard";
 import Badge from "@/components/common/Badge";
+import Avatar from "@/components/common/Avatar";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import { selectOrders } from "@/features/orders";
 import { selectProducts } from "@/features/products";
@@ -290,11 +291,7 @@ export default function AdminDashboardView() {
                   to={`/admin/users/${user.id}`}
                   className="flex items-center gap-3 px-6 py-3.5 transition hover:bg-slate-50"
                 >
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="h-9 w-9 rounded-full object-cover"
-                  />
+                  <Avatar user={user} size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-slate-800">
                       {user.name}

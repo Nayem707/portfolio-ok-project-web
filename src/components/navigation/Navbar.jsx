@@ -16,6 +16,7 @@ import {
 import Logo from "@/components/navigation/Logo";
 import SearchBar from "@/components/common/SearchBar";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
+import Avatar from "@/components/common/Avatar";
 import { selectCartCount } from "@/features/cart";
 import { selectWishlistCount } from "@/features/wishlist";
 import { toggleMiniCart, toggleMobileMenu } from "@/features/ui";
@@ -136,15 +137,7 @@ export default function Navbar() {
               <Dropdown
                 trigger={
                   <span className="flex items-center gap-2 rounded-lg p-1.5 pr-2 transition hover:bg-slate-100">
-                    <img
-                      src={
-                        user.avatarUrl ||
-                        user.avatar ||
-                        "https://i.pravatar.cc/150?img=12"
-                      }
-                      alt={user.name}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
+                    <Avatar user={user} size="sm" />
                     <ChevronDownIcon className="hidden h-4 w-4 text-slate-400 sm:block" />
                   </span>
                 }

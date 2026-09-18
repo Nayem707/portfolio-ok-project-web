@@ -21,7 +21,7 @@ import {
   selectOrdersLoading,
 } from "@/features/orders";
 import { selectWishlistItems } from "@/features/wishlist";
-import { formatCurrency, formatDate } from "@/utils";
+import { formatCurrency, formatDate, getProductImage } from "@/utils";
 import { ORDER_STATUS } from "@/constants";
 
 export default function DashboardOverviewView() {
@@ -133,10 +133,10 @@ export default function DashboardOverviewView() {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={
-                        order.items[0]?.image ||
-                        "https://placehold.co/88x88?text=Item"
-                      }
+                      src={getProductImage(
+                        order.items[0],
+                        "https://placehold.co/88x88?text=Item",
+                      )}
                       alt=""
                       className="h-11 w-11 rounded-lg border border-slate-100 object-cover"
                     />

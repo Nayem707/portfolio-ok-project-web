@@ -33,6 +33,36 @@ export const getDiscountedPrice = (price, discount = 0) => {
 
 export const getDiscountPercent = (price, discount = 0) => Math.round(discount);
 
+/** First usable product/order-item image, or the provided fallback. */
+export const getProductImage = (source, fallback = "") => {
+  if (!source) return fallback;
+  if (typeof source === "string") return source || fallback;
+  return (
+    source.image ||
+    source.productImage ||
+    source.imageUrl ||
+    source.images?.[0] ||
+    source.product?.images?.[0] ||
+    source.product?.image ||
+    fallback
+  );
+};
+
+/** Resolve a user's profile image URL from common API/legacy field names. */
+export const getUserAvatarUrl = (user) => {
+  if (!user) return null;
+  if (typeof user === "string") return user || null;
+  return user.avatarUrl || user.avatar || user.image || null;
+};
+
+/** Initials for avatar fallback (e.g. "Sam Rivera" → "SR"). */
+export const getInitials = (name = "") => {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
 export const truncate = (str = "", length = 60) =>
   str.length > length ? `${str.slice(0, length).trim()}…` : str;
 

@@ -19,7 +19,7 @@ import {
   selectOrdersError,
   selectOrdersLoading,
 } from "@/features/orders";
-import { formatCurrency, formatDate } from "@/utils";
+import { formatCurrency, formatDate, getProductImage } from "@/utils";
 
 const filters = [
   "All",
@@ -106,11 +106,12 @@ export default function OrdersView() {
 
               <div className="flex items-center justify-between gap-4 pt-4">
                 <div className="flex -space-x-3">
-                  {order.items.slice(0, 4).map((item, idx) =>
-                    item.image ? (
+                  {order.items.slice(0, 4).map((item, idx) => {
+                    const image = getProductImage(item);
+                    return image ? (
                       <img
                         key={`${item.id}-${idx}`}
-                        src={item.image}
+                        src={image}
                         alt={item.name}
                         className="h-12 w-12 rounded-lg border-2 border-white object-cover"
                       />
@@ -121,8 +122,8 @@ export default function OrdersView() {
                       >
                         {item.name?.slice(0, 2)?.toUpperCase() || "PR"}
                       </span>
-                    ),
-                  )}
+                    );
+                  })}
                   {order.items.length > 4 && (
                     <span className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-white bg-slate-100 text-xs font-medium text-slate-500">
                       +{order.items.length - 4}

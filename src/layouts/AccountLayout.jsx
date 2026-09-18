@@ -12,6 +12,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Breadcrumb from "@/components/common/Breadcrumb";
+import Avatar from "@/components/common/Avatar";
 import { logout, selectCurrentUser } from "@/features/auth";
 import { resetCartState } from "@/features/cart";
 import { resetWishlistState } from "@/features/wishlist";
@@ -40,15 +41,7 @@ export default function AccountLayout() {
         <aside className="h-fit min-w-0 lg:sticky lg:top-24">
           <div className="card p-5">
             <div className="flex items-center gap-3">
-              <img
-                src={
-                  user?.avatarUrl ||
-                  user?.avatar ||
-                  "https://i.pravatar.cc/150?img=12"
-                }
-                alt={user?.name}
-                className="h-12 w-12 rounded-full object-cover"
-              />
+              <Avatar user={user} size="lg" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-slate-800">
                   {user?.name}

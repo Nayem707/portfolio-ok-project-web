@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
+import Avatar from "@/components/common/Avatar";
 import EmptyState from "@/components/common/EmptyState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import { getUserById } from "@/data/users";
@@ -47,11 +48,7 @@ export default function AdminUserDetailsView() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Profile */}
         <div className="card p-6 text-center">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="mx-auto h-24 w-24 rounded-full object-cover"
-          />
+          <Avatar user={user} size="2xl" className="mx-auto" />
           <h1 className="mt-4 text-xl font-bold text-slate-900">{user.name}</h1>
           <div className="mt-2 flex items-center justify-center gap-2">
             <Badge color={user.role === "ADMIN" ? "indigo" : "gray"}>
