@@ -11,6 +11,7 @@ import sizeReducer from "@/features/sizes/sizes.slice";
 import homePageReducer from "@/features/homepage/homepage.slice";
 import orderReducer from "@/features/orders/orders.slice";
 import usersReducer from "@/features/users/users.slice";
+import dashboardReducer from "@/features/dashboard/dashboard.slice";
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ export const store = configureStore({
     homePage: homePageReducer,
     order: orderReducer,
     users: usersReducer,
+    dashboard: dashboardReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

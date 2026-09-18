@@ -349,4 +349,14 @@ export const api = {
     const response = await axiosInstance.get("/health");
     return getData(response);
   },
+
+  getDashboardOverview: async () => {
+    const response = await axiosInstance.get("/admin/dashboard/overview");
+    return getData(response);
+  },
+
+  getDashboardStats: async () => {
+    const response = await axiosInstance.get("/admin/dashboard/stats");
+    return getData(response);
+  },
 };

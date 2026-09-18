@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import {
+  ArrowUpTrayIcon,
+  StarIcon,
+  TrashIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
@@ -9,6 +18,7 @@ import {
 } from "@/features/categories";
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
+import { api } from "@/services/api";
 import { PRODUCT_STATUS, toProductStatusKey } from "@/constants";
 
 const empty = {
@@ -25,6 +35,16 @@ const empty = {
   status: "ACTIVE",
 };
 
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
+const MAX_SIZE_MB = 5;
+const MAX_UPLOAD_BATCH = 8;
+
 const toArray = (value) => {
   if (Array.isArray(value)) return value;
   if (!value) return [];
@@ -37,12 +57,17 @@ const toArray = (value) => {
   return [];
 };
 
+const normalizeImages = (images) =>
+  toArray(images)
+    .map((img) => (typeof img === "string" ? img.trim() : ""))
+    .filter(Boolean);
+
 const fromInitial = (initial) => ({
   ...empty,
   ...initial,
   category: initial?.category || "",
   status: toProductStatusKey(initial?.status) || "ACTIVE",
-  images: initial?.images || [],
+  images: normalizeImages(initial?.images),
   availableColors: toArray(initial?.colors || initial?.availableColors),
   availableSizes: toArray(initial?.sizes || initial?.availableSizes),
 });
@@ -57,15 +82,24 @@ export default function ProductForm({
   const categories = useSelector(selectCategories);
   const colors = useSelector(selectColors);
   const sizes = useSelector(selectSizes);
+  const fileInputRef = useRef(null);
   const [form, setForm] = useState(() => fromInitial(initial));
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCategories({ all: true }));
     dispatch(fetchColors());
     dispatch(fetchSizes());
   }, [dispatch]);
+
+  useEffect(() => {
+    setForm(fromInitial(initial));
+    setImageUrl("");
+    setErrors({});
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [initial]);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
@@ -79,14 +113,102 @@ export default function ProductForm({
     });
   };
 
-  const addImage = () => {
-    if (!imageUrl.trim()) return;
-    setForm({ ...form, images: [...form.images, imageUrl.trim()] });
+  const updateImages = (nextImages) => {
+    setForm((prev) => ({ ...prev, images: normalizeImages(nextImages) }));
+  };
+
+  const addImageUrl = () => {
+    const url = imageUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      toast.error("Enter a valid image URL or upload path");
+      return;
+    }
+    if (form.images.includes(url)) {
+      toast.error("This image is already added");
+      return;
+    }
+    updateImages([...form.images, url]);
     setImageUrl("");
   };
 
-  const removeImage = (idx) =>
-    setForm({ ...form, images: form.images.filter((_, i) => i !== idx) });
+  const removeImage = (idx) => {
+    updateImages(form.images.filter((_, i) => i !== idx));
+  };
+
+  const setPrimaryImage = (idx) => {
+    if (idx <= 0 || idx >= form.images.length) return;
+    const next = [...form.images];
+    const [selected] = next.splice(idx, 1);
+    next.unshift(selected);
+    updateImages(next);
+  };
+
+  const moveImage = (idx, direction) => {
+    const target = idx + direction;
+    if (target < 0 || target >= form.images.length) return;
+    const next = [...form.images];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    updateImages(next);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    if (files.length > MAX_UPLOAD_BATCH) {
+      toast.error(`You can upload up to ${MAX_UPLOAD_BATCH} images at once`);
+      return;
+    }
+
+    for (const file of files) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error("Please select JPG, PNG, WebP, GIF, or AVIF images only");
+        return;
+      }
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.error(`Each image must be under ${MAX_SIZE_MB}MB`);
+        return;
+      }
+    }
+
+    setUploading(true);
+    try {
+      const uploaded = await api.uploadImages(files);
+      const list = Array.isArray(uploaded) ? uploaded : [uploaded];
+      const urls = list
+        .map((item) => item?.url)
+        .filter((url) => typeof url === "string" && url.trim());
+
+      if (!urls.length) {
+        throw new Error("Upload did not return image URLs");
+      }
+
+      const merged = [...form.images];
+      urls.forEach((url) => {
+        if (!merged.includes(url)) merged.push(url);
+      });
+      updateImages(merged);
+      toast.success(
+        urls.length === 1
+          ? "Image uploaded"
+          : `${urls.length} images uploaded`,
+      );
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to upload images",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const validate = () => {
     const next = {};
@@ -103,6 +225,10 @@ export default function ProductForm({
 
   const submit = (e) => {
     e.preventDefault();
+    if (uploading) {
+      toast.error("Please wait for image uploads to finish");
+      return;
+    }
     if (!validate()) return;
 
     const selectedCategory = categories.find(
@@ -174,42 +300,142 @@ export default function ProductForm({
 
         <div className="card p-6">
           <h2 className="font-semibold text-slate-900">Images</h2>
-          <div className="mt-4 flex gap-2">
+          <p className="mt-1 text-sm text-slate-500">
+            Add image URLs and/or upload multiple files. The first image is the
+            primary/featured image.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Input
               placeholder="Paste image URL…"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addImageUrl();
+                }
+              }}
             />
             <Button
               type="button"
               variant="outline"
-              onClick={addImage}
+              onClick={addImageUrl}
               className="shrink-0"
+              disabled={uploading}
             >
-              Add
+              Add URL
             </Button>
           </div>
-          {form.images.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {form.images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200"
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute top-1 right-1 rounded-md bg-white/90 px-1.5 py-0.5 text-xs font-medium text-red-600 opacity-0 transition group-hover:opacity-100"
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={ArrowUpTrayIcon}
+              loading={uploading}
+              onClick={handleUploadClick}
+            >
+              {uploading ? "Uploading…" : "Upload images"}
+            </Button>
+            <p className="text-xs text-slate-400">
+              JPG, PNG, WebP, GIF, or AVIF · max {MAX_SIZE_MB}MB each · up to{" "}
+              {MAX_UPLOAD_BATCH} at once
+            </p>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES.join(",")}
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {form.images.length > 0 ? (
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {form.images.map((img, idx) => {
+                const isPrimary = idx === 0;
+                return (
+                  <div
+                    key={`${img}-${idx}`}
+                    className={[
+                      "group relative aspect-square overflow-hidden rounded-xl border bg-slate-50",
+                      isPrimary
+                        ? "border-primary-500 ring-primary-200 ring-2"
+                        : "border-slate-200",
+                    ].join(" ")}
                   >
-                    Remove
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={img}
+                      alt={`Product image ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+
+                    {isPrimary ? (
+                      <span className="bg-primary-600 absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                        <StarSolidIcon className="h-3 w-3" />
+                        Primary
+                      </span>
+                    ) : null}
+
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent px-1.5 pt-6 pb-1.5 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => moveImage(idx, -1)}
+                          disabled={idx === 0 || uploading}
+                          className="rounded-md bg-white/90 p-1 text-slate-700 disabled:opacity-40"
+                          aria-label="Move image left"
+                          title="Move left"
+                        >
+                          <ChevronLeftIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveImage(idx, 1)}
+                          disabled={idx === form.images.length - 1 || uploading}
+                          className="rounded-md bg-white/90 p-1 text-slate-700 disabled:opacity-40"
+                          aria-label="Move image right"
+                          title="Move right"
+                        >
+                          <ChevronRightIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {!isPrimary ? (
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryImage(idx)}
+                            disabled={uploading}
+                            className="rounded-md bg-white/90 p-1 text-amber-600"
+                            aria-label="Set as primary image"
+                            title="Set as primary"
+                          >
+                            <StarIcon className="h-3.5 w-3.5" />
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          disabled={uploading}
+                          className="rounded-md bg-white/90 p-1 text-red-600"
+                          aria-label="Remove image"
+                          title="Remove"
+                        >
+                          <TrashIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
+              No images yet — paste a URL or upload files.
             </div>
           )}
         </div>
@@ -344,7 +570,13 @@ export default function ProductForm({
           </div>
         </div>
 
-        <Button type="submit" fullWidth size="lg" loading={loading}>
+        <Button
+          type="submit"
+          fullWidth
+          size="lg"
+          loading={loading}
+          disabled={uploading}
+        >
           {submitLabel}
         </Button>
       </div>
