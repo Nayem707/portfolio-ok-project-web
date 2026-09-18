@@ -4,6 +4,8 @@ export const selectProductById = (id) => (state) =>
 export const selectProductListMeta = (state) => state.product.listMeta;
 export const selectProductsLoading = (state) => state.product.loading;
 export const selectProductsError = (state) => state.product.error;
+export const selectProductsMutationLoading = (state) =>
+  state.product.mutationLoading;
 export const selectCurrentProduct = (state) => state.product.currentProduct;
 export const selectProductDetailsLoading = (state) =>
   state.product.detailsLoading;

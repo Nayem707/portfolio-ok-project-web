@@ -188,6 +188,21 @@ export const api = {
     return getData(response);
   },
 
+  createProduct: async (payload) => {
+    const response = await axiosInstance.post("/products", payload);
+    return getData(response);
+  },
+
+  updateProduct: async (productId, payload) => {
+    const response = await axiosInstance.patch(`/products/${productId}`, payload);
+    return getData(response);
+  },
+
+  deleteProduct: async (productId) => {
+    const response = await axiosInstance.delete(`/products/${productId}`);
+    return getData(response);
+  },
+
   getPublicProductReviews: async (productId) => {
     const response = await axiosInstance.get(`/products/${productId}/reviews`);
     return getData(response);

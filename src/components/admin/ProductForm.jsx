@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
-import { selectCategories } from "@/features/categories";
-import { selectColors } from "@/features/colors";
-import { selectSizes } from "@/features/sizes";
-import { PRODUCT_STATUS } from "@/constants";
+import {
+  fetchCategories,
+  selectCategories,
+} from "@/features/categories";
+import { fetchColors, selectColors } from "@/features/colors";
+import { fetchSizes, selectSizes } from "@/features/sizes";
+import { PRODUCT_STATUS, toProductStatusKey } from "@/constants";
 
 const empty = {
   name: "",
@@ -17,9 +20,9 @@ const empty = {
   stock: "",
   sku: "",
   images: [],
-  availableColors: "",
-  availableSizes: "",
-  status: PRODUCT_STATUS.ACTIVE,
+  availableColors: [],
+  availableSizes: [],
+  status: "ACTIVE",
 };
 
 const toArray = (value) => {
@@ -34,24 +37,35 @@ const toArray = (value) => {
   return [];
 };
 
+const fromInitial = (initial) => ({
+  ...empty,
+  ...initial,
+  category: initial?.category || "",
+  status: toProductStatusKey(initial?.status) || "ACTIVE",
+  images: initial?.images || [],
+  availableColors: toArray(initial?.colors || initial?.availableColors),
+  availableSizes: toArray(initial?.sizes || initial?.availableSizes),
+});
+
 export default function ProductForm({
   initial,
   onSubmit,
   submitLabel = "Save product",
   loading,
 }) {
+  const dispatch = useDispatch();
   const categories = useSelector(selectCategories);
   const colors = useSelector(selectColors);
   const sizes = useSelector(selectSizes);
-  const [form, setForm] = useState(() => ({
-    ...empty,
-    ...initial,
-    images: initial?.images || [],
-    availableColors: toArray(initial?.availableColors),
-    availableSizes: toArray(initial?.availableSizes),
-  }));
+  const [form, setForm] = useState(() => fromInitial(initial));
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    dispatch(fetchCategories({ all: true }));
+    dispatch(fetchColors());
+    dispatch(fetchSizes());
+  }, [dispatch]);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
@@ -90,25 +104,44 @@ export default function ProductForm({
   const submit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const cat = categories.find((c) => c.name === form.category);
+
+    const selectedCategory = categories.find(
+      (c) => c.id === form.category || c.name === form.category,
+    );
+    if (!selectedCategory?.id && !initial?.categoryId) {
+      setErrors({ ...errors, category: "Required" });
+      return;
+    }
+
+    const selectedColorNames = Array.isArray(form.availableColors)
+      ? form.availableColors
+      : toArray(form.availableColors);
+    const selectedSizeNames = Array.isArray(form.availableSizes)
+      ? form.availableSizes
+      : toArray(form.availableSizes);
+
     onSubmit({
-      ...form,
+      name: form.name.trim(),
+      sku: form.sku.trim(),
+      categoryId: selectedCategory?.id || initial?.categoryId,
+      description: form.description?.trim() || undefined,
       price: Number(form.price),
       discount: Number(form.discount) || 0,
       stock: Number(form.stock),
-      categoryId: cat?.id,
-      availableColors: Array.isArray(form.availableColors)
-        ? form.availableColors
-        : form.availableColors
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
-      availableSizes: Array.isArray(form.availableSizes)
-        ? form.availableSizes
-        : form.availableSizes
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
+      status: toProductStatusKey(form.status) || "ACTIVE",
+      images: form.images,
+      colorIds:
+        colors.length > 0
+          ? colors
+              .filter((color) => selectedColorNames.includes(color.name))
+              .map((color) => color.id)
+          : initial?.colorIds || [],
+      sizeIds:
+        sizes.length > 0
+          ? sizes
+              .filter((size) => selectedSizeNames.includes(size.name))
+              .map((size) => size.id)
+          : initial?.sizeIds || [],
     });
   };
 
@@ -233,8 +266,10 @@ export default function ProductForm({
               ))}
             </Select>
             <Select label="Status" value={form.status} onChange={set("status")}>
-              {Object.values(PRODUCT_STATUS).map((s) => (
-                <option key={s}>{s}</option>
+              {Object.entries(PRODUCT_STATUS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
               ))}
             </Select>
             <div className="space-y-2">

@@ -24,11 +24,11 @@ import Modal from "@/components/common/Modal";
 import QuantitySelector from "@/components/common/QuantitySelector";
 import SectionHeader from "@/components/common/SectionHeader";
 import ProductGrid from "@/components/product/ProductGrid";
-import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import Skeleton from "@/components/common/Skeleton";
 import useAuth from "@/hooks/useAuth";
 import {
+  clearCurrentProduct,
   fetchProductByIdOrSlug,
   selectCurrentProduct,
   selectProductDetailsError,
@@ -38,8 +38,53 @@ import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { addToCart } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
-import { classNames } from "@/utils";
+import { classNames, range } from "@/utils";
 import { api } from "@/services/api";
+
+function ProductDetailsSkeleton() {
+  return (
+    <div className="container-app py-8" aria-busy="true" aria-live="polite">
+      <Skeleton className="h-4 w-48" />
+      <div className="mt-6 grid gap-10 lg:grid-cols-2">
+        <div>
+          <Skeleton className="aspect-square w-full" rounded="rounded-2xl" />
+          <div className="mt-4 flex gap-3">
+            {range(4).map((i) => (
+              <Skeleton key={i} className="h-20 w-20" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-9 w-4/5" />
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-8 w-32" />
+          <div className="space-y-2 pt-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <Skeleton className="h-6 w-28" />
+          <div className="flex gap-3 pt-2">
+            {range(4).map((i) => (
+              <Skeleton key={i} className="h-9 w-9" rounded="rounded-full" />
+            ))}
+          </div>
+          <div className="flex gap-2 pt-2">
+            {range(4).map((i) => (
+              <Skeleton key={i} className="h-10 w-14" />
+            ))}
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Skeleton className="h-12 w-28" />
+            <Skeleton className="h-12 flex-1" />
+            <Skeleton className="h-12 flex-1" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductDetailsView() {
   const { id } = useParams();
@@ -54,13 +99,69 @@ export default function ProductDetailsView() {
   const sizes = useSelector(selectSizes);
   const wishlist = useSelector(selectWishlistItems);
   const [related, setRelated] = useState([]);
+  const [primaryImageReady, setPrimaryImageReady] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState("Black");
+  const [selectedSize, setSelectedSize] = useState("Standard");
+  const [visibleReviews, setVisibleReviews] = useState(6);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [editingReviewId, setEditingReviewId] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
+
+  const matchesRoute =
+    !!product &&
+    !!id &&
+    (product.id === id || product.slug === id);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearCurrentProduct());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     if (!id) return;
+    setPrimaryImageReady(false);
+    setActiveImage(0);
+    setRelated([]);
+    setReviews([]);
     dispatch(fetchProductByIdOrSlug(id));
     dispatch(fetchColors());
     dispatch(fetchSizes());
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (!matchesRoute) {
+      setPrimaryImageReady(false);
+      return;
+    }
+
+    const primarySrc =
+      product.images?.[0] ||
+      product.image ||
+      "https://placehold.co/800x800?text=Product";
+
+    let cancelled = false;
+    const img = new Image();
+    const markReady = () => {
+      if (!cancelled) setPrimaryImageReady(true);
+    };
+
+    img.onload = markReady;
+    img.onerror = markReady;
+    img.src = primarySrc;
+    if (img.complete) markReady();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [matchesRoute, product]);
 
   const colorSwatches = {
     Black: "#111827",
@@ -110,23 +211,6 @@ export default function ProductDetailsView() {
     const names = (sizes || []).map((item) => item.name);
     return names.length ? names : ["Standard"];
   }, [product, sizes]);
-  const [activeImage, setActiveImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState(
-    productColors[0]?.name || "Black",
-  );
-  const [selectedSize, setSelectedSize] = useState(
-    productSizes[0] || "Standard",
-  );
-  const [visibleReviews, setVisibleReviews] = useState(6);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [reviewsError, setReviewsError] = useState("");
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
-  const [editingReviewId, setEditingReviewId] = useState("");
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
 
   useEffect(() => {
     setSelectedColor(productColors[0]?.name || "Black");
@@ -220,13 +304,7 @@ export default function ProductDetailsView() {
     };
   }, [product?.id]);
 
-  if (productLoading && !product) {
-    return (
-      <LoadingSpinner className="py-16" label="Loading product details..." />
-    );
-  }
-
-  if (productError && !product) {
+  if (productError && !matchesRoute && !productLoading) {
     return (
       <div className="container-app py-8">
         <ErrorState
@@ -238,20 +316,10 @@ export default function ProductDetailsView() {
     );
   }
 
-  if (!product) {
-    return (
-      <div className="container-app py-16">
-        <EmptyState
-          title="Product not found"
-          description="The product you’re looking for doesn’t exist or has been removed."
-          action={
-            <Button as={Link} to="/products">
-              Back to products
-            </Button>
-          }
-        />
-      </div>
-    );
+  // Show card skeleton whenever the route product is not fully ready —
+  // including while Product B loads after Product A was shown.
+  if (!matchesRoute || productLoading || !primaryImageReady) {
+    return <ProductDetailsSkeleton />;
   }
 
   const isWishlisted = wishlist.some((i) => i.id === product.id);
@@ -392,7 +460,10 @@ export default function ProductDetailsView() {
   )}`;
 
   return (
-    <div className="container-app py-8">
+    <div
+      key={product.id}
+      className="container-app py-8 transition-opacity duration-300 ease-out"
+    >
       <Breadcrumb
         items={[
           { label: "Products", to: "/products" },

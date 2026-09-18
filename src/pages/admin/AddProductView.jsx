@@ -1,19 +1,26 @@
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ProductForm from "@/components/admin/ProductForm";
-import Breadcrumb from "@/components/common/Breadcrumb";
-import { addProduct } from "@/features/products";
+import {
+  createProduct,
+  selectProductsMutationLoading,
+} from "@/features/products";
 
 export default function AddProductView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const loading = useSelector(selectProductsMutationLoading);
 
-  const handleSubmit = (data) => {
-    dispatch(addProduct(data));
-    toast.success("Product created successfully");
-    navigate("/admin/products");
+  const handleSubmit = async (payload) => {
+    try {
+      await dispatch(createProduct(payload)).unwrap();
+      toast.success("Product created successfully");
+      navigate("/admin/products");
+    } catch (error) {
+      toast.error(error || "Failed to create product");
+    }
   };
 
   return (
@@ -30,7 +37,11 @@ export default function AddProductView() {
           Create a new product for your catalog.
         </p>
       </div>
-      <ProductForm onSubmit={handleSubmit} submitLabel="Create product" />
+      <ProductForm
+        onSubmit={handleSubmit}
+        submitLabel="Create product"
+        loading={loading}
+      />
     </div>
   );
 }

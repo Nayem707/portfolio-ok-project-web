@@ -31,27 +31,25 @@ import {
   selectProducts,
   selectProductsError,
   selectProductsLoading,
+  selectProductsMutationLoading,
 } from "@/features/products";
 import { fetchCategories, selectCategories } from "@/features/categories";
 import { formatCurrency, formatDate } from "@/utils";
-import { PRODUCT_STATUS } from "@/constants";
+import {
+  PRODUCT_STATUS,
+  toProductStatusKey,
+  toProductStatusLabel,
+} from "@/constants";
 
-const STATUS_LABEL = {
-  ACTIVE: "Active",
-  DRAFT: "Draft",
-  ARCHIVED: "Archived",
-};
 const statusColor = { ACTIVE: "green", DRAFT: "yellow", ARCHIVED: "gray" };
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 const ADMIN_PRODUCT_LIMIT = 100;
-
-const toStatusKey = (value) => String(value || "").toUpperCase();
-const statusLabel = (status) => STATUS_LABEL[toStatusKey(status)] || status;
 
 export default function AdminProductListView() {
   const products = useSelector(selectProducts);
   const productsLoading = useSelector(selectProductsLoading);
   const productsError = useSelector(selectProductsError);
+  const mutationLoading = useSelector(selectProductsMutationLoading);
   const categories = useSelector(selectCategories);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -69,7 +67,7 @@ export default function AdminProductListView() {
         (p) =>
           p.name.toLowerCase().includes(search.toLowerCase()) &&
           (!category || p.category === category || p.categoryId === category) &&
-          (!status || toStatusKey(p.status) === toStatusKey(status)),
+          (!status || toProductStatusKey(p.status) === toProductStatusKey(status)),
       ),
     [products, search, category, status],
   );
@@ -82,13 +80,13 @@ export default function AdminProductListView() {
 
   const overview = useMemo(() => {
     const active = products.filter(
-      (p) => toStatusKey(p.status) === "ACTIVE",
+      (p) => toProductStatusKey(p.status) === "ACTIVE",
     ).length;
     const draft = products.filter(
-      (p) => toStatusKey(p.status) === "DRAFT",
+      (p) => toProductStatusKey(p.status) === "DRAFT",
     ).length;
     const archived = products.filter(
-      (p) => toStatusKey(p.status) === "ARCHIVED",
+      (p) => toProductStatusKey(p.status) === "ARCHIVED",
     ).length;
     const outOfStock = products.filter((p) => p.stock === 0).length;
 
@@ -165,8 +163,8 @@ export default function AdminProductListView() {
       key: "status",
       header: "Status",
       render: (p) => (
-        <Badge color={statusColor[toStatusKey(p.status)] || "gray"}>
-          {statusLabel(p.status)}
+        <Badge color={statusColor[toProductStatusKey(p.status)] || "gray"}>
+          {toProductStatusLabel(p.status)}
         </Badge>
       ),
     },
@@ -225,8 +223,8 @@ export default function AdminProductListView() {
             <span className="font-semibold text-slate-900">
               {formatCurrency(p.price)}
             </span>
-            <Badge color={statusColor[toStatusKey(p.status)] || "gray"}>
-              {statusLabel(p.status)}
+            <Badge color={statusColor[toProductStatusKey(p.status)] || "gray"}>
+              {toProductStatusLabel(p.status)}
             </Badge>
           </div>
         </div>
@@ -329,9 +327,9 @@ export default function AdminProductListView() {
           <div className="sm:w-44">
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">All status</option>
-              {Object.values(PRODUCT_STATUS).map((value) => (
+              {Object.entries(PRODUCT_STATUS).map(([value, label]) => (
                 <option key={value} value={value}>
-                  {value}
+                  {label}
                 </option>
               ))}
             </Select>
@@ -384,15 +382,21 @@ export default function AdminProductListView() {
 
       <ConfirmDialog
         open={!!toDelete}
-        onClose={() => setToDelete(null)}
-        onConfirm={() => {
-          dispatch(deleteProduct(toDelete.id));
-          toast.success("Product deleted");
-          setToDelete(null);
+        onClose={() => !mutationLoading && setToDelete(null)}
+        onConfirm={async () => {
+          if (!toDelete) return;
+          try {
+            await dispatch(deleteProduct(toDelete.id)).unwrap();
+            toast.success("Product deleted");
+            setToDelete(null);
+          } catch (error) {
+            toast.error(error || "Failed to delete product");
+          }
         }}
         title="Delete product?"
         message={`"${toDelete?.name}" will be permanently removed from your catalog.`}
         confirmText="Delete"
+        loading={mutationLoading}
       />
     </div>
   );

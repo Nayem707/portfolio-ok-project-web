@@ -39,6 +39,12 @@ export const PRODUCT_STATUS = {
   ARCHIVED: "Archived",
 };
 
+export const toProductStatusKey = (value) =>
+  String(value || "").trim().toUpperCase();
+
+export const toProductStatusLabel = (value) =>
+  PRODUCT_STATUS[toProductStatusKey(value)] || value || "";
+
 export const USER_STATUS = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
