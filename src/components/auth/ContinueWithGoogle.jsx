@@ -1,11 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
 import { loginSuccess } from "@/features/auth";
 import { api } from "@/services/api";
-import { isFirebaseConfigured, signInWithGoogleIdToken } from "@/lib/firebase";
+import {
+  completeGoogleRedirectSignIn,
+  isFirebaseConfigured,
+  signInWithGoogleIdToken,
+  stashGoogleAuthContext,
+  takeGoogleAuthContext,
+} from "@/lib/firebase";
 
 function GoogleIcon({ className }) {
   return (
@@ -33,6 +39,7 @@ function GoogleIcon({ className }) {
 /**
  * Continues with Google via Firebase, then exchanges the ID token
  * for the app's existing JWT session (loginSuccess).
+ * Uses redirect on live hosts to avoid Cross-Origin-Opener-Policy popup blocks.
  */
 export default function ContinueWithGoogle({ mode = "login" }) {
   const dispatch = useDispatch();
@@ -41,8 +48,59 @@ export default function ContinueWithGoogle({ mode = "login" }) {
   const [loading, setLoading] = useState(false);
 
   const from = location.state?.from?.pathname;
-  const label =
-    mode === "register" ? "Continue with Google" : "Continue with Google";
+
+  const finishWithIdToken = async (idToken, authMode = mode, returnTo = from) => {
+    const response = await api.loginWithGoogle({ idToken });
+    const user = response?.user ?? response;
+
+    dispatch(
+      loginSuccess({
+        user,
+        accessToken: response?.accessToken,
+        refreshToken: response?.refreshToken,
+      }),
+    );
+
+    toast.success(
+      authMode === "register"
+        ? "Account ready — welcome!"
+        : `Welcome back, ${(user.name || user.email || "there").split(" ")[0]}!`,
+    );
+
+    navigate(returnTo || (user.role === "ADMIN" ? "/admin" : "/account"), {
+      replace: true,
+    });
+  };
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return undefined;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const idToken = await completeGoogleRedirectSignIn();
+        if (!idToken || cancelled) return;
+        setLoading(true);
+        const { returnTo, mode: authMode } = takeGoogleAuthContext();
+        await finishWithIdToken(idToken, authMode, returnTo || undefined);
+      } catch (error) {
+        if (cancelled) return;
+        const message =
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Google sign-in failed";
+        toast.error(message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount to complete redirect return.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = async () => {
     if (!isFirebaseConfigured()) {
@@ -52,27 +110,11 @@ export default function ContinueWithGoogle({ mode = "login" }) {
 
     setLoading(true);
     try {
+      stashGoogleAuthContext({ returnTo: from || "", mode });
       const idToken = await signInWithGoogleIdToken();
-      const response = await api.loginWithGoogle({ idToken });
-      const user = response?.user ?? response;
-
-      dispatch(
-        loginSuccess({
-          user,
-          accessToken: response?.accessToken,
-          refreshToken: response?.refreshToken,
-        }),
-      );
-
-      toast.success(
-        mode === "register"
-          ? "Account ready — welcome!"
-          : `Welcome back, ${(user.name || user.email || "there").split(" ")[0]}!`,
-      );
-
-      navigate(from || (user.role === "ADMIN" ? "/admin" : "/account"), {
-        replace: true,
-      });
+      // Redirect flow navigates away; popup flow returns a token here.
+      if (!idToken) return;
+      await finishWithIdToken(idToken);
     } catch (error) {
       if (error?.code === "auth/popup-closed-by-user") {
         return;
@@ -106,7 +148,7 @@ export default function ContinueWithGoogle({ mode = "login" }) {
         onClick={handleClick}
         leftIcon={GoogleIcon}
       >
-        {label}
+        Continue with Google
       </Button>
     </div>
   );
