@@ -115,9 +115,7 @@ export default function ProductDetailsView() {
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
 
   const matchesRoute =
-    !!product &&
-    !!id &&
-    (product.id === id || product.slug === id);
+    !!product && !!id && (product.id === id || product.slug === id);
 
   useEffect(() => {
     return () => {
@@ -811,7 +809,7 @@ export default function ProductDetailsView() {
             {reviewsError}
           </div>
         ) : productReviews.length === 0 ? (
-          <div className="py-10 text-center text-sm text-slate-500">
+          <div className="border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500">
             No reviews yet.
           </div>
         ) : (
