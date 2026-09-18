@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
+  EllipsisVerticalIcon,
+  CheckIcon,
   UsersIcon,
   UserCircleIcon,
   CheckCircleIcon,
@@ -19,6 +21,7 @@ import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StatCard from "@/components/common/StatCard";
 import Pagination from "@/components/common/Pagination";
+import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import Avatar from "@/components/common/Avatar";
 import {
@@ -33,6 +36,98 @@ import { USER_STATUS } from "@/constants";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 const ADMIN_USER_LIMIT = 100;
+const USER_STATUS_OPTIONS = Object.values(USER_STATUS);
+
+function UserRowActions({ user }) {
+  const dispatch = useDispatch();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  const applyStatusUpdate = async (nextStatus) => {
+    if (!nextStatus || nextStatus === user.status) return;
+    setUpdating(true);
+    try {
+      await dispatch(
+        updateAdminUserStatus({ id: user.id, status: nextStatus }),
+      ).unwrap();
+      toast.success(`User marked as ${nextStatus}`);
+      setMenuOpen(false);
+    } catch (err) {
+      toast.error(err || "Failed to update user status");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <div className="inline-flex items-center gap-0.5">
+      <Link
+        to={`/admin/users/${user.id}`}
+        className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+        title="View user"
+        aria-label={`View user ${user.name}`}
+      >
+        <EyeIcon className="h-4.5 w-4.5" />
+      </Link>
+
+      <Dropdown
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        closeOnSelect={false}
+        portal
+        align="right"
+        disabled={updating}
+        trigger={
+          <span
+            className="hover:text-primary-600 inline-flex rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+            title="Update status"
+            aria-label={`Update status for ${user.name}`}
+          >
+            {updating ? (
+              <span
+                className="border-primary-200 border-t-primary-600 h-4.5 w-4.5 animate-spin rounded-full border-2"
+                aria-hidden
+              />
+            ) : (
+              <EllipsisVerticalIcon className="h-4.5 w-4.5" />
+            )}
+          </span>
+        }
+      >
+        <div className="px-4 py-1.5 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+          User status
+        </div>
+        {USER_STATUS_OPTIONS.map((status) => {
+          const isCurrent = status === user.status;
+          return (
+            <DropdownItem
+              key={status}
+              disabled={updating || isCurrent}
+              onClick={() => applyStatusUpdate(status)}
+              className={
+                isCurrent
+                  ? "bg-primary-50 text-primary-700 hover:bg-primary-50 hover:text-primary-700"
+                  : undefined
+              }
+            >
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                {isCurrent ? (
+                  <CheckIcon className="text-primary-600 h-4 w-4" />
+                ) : null}
+              </span>
+              {status}
+              {isCurrent ? (
+                <span className="ml-auto text-[11px] font-medium text-slate-400">
+                  Current
+                </span>
+              ) : null}
+            </DropdownItem>
+          );
+        })}
+      </Dropdown>
+    </div>
+  );
+}
 
 export default function AdminUserListView() {
   const dispatch = useDispatch();
@@ -45,7 +140,6 @@ export default function AdminUserListView() {
   const [statusFilter, setStatusFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
-  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAdminUsers({ page: 1, limit: ADMIN_USER_LIMIT }));
@@ -97,24 +191,6 @@ export default function AdminUserListView() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  const toggleStatus = async (user) => {
-    const nextStatus =
-      user.status === USER_STATUS.ACTIVE
-        ? USER_STATUS.INACTIVE
-        : USER_STATUS.ACTIVE;
-    setUpdatingId(user.id);
-    try {
-      await dispatch(
-        updateAdminUserStatus({ id: user.id, status: nextStatus }),
-      ).unwrap();
-      toast.success(`User marked as ${nextStatus}`);
-    } catch (err) {
-      toast.error(err || "Failed to update user status");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
   const columns = [
     {
       key: "user",
@@ -161,40 +237,8 @@ export default function AdminUserListView() {
       key: "actions",
       header: "Actions",
       className: "text-right",
-      cellClassName: "text-right align-middle",
-      render: (u) => (
-        <div className="flex items-center justify-end gap-3">
-          <Link
-            to={`/admin/users/${u.id}`}
-            className="hover:text-primary-600 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-          >
-            <EyeIcon className="h-4.5 w-4.5" />
-          </Link>
-          <button
-            type="button"
-            disabled={updatingId === u.id}
-            onClick={() => toggleStatus(u)}
-            aria-label={
-              u.status === USER_STATUS.ACTIVE
-                ? "Deactivate user"
-                : "Activate user"
-            }
-            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-              u.status === USER_STATUS.ACTIVE
-                ? "bg-primary-500"
-                : "bg-slate-300"
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                u.status === USER_STATUS.ACTIVE
-                  ? "translate-x-5"
-                  : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
-      ),
+      cellClassName: "relative overflow-visible text-right align-middle",
+      render: (u) => <UserRowActions user={u} />,
     },
   ];
 
@@ -212,37 +256,7 @@ export default function AdminUserListView() {
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
         <Badge color={u.role === "ADMIN" ? "indigo" : "gray"}>{u.role}</Badge>
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/admin/users/${u.id}`}
-            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-          >
-            <EyeIcon className="h-4.5 w-4.5" />
-          </Link>
-          <button
-            type="button"
-            disabled={updatingId === u.id}
-            onClick={() => toggleStatus(u)}
-            aria-label={
-              u.status === USER_STATUS.ACTIVE
-                ? "Deactivate user"
-                : "Activate user"
-            }
-            className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-              u.status === USER_STATUS.ACTIVE
-                ? "bg-primary-500"
-                : "bg-slate-300"
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                u.status === USER_STATUS.ACTIVE
-                  ? "translate-x-5"
-                  : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
+        <UserRowActions user={u} />
       </div>
     </div>
   );
