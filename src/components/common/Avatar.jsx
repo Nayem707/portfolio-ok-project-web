@@ -55,6 +55,7 @@ export default function Avatar({
       src={resolvedSrc}
       alt={label}
       title={displayName || undefined}
+      referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
       className={classNames(
         "inline-block shrink-0 rounded-full object-cover",

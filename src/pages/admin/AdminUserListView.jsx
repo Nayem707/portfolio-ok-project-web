@@ -24,6 +24,7 @@ import Pagination from "@/components/common/Pagination";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import Avatar from "@/components/common/Avatar";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import {
   fetchAdminUsers,
   selectAdminUsers,
@@ -199,7 +200,10 @@ export default function AdminUserListView() {
         <div className="flex items-center gap-3">
           <Avatar user={u} size="md" />
           <div>
-            <p className="font-medium text-slate-800">{u.name}</p>
+            <p className="flex items-center gap-1 font-medium text-slate-800">
+              <span>{u.name}</span>
+              <GoogleVerifiedBadge user={u} />
+            </p>
             <p className="text-xs text-slate-400">{u.email}</p>
           </div>
         </div>
@@ -247,7 +251,10 @@ export default function AdminUserListView() {
       <div className="flex items-center gap-3">
         <Avatar user={u} size="md" />
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-slate-800">{u.name}</p>
+          <p className="flex items-center gap-1 font-medium text-slate-800">
+            <span className="truncate">{u.name}</span>
+            <GoogleVerifiedBadge user={u} />
+          </p>
           <p className="truncate text-xs text-slate-400">{u.email}</p>
         </div>
         <Badge color={u.status === USER_STATUS.ACTIVE ? "green" : "red"} dot>

@@ -14,6 +14,7 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { selectCurrentUser } from "@/features/auth";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import {
   fetchMyOrders,
   selectMyOrders,
@@ -53,8 +54,9 @@ export default function DashboardOverviewView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Welcome back, {user?.name?.split(" ")[0]} 👋
+        <h1 className="flex flex-wrap items-center gap-1.5 text-2xl font-bold text-slate-900">
+          <span>Welcome back, {user?.name?.split(" ")[0]}</span>
+          <GoogleVerifiedBadge user={user} className="h-6 w-6" />
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           Here’s a quick overview of your account activity.

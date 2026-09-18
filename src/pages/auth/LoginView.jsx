@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
+import ContinueWithGoogle from "@/components/auth/ContinueWithGoogle";
 import { loginSuccess } from "@/features/auth";
 import { api } from "@/services/api";
 
@@ -120,6 +121,8 @@ export default function LoginView() {
           Sign in
         </Button>
       </form>
+
+      <ContinueWithGoogle mode="login" />
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Don’t have an account?{" "}

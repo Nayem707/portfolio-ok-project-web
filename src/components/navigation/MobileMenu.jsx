@@ -103,10 +103,27 @@ export default function MobileMenu({ open }) {
                 fullWidth
                 variant="ghost"
                 className="text-red-600"
-                onClick={() => {
-                  dispatch(logout());
-                  toast.success("Signed out");
-                  go("/");
+                onClick={async () => {
+                  const refreshToken = localStorage.getItem("refresh_token");
+                  try {
+                    if (refreshToken) {
+                      await import("@/services/api").then(({ api }) =>
+                        api.logout(refreshToken),
+                      );
+                    }
+                  } catch (error) {
+                    console.warn(
+                      "Backend logout request failed; clearing local auth state anyway.",
+                      error,
+                    );
+                  } finally {
+                    await import("@/lib/firebase").then(({ signOutFirebase }) =>
+                      signOutFirebase(),
+                    );
+                    dispatch(logout());
+                    toast.success("Signed out");
+                    go("/");
+                  }
                 }}
               >
                 Sign out

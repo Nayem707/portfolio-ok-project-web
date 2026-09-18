@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import Avatar from "@/components/common/Avatar";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import { logout, selectCurrentUser } from "@/features/auth";
 import { resetCartState } from "@/features/cart";
 import { resetWishlistState } from "@/features/wishlist";
@@ -43,8 +44,9 @@ export default function AccountLayout() {
             <div className="flex items-center gap-3">
               <Avatar user={user} size="lg" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-800">
-                  {user?.name}
+                <p className="flex items-center gap-1 truncate text-sm font-semibold text-slate-800">
+                  <span className="truncate">{user?.name}</span>
+                  <GoogleVerifiedBadge user={user} className="h-4 w-4" />
                 </p>
                 <p className="truncate text-xs text-slate-400">{user?.email}</p>
               </div>
@@ -89,6 +91,9 @@ export default function AccountLayout() {
                         error,
                       );
                     } finally {
+                      await import("@/lib/firebase").then(({ signOutFirebase }) =>
+                        signOutFirebase(),
+                      );
                       dispatch(logout());
                       dispatch(resetCartState());
                       dispatch(resetWishlistState());

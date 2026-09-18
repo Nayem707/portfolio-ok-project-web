@@ -34,6 +34,9 @@ export default function AdminTopbar() {
         error,
       );
     } finally {
+      await import("@/lib/firebase").then(({ signOutFirebase }) =>
+        signOutFirebase(),
+      );
       dispatch(logout());
       toast.success("Signed out");
       navigate("/");

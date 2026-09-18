@@ -7,10 +7,12 @@ import {
   PhoneIcon,
   CalendarDaysIcon,
   EyeIcon,
+  KeyIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
 import Avatar from "@/components/common/Avatar";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import Modal from "@/components/common/Modal";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
@@ -23,7 +25,12 @@ import {
   selectAdminUsersError,
 } from "@/features/users";
 import { fetchAdminOrders, selectOrders } from "@/features/orders";
-import { formatCurrency, formatDate, getUserAvatarUrl } from "@/utils";
+import {
+  formatCurrency,
+  formatDate,
+  getAuthProviderLabel,
+  getUserAvatarUrl,
+} from "@/utils";
 import { USER_STATUS } from "@/constants";
 
 export default function AdminUserDetailsView() {
@@ -93,8 +100,11 @@ export default function AdminUserDetailsView() {
           ) : (
             <Avatar user={user} size="2xl" className="mx-auto" />
           )}
-          <h1 className="mt-4 text-xl font-bold text-slate-900">{user.name}</h1>
-          <div className="mt-2 flex items-center justify-center gap-2">
+          <h1 className="mt-4 flex items-center justify-center gap-1.5 text-xl font-bold text-slate-900">
+            <span>{user.name}</span>
+            <GoogleVerifiedBadge user={user} className="h-5 w-5" />
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
             <Badge color={user.role === "ADMIN" ? "indigo" : "gray"}>
               {user.role}
             </Badge>
@@ -104,6 +114,7 @@ export default function AdminUserDetailsView() {
             >
               {user.status}
             </Badge>
+            <GoogleVerifiedBadge user={user} variant="badge" />
           </div>
 
           <div className="mt-6 space-y-3 border-t border-slate-100 pt-6 text-left text-sm">
@@ -114,6 +125,10 @@ export default function AdminUserDetailsView() {
             <p className="flex items-center gap-2.5 text-slate-600">
               <PhoneIcon className="h-4.5 w-4.5 text-slate-400" />{" "}
               {user.phone || "—"}
+            </p>
+            <p className="flex items-center gap-2.5 text-slate-600">
+              <KeyIcon className="h-4.5 w-4.5 text-slate-400" />
+              Provider: {getAuthProviderLabel(user)}
             </p>
             <p className="flex items-center gap-2.5 text-slate-600">
               <CalendarDaysIcon className="h-4.5 w-4.5 text-slate-400" /> Joined{" "}
@@ -187,6 +202,7 @@ export default function AdminUserDetailsView() {
           <img
             src={avatarUrl}
             alt={user.name}
+            referrerPolicy="no-referrer"
             className="mx-auto max-h-[75vh] w-full object-contain"
           />
         </div>

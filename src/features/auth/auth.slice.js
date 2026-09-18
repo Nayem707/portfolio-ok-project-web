@@ -16,6 +16,11 @@ const normalizeUser = (user) => {
     ...user,
     avatarUrl,
     avatar: avatarUrl,
+    authProvider: user.authProvider || "LOCAL",
+    isGoogleVerified:
+      typeof user.isGoogleVerified === "boolean"
+        ? user.isGoogleVerified
+        : String(user.authProvider || "").toUpperCase() === "GOOGLE",
   };
 };
 

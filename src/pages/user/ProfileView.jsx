@@ -5,6 +5,7 @@ import { CameraIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import Avatar from "@/components/common/Avatar";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import { selectCurrentUser, updateProfile } from "@/features/auth";
 import { api } from "@/services/api";
 import { resolveMediaUrl } from "@/utils";
@@ -191,8 +192,16 @@ export default function ProfileView() {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-lg font-semibold text-slate-800">{form.name}</p>
+            <p className="flex items-center gap-1.5 text-lg font-semibold text-slate-800">
+              <span className="truncate">{form.name}</span>
+              <GoogleVerifiedBadge user={user} />
+            </p>
             <p className="text-sm text-slate-400">{form.email}</p>
+            {user?.isGoogleVerified && (
+              <p className="mt-1">
+                <GoogleVerifiedBadge user={user} variant="badge" />
+              </p>
+            )}
             <p className="mt-1 text-xs text-slate-400">
               JPG, PNG, WebP, GIF, or AVIF · max {MAX_SIZE_MB}MB
             </p>

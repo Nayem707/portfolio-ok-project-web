@@ -92,6 +92,21 @@ export const getUserAvatarUrl = (user) => {
   return resolveMediaUrl(raw) || null;
 };
 
+/** True when API marks the account as Google-authenticated. */
+export const isGoogleVerifiedUser = (user) => {
+  if (!user) return false;
+  if (typeof user.isGoogleVerified === "boolean") return user.isGoogleVerified;
+  return String(user.authProvider || "").toUpperCase() === "GOOGLE";
+};
+
+/** Human-readable auth provider label for admin/profile UI. */
+export const getAuthProviderLabel = (user) => {
+  if (!user) return "Manual";
+  const provider = String(user.authProvider || "").toUpperCase();
+  if (provider === "GOOGLE" || user.isGoogleVerified) return "Google";
+  return "Manual";
+};
+
 /** Initials for avatar fallback (e.g. "Sam Rivera" → "SR"). */
 export const getInitials = (name = "") => {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);

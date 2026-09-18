@@ -19,6 +19,11 @@ export const api = {
     return getData(response);
   },
 
+  loginWithGoogle: async (payload) => {
+    const response = await axiosInstance.post("/auth/google", payload);
+    return getData(response);
+  },
+
   refreshToken: async (refreshToken) => {
     const response = await axiosInstance.post("/auth/refresh", {
       refreshToken,

@@ -17,6 +17,7 @@ import Logo from "@/components/navigation/Logo";
 import SearchBar from "@/components/common/SearchBar";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import Avatar from "@/components/common/Avatar";
+import GoogleVerifiedBadge from "@/components/common/GoogleVerifiedBadge";
 import { selectCartCount } from "@/features/cart";
 import { selectWishlistCount } from "@/features/wishlist";
 import { toggleMiniCart, toggleMobileMenu } from "@/features/ui";
@@ -64,6 +65,9 @@ export default function Navbar() {
         error,
       );
     } finally {
+      await import("@/lib/firebase").then(({ signOutFirebase }) =>
+        signOutFirebase(),
+      );
       dispatch(logout());
       dispatch(resetCartState());
       dispatch(resetWishlistState());
@@ -143,8 +147,9 @@ export default function Navbar() {
                 }
               >
                 <div className="border-b border-slate-100 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-800">
-                    {user.name}
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                    <span className="truncate">{user.name}</span>
+                    <GoogleVerifiedBadge user={user} />
                   </p>
                   <p className="truncate text-xs text-slate-400">
                     {user.email}
