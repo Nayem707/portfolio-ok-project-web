@@ -1,15 +1,17 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
   PhoneIcon,
   CalendarDaysIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
 import Avatar from "@/components/common/Avatar";
+import Modal from "@/components/common/Modal";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -21,7 +23,7 @@ import {
   selectAdminUsersError,
 } from "@/features/users";
 import { fetchAdminOrders, selectOrders } from "@/features/orders";
-import { formatCurrency, formatDate } from "@/utils";
+import { formatCurrency, formatDate, getUserAvatarUrl } from "@/utils";
 import { USER_STATUS } from "@/constants";
 
 export default function AdminUserDetailsView() {
@@ -32,6 +34,7 @@ export default function AdminUserDetailsView() {
   const loading = useSelector(selectAdminUserDetailsLoading);
   const error = useSelector(selectAdminUsersError);
   const orders = useSelector(selectOrders).filter((o) => o.customer?.id === id);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (id) dispatch(fetchAdminUserById(id));
@@ -61,6 +64,7 @@ export default function AdminUserDetailsView() {
 
   const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
   const orderCount = user.orders ?? orders.length;
+  const avatarUrl = getUserAvatarUrl(user);
 
   return (
     <div className="space-y-6">
@@ -73,7 +77,22 @@ export default function AdminUserDetailsView() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card p-6 text-center">
-          <Avatar user={user} size="2xl" className="mx-auto" />
+          {avatarUrl ? (
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="group relative mx-auto inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              aria-label={`View ${user.name}'s photo`}
+              title="View photo"
+            >
+              <Avatar user={user} size="2xl" />
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/0 transition group-hover:bg-slate-900/45">
+                <EyeIcon className="h-7 w-7 text-white opacity-0 transition group-hover:opacity-100" />
+              </span>
+            </button>
+          ) : (
+            <Avatar user={user} size="2xl" className="mx-auto" />
+          )}
           <h1 className="mt-4 text-xl font-bold text-slate-900">{user.name}</h1>
           <div className="mt-2 flex items-center justify-center gap-2">
             <Badge color={user.role === "ADMIN" ? "indigo" : "gray"}>
@@ -156,6 +175,22 @@ export default function AdminUserDetailsView() {
           )}
         </div>
       </div>
+
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={user.name}
+        size="lg"
+        flush
+      >
+        <div className="bg-slate-950">
+          <img
+            src={avatarUrl}
+            alt={user.name}
+            className="mx-auto max-h-[75vh] w-full object-contain"
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
