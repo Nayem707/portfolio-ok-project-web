@@ -27,18 +27,12 @@ export default function ProductCard({ product, lockWhenInCart = false }) {
   const outOfStock = product.stock === 0;
   const cartLocked = lockWhenInCart && (inCart || addPending);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = () => {
     if (outOfStock || cartLocked) return;
-    try {
-      await dispatch(addToCart(product)).unwrap();
-      toast.success(`${product.name} added to cart`, {
-        position: "bottom-right",
-      });
-    } catch (error) {
-      toast.error(error || "Failed to add to cart", {
-        position: "bottom-right",
-      });
-    }
+    dispatch(addToCart(product));
+    toast.success(`${product.name} added to cart`, {
+      position: "bottom-right",
+    });
   };
 
   const handleWishlist = async () => {

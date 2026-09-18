@@ -128,17 +128,11 @@ export default function WishlistView() {
                     size="sm"
                     leftIcon={ShoppingBagIcon}
                     disabled={outOfStock}
-                    onClick={async () => {
-                      try {
-                        await dispatch(addToCart(item)).unwrap();
-                        toast.success("Added to cart", {
-                          position: "bottom-right",
-                        });
-                      } catch (err) {
-                        toast.error(err || "Failed to add to cart", {
-                          position: "bottom-right",
-                        });
-                      }
+                    onClick={() => {
+                      dispatch(addToCart(item));
+                      toast.success("Added to cart", {
+                        position: "bottom-right",
+                      });
                     }}
                   >
                     Add to cart

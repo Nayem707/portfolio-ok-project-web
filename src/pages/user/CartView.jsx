@@ -15,13 +15,10 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import {
   selectCartItems,
   selectCartTotals,
-  fetchCart,
   removeFromCart,
   setQuantity,
 } from "@/features/cart";
 import { toggleWishlist } from "@/features/wishlist";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
-import ErrorState from "@/components/common/ErrorState";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
@@ -51,9 +48,6 @@ export default function CartView() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
   const { subtotal, shipping, total } = useSelector(selectCartTotals);
-  const loading = useSelector((state) => state.cart.loading);
-  const mutating = useSelector((state) => state.cart.mutating);
-  const error = useSelector((state) => state.cart.error);
 
   const savings = items.reduce(
     (sum, i) =>
@@ -61,22 +55,6 @@ export default function CartView() {
     0,
   );
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-
-  if (loading) {
-    return <LoadingSpinner className="py-16" label="Loading your cart..." />;
-  }
-
-  if (error && items.length === 0) {
-    return (
-      <div className="container-app py-8">
-        <ErrorState
-          title="Could not load cart"
-          description={error}
-          onRetry={() => dispatch(fetchCart())}
-        />
-      </div>
-    );
-  }
 
   if (items.length === 0) {
     return (
@@ -193,7 +171,7 @@ export default function CartView() {
                       onClick={async () => {
                         try {
                           await dispatch(toggleWishlist(item)).unwrap();
-                          await dispatch(
+                          dispatch(
                             removeFromCart({
                               id: item.id,
                               color: item.selectedColor,
@@ -201,35 +179,29 @@ export default function CartView() {
                               itemKey: item.itemKey,
                               cartItemId: item.cartItemId,
                             }),
-                          ).unwrap();
+                          );
                           toast.success("Moved to wishlist");
                         } catch (err) {
                           toast.error(err || "Failed to move item");
                         }
                       }}
-                      disabled={mutating}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100"
                     >
                       <HeartIcon className="h-4 w-4" /> Save
                     </button>
                     <button
-                      onClick={async () => {
-                        try {
-                          await dispatch(
-                            removeFromCart({
-                              id: item.id,
-                              color: item.selectedColor,
-                              size: item.selectedSize,
-                              itemKey: item.itemKey,
-                              cartItemId: item.cartItemId,
-                            }),
-                          ).unwrap();
-                          toast.success("Removed from cart");
-                        } catch (err) {
-                          toast.error(err || "Failed to remove item");
-                        }
+                      onClick={() => {
+                        dispatch(
+                          removeFromCart({
+                            id: item.id,
+                            color: item.selectedColor,
+                            size: item.selectedSize,
+                            itemKey: item.itemKey,
+                            cartItemId: item.cartItemId,
+                          }),
+                        );
+                        toast.success("Removed from cart");
                       }}
-                      disabled={mutating}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50"
                     >
                       <TrashIcon className="h-4 w-4" /> Remove

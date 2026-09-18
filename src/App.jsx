@@ -7,7 +7,7 @@ import {
   restoreAuth,
   selectAuth,
 } from "@/features/auth";
-import { fetchCart, resetCartState } from "@/features/cart";
+import { hydrateCart, resetCartState } from "@/features/cart";
 import { fetchWishlist, resetWishlistState } from "@/features/wishlist";
 import { clearMyOrderState } from "@/features/orders";
 import { api } from "@/services/api";
@@ -15,6 +15,11 @@ import { api } from "@/services/api";
 export default function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, initialized } = useSelector(selectAuth);
+
+  useEffect(() => {
+    dispatch(hydrateCart());
+  }, [dispatch]);
+
 
   useEffect(() => {
     const handleAuthLogout = () => {
@@ -62,7 +67,6 @@ export default function App() {
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) return;
-    dispatch(fetchCart());
     dispatch(fetchWishlist());
   }, [dispatch, initialized, isAuthenticated]);
 

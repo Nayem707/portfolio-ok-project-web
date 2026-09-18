@@ -327,45 +327,33 @@ export default function ProductDetailsView() {
   const productReviews = reviews;
   const visibleReviewItems = productReviews.slice(0, visibleReviews);
 
-  const handleAddToCart = async () => {
-    try {
-      await dispatch(
-        addToCart({
-          ...product,
-          quantity,
-          selectedColor,
-          selectedSize,
-        }),
-      ).unwrap();
-      toast.success(
-        `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
-        {
-          position: "bottom-right",
-        },
-      );
-    } catch (error) {
-      toast.error(error || "Failed to add to cart", {
+  const handleAddToCart = () => {
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+        selectedColor,
+        selectedSize,
+      }),
+    );
+    toast.success(
+      `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
+      {
         position: "bottom-right",
-      });
-    }
+      },
+    );
   };
 
-  const handleBuyNow = async () => {
-    try {
-      await dispatch(
-        addToCart({
-          ...product,
-          quantity,
-          selectedColor,
-          selectedSize,
-        }),
-      ).unwrap();
-      navigate("/checkout");
-    } catch (error) {
-      toast.error(error || "Failed to add to cart", {
-        position: "bottom-right",
-      });
-    }
+  const handleBuyNow = () => {
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+        selectedColor,
+        selectedSize,
+      }),
+    );
+    navigate("/checkout");
   };
 
   const imageList = product.images?.length

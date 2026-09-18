@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import toast from "react-hot-toast";
 import { ShoppingBagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
@@ -127,20 +126,16 @@ export default function MiniCart({ open }) {
                     </p>
                   </div>
                   <button
-                    onClick={async () => {
-                      try {
-                        await dispatch(
-                          removeFromCart({
-                            id: item.id,
-                            color: item.selectedColor,
-                            size: item.selectedSize,
-                            itemKey: item.itemKey,
-                            cartItemId: item.cartItemId,
-                          }),
-                        ).unwrap();
-                      } catch (error) {
-                        toast.error(error || "Failed to remove item");
-                      }
+                    onClick={() => {
+                      dispatch(
+                        removeFromCart({
+                          id: item.id,
+                          color: item.selectedColor,
+                          size: item.selectedSize,
+                          itemKey: item.itemKey,
+                          cartItemId: item.cartItemId,
+                        }),
+                      );
                     }}
                     className="self-start rounded p-1 text-slate-300 hover:text-red-500"
                     aria-label="Remove"

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { orders as seedOrders } from "@/data/orders";
+import { clearCart } from "@/features/cart/cart.slice";
 import { api } from "@/services/api";
 
 const toTitleCase = (value) => {
@@ -79,9 +80,36 @@ export const fetchMyOrderById = createAsyncThunk(
 
 export const placeOrder = createAsyncThunk(
   "order/placeOrder",
-  async (payload, { rejectWithValue }) => {
+  async (payload, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await api.checkout(payload);
+      const cartItems = getState().cart?.items || [];
+      if (!cartItems.length) {
+        return rejectWithValue("Your cart is empty");
+      }
+
+      for (const item of cartItems) {
+        if (!item?.id) {
+          return rejectWithValue("Cart contains an invalid product");
+        }
+        if (!item.quantity || item.quantity < 1) {
+          return rejectWithValue(`Invalid quantity for ${item.name || "item"}`);
+        }
+      }
+
+      const items = cartItems.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        ...(item.selectedColor ? { selectedColor: item.selectedColor } : {}),
+        ...(item.selectedSize ? { selectedSize: item.selectedSize } : {}),
+      }));
+
+      const response = await api.checkout({
+        ...payload,
+        items,
+      });
+
+      // Clear local cart only after the order is successfully created.
+      dispatch(clearCart());
       return normalizeOrder(response);
     } catch (error) {
       return rejectWithValue(

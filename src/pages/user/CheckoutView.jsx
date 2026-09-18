@@ -13,7 +13,7 @@ import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { selectCartItems, selectCartTotals, clearCart } from "@/features/cart";
+import { selectCartItems, selectCartTotals } from "@/features/cart";
 import { placeOrder } from "@/features/orders";
 import { selectCurrentUser } from "@/features/auth";
 import { formatCurrency, getDiscountedPrice, classNames } from "@/utils";
@@ -106,7 +106,6 @@ export default function CheckoutView() {
           },
         }),
       ).unwrap();
-      await dispatch(clearCart()).unwrap();
       toast.success("Order placed successfully!", {
         position: "bottom-right",
       });

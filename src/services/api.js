@@ -76,34 +76,6 @@ export const api = {
     return getData(response);
   },
 
-  getCart: async () => {
-    const response = await axiosInstance.get("/cart");
-    return getData(response);
-  },
-
-  addCartItem: async (payload) => {
-    const response = await axiosInstance.post("/cart/items", payload);
-    return getData(response);
-  },
-
-  updateCartItem: async (cartItemId, payload) => {
-    const response = await axiosInstance.patch(
-      `/cart/items/${cartItemId}`,
-      payload,
-    );
-    return getData(response);
-  },
-
-  removeCartItem: async (cartItemId) => {
-    const response = await axiosInstance.delete(`/cart/items/${cartItemId}`);
-    return getData(response);
-  },
-
-  clearCart: async () => {
-    const response = await axiosInstance.delete("/cart");
-    return getData(response);
-  },
-
   getWishlist: async () => {
     const response = await axiosInstance.get("/wishlist");
     return getData(response);

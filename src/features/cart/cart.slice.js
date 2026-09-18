@@ -1,178 +1,180 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { api } from "@/services/api";
+import { createSlice } from "@reduxjs/toolkit";
+import { loadState, saveState, removeState } from "@/utils/storage";
+import { CART_STORAGE_KEY } from "./cart.constants";
+import {
+  buildCartItem,
+  calcCartTotals,
+  matchesCartItem,
+  normaliseSelector,
+  refreshLineTotals,
+  resolveItemKey,
+} from "./cart.utils";
 
-const resolveItemKey = (productId, color, size) =>
-  `${productId}-${color || "default"}-${size || "default"}`;
-
-const normaliseSelector = (value) => ({
-  id: value?.id ?? value?.productId ?? null,
-  cartItemId: value?.cartItemId ?? null,
-  itemKey: value?.itemKey ?? null,
-  color: value?.color ?? value?.selectedColor ?? null,
-  size: value?.size ?? value?.selectedSize ?? null,
-});
-
-const matchesCartItem = (item, selector) => {
-  if (!selector) return false;
-
-  if (selector.cartItemId) {
-    return item.cartItemId === selector.cartItemId;
-  }
-
-  if (selector.itemKey) {
-    return item.itemKey === selector.itemKey;
-  }
-
-  if (!selector.id) return false;
-
-  const itemColor = item.selectedColor ?? null;
-  const itemSize = item.selectedSize ?? null;
-  const selectorColor = selector.color ?? null;
-  const selectorSize = selector.size ?? null;
-
-  if (selectorColor || selectorSize) {
-    return (
-      item.id === selector.id &&
-      itemColor === selectorColor &&
-      itemSize === selectorSize
-    );
-  }
-
-  return item.id === selector.id && !itemColor && !itemSize;
+const emptyCart = {
+  items: [],
+  subtotal: 0,
+  totalItems: 0,
 };
 
-const mapServerCart = (cart = {}) => ({
-  id: cart.id ?? null,
-  subtotal: Number(cart.subtotal || 0),
-  totalItems: Number(cart.totalItems || 0),
-  items: (cart.items || []).map((item) => ({
-    id: item.productId,
-    cartItemId: item.id,
-    itemKey: resolveItemKey(
-      item.productId,
-      item.selectedColor,
-      item.selectedSize,
-    ),
-    name: item.name,
-    price: Number(item.price || 0),
-    discount: Number(item.discount || 0),
-    image: item.image,
-    stock: item.stock,
-    quantity: item.quantity,
-    selectedColor: item.selectedColor || null,
-    selectedSize: item.selectedSize || null,
-    lineTotal: Number(item.lineTotal || 0),
-  })),
-});
+const loadPersistedCart = () => {
+  const saved = loadState(CART_STORAGE_KEY, null);
+  if (!saved || !Array.isArray(saved.items)) {
+    return { ...emptyCart };
+  }
+  const items = refreshLineTotals(saved.items);
+  const totals = calcCartTotals(items);
+  return {
+    items,
+    subtotal: totals.subtotal,
+    totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+  };
+};
 
-export const fetchCart = createAsyncThunk(
-  "cart/fetchCart",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.getCart();
-      return mapServerCart(response);
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to load cart",
-      );
-    }
-  },
-);
+const persistCart = (state) => {
+  saveState(CART_STORAGE_KEY, {
+    items: state.items,
+    subtotal: state.subtotal,
+    totalItems: state.totalItems,
+  });
+};
 
-export const addToCart = createAsyncThunk(
-  "cart/addToCart",
-  async (product, { rejectWithValue }) => {
-    try {
-      const response = await api.addCartItem({
-        productId: product.id,
-        quantity: Number(product.quantity || 1),
-        selectedColor: product.selectedColor || undefined,
-        selectedSize: product.selectedSize || undefined,
-      });
-      return mapServerCart(response);
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to add item to cart",
-      );
-    }
-  },
-);
+const applyTotals = (state) => {
+  state.items = refreshLineTotals(state.items);
+  const totals = calcCartTotals(state.items);
+  state.subtotal = totals.subtotal;
+  state.totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
+  persistCart(state);
+};
 
-export const setQuantity = createAsyncThunk(
-  "cart/setQuantity",
-  async (payload, { getState, rejectWithValue }) => {
-    try {
-      const selector = normaliseSelector(payload);
-      const items = getState().cart.items || [];
-      const target = items.find((item) => matchesCartItem(item, selector));
-      if (!target?.cartItemId) {
-        return rejectWithValue("Cart item not found");
-      }
-      const response = await api.updateCartItem(target.cartItemId, {
-        quantity: Number(payload.quantity),
-      });
-      return mapServerCart(response);
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to update quantity",
-      );
-    }
-  },
-);
-
-export const removeFromCart = createAsyncThunk(
-  "cart/removeFromCart",
-  async (payload, { getState, rejectWithValue }) => {
-    try {
-      const selector = normaliseSelector(payload);
-      const items = getState().cart.items || [];
-      const target = items.find((item) => matchesCartItem(item, selector));
-      if (!target?.cartItemId) {
-        return rejectWithValue("Cart item not found");
-      }
-      const response = await api.removeCartItem(target.cartItemId);
-      return mapServerCart(response);
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to remove item",
-      );
-    }
-  },
-);
-
-export const clearCart = createAsyncThunk(
-  "cart/clearCart",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.clearCart();
-      return mapServerCart(response);
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to clear cart",
-      );
-    }
-  },
-);
+const persisted = loadPersistedCart();
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    id: null,
-    items: [],
-    subtotal: 0,
-    totalItems: 0,
+    items: persisted.items,
+    subtotal: persisted.subtotal,
+    totalItems: persisted.totalItems,
     pendingProductIds: [],
     loading: false,
     mutating: false,
     error: null,
-    initialized: false,
+    initialized: true,
   },
   reducers: {
-    resetCartState(state) {
-      state.id = null;
+    hydrateCart(state) {
+      const next = loadPersistedCart();
+      state.items = next.items;
+      state.subtotal = next.subtotal;
+      state.totalItems = next.totalItems;
+      state.loading = false;
+      state.error = null;
+      state.initialized = true;
+    },
+
+    addToCart(state, action) {
+      const product = action.payload;
+      if (!product?.id) return;
+
+      const quantity = Math.max(1, Number(product.quantity) || 1);
+      const draft = buildCartItem(product, quantity);
+      const existing = state.items.find(
+        (item) => item.itemKey === draft.itemKey,
+      );
+
+      if (existing) {
+        const nextQty = existing.quantity + quantity;
+        existing.quantity =
+          existing.stock > 0 ? Math.min(nextQty, existing.stock) : nextQty;
+      } else {
+        state.items.unshift(draft);
+      }
+
+      applyTotals(state);
+      state.error = null;
+    },
+
+    setQuantity(state, action) {
+      const selector = normaliseSelector(action.payload);
+      const quantity = Math.max(1, Number(action.payload?.quantity) || 1);
+      const target = state.items.find((item) => matchesCartItem(item, selector));
+      if (!target) return;
+
+      target.quantity =
+        target.stock > 0 ? Math.min(quantity, target.stock) : quantity;
+      applyTotals(state);
+      state.error = null;
+    },
+
+    updateCartItemOptions(state, action) {
+      const selector = normaliseSelector(action.payload);
+      const target = state.items.find((item) => matchesCartItem(item, selector));
+      if (!target) return;
+
+      const nextColor =
+        action.payload.selectedColor !== undefined
+          ? action.payload.selectedColor || null
+          : target.selectedColor;
+      const nextSize =
+        action.payload.selectedSize !== undefined
+          ? action.payload.selectedSize || null
+          : target.selectedSize;
+      const nextKey = resolveItemKey(target.id, nextColor, nextSize);
+
+      if (nextKey === target.itemKey) {
+        target.selectedColor = nextColor;
+        target.selectedSize = nextSize;
+        applyTotals(state);
+        return;
+      }
+
+      const duplicate = state.items.find(
+        (item) => item.itemKey === nextKey && item.cartItemId !== target.cartItemId,
+      );
+
+      if (duplicate) {
+        const mergedQty = duplicate.quantity + target.quantity;
+        duplicate.quantity =
+          duplicate.stock > 0
+            ? Math.min(mergedQty, duplicate.stock)
+            : mergedQty;
+        state.items = state.items.filter(
+          (item) => item.cartItemId !== target.cartItemId,
+        );
+      } else {
+        target.selectedColor = nextColor;
+        target.selectedSize = nextSize;
+        target.itemKey = nextKey;
+        target.cartItemId = nextKey;
+      }
+
+      applyTotals(state);
+      state.error = null;
+    },
+
+    removeFromCart(state, action) {
+      const selector = normaliseSelector(action.payload);
+      state.items = state.items.filter(
+        (item) => !matchesCartItem(item, selector),
+      );
+      applyTotals(state);
+      state.error = null;
+    },
+
+    clearCart(state) {
       state.items = [];
       state.subtotal = 0;
       state.totalItems = 0;
+      state.pendingProductIds = [];
+      state.error = null;
+      removeState(CART_STORAGE_KEY);
+    },
+
+    resetCartState(state) {
+      // Local cart is guest-friendly — keep persisted items across logout.
+      const next = loadPersistedCart();
+      state.items = next.items;
+      state.subtotal = next.subtotal;
+      state.totalItems = next.totalItems;
       state.pendingProductIds = [];
       state.loading = false;
       state.mutating = false;
@@ -180,96 +182,16 @@ const cartSlice = createSlice({
       state.initialized = true;
     },
   },
-  extraReducers: (builder) => {
-    const setFromPayload = (state, action) => {
-      state.id = action.payload.id;
-      state.items = action.payload.items;
-      state.subtotal = action.payload.subtotal;
-      state.totalItems = action.payload.totalItems;
-      state.error = null;
-      state.initialized = true;
-    };
-
-    builder
-      .addCase(fetchCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCart.fulfilled, (state, action) => {
-        state.loading = false;
-        setFromPayload(state, action);
-      })
-      .addCase(fetchCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Failed to load cart";
-        state.initialized = true;
-      })
-      .addCase(addToCart.pending, (state, action) => {
-        state.mutating = true;
-        state.error = null;
-        const productId = action.meta.arg?.id;
-        if (productId && !state.pendingProductIds.includes(productId)) {
-          state.pendingProductIds.push(productId);
-        }
-      })
-      .addCase(addToCart.fulfilled, (state, action) => {
-        state.mutating = false;
-        const productId = action.meta.arg?.id;
-        if (productId) {
-          state.pendingProductIds = state.pendingProductIds.filter(
-            (id) => id !== productId,
-          );
-        }
-        setFromPayload(state, action);
-      })
-      .addCase(addToCart.rejected, (state, action) => {
-        state.mutating = false;
-        const productId = action.meta.arg?.id;
-        if (productId) {
-          state.pendingProductIds = state.pendingProductIds.filter(
-            (id) => id !== productId,
-          );
-        }
-        state.error = action.payload || "Failed to add item to cart";
-      })
-      .addCase(setQuantity.pending, (state) => {
-        state.mutating = true;
-        state.error = null;
-      })
-      .addCase(setQuantity.fulfilled, (state, action) => {
-        state.mutating = false;
-        setFromPayload(state, action);
-      })
-      .addCase(setQuantity.rejected, (state, action) => {
-        state.mutating = false;
-        state.error = action.payload || "Failed to update quantity";
-      })
-      .addCase(removeFromCart.pending, (state) => {
-        state.mutating = true;
-        state.error = null;
-      })
-      .addCase(removeFromCart.fulfilled, (state, action) => {
-        state.mutating = false;
-        setFromPayload(state, action);
-      })
-      .addCase(removeFromCart.rejected, (state, action) => {
-        state.mutating = false;
-        state.error = action.payload || "Failed to remove item";
-      })
-      .addCase(clearCart.pending, (state) => {
-        state.mutating = true;
-        state.error = null;
-      })
-      .addCase(clearCart.fulfilled, (state, action) => {
-        state.mutating = false;
-        setFromPayload(state, action);
-      })
-      .addCase(clearCart.rejected, (state, action) => {
-        state.mutating = false;
-        state.error = action.payload || "Failed to clear cart";
-      });
-  },
 });
 
-export const { resetCartState } = cartSlice.actions;
+export const {
+  hydrateCart,
+  addToCart,
+  setQuantity,
+  updateCartItemOptions,
+  removeFromCart,
+  clearCart,
+  resetCartState,
+} = cartSlice.actions;
+
 export default cartSlice.reducer;
