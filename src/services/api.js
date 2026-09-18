@@ -257,6 +257,23 @@ export const api = {
     return getData(response);
   },
 
+  uploadImages: async (files) => {
+    const formData = new FormData();
+    const list = Array.isArray(files) ? files : [files];
+    list.forEach((file) => {
+      if (file) formData.append("images", file);
+    });
+    const response = await axiosInstance.post("/uploads/images", formData, {
+      timeout: 30000,
+    });
+    return getData(response);
+  },
+
+  deleteUploadedImage: async (key) => {
+    const response = await axiosInstance.delete(`/uploads/images/${key}`);
+    return getData(response);
+  },
+
   getColors: async () => {
     const response = await axiosInstance.get("/attributes/colors");
     return getData(response);

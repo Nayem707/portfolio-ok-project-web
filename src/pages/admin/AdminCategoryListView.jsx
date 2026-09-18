@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -6,6 +6,8 @@ import {
   PencilSquareIcon,
   TrashIcon,
   ArrowsRightLeftIcon,
+  PhotoIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
@@ -23,9 +25,19 @@ import {
   toggleCategoryStatus,
   updateCategory,
 } from "@/features/categories";
+import { api } from "@/services/api";
 import { formatDate } from "@/utils";
 
 const emptyForm = { name: "", description: "", image: "", status: "ACTIVE" };
+
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
+const MAX_SIZE_MB = 5;
 
 const statusLabel = (status) => (status === "INACTIVE" ? "Inactive" : "Active");
 const badgeColor = (status) => (status === "INACTIVE" ? "gray" : "green");
@@ -38,28 +50,100 @@ export default function AdminCategoryListView() {
     (state) => state.category.mutationLoading,
   );
   const dispatch = useDispatch();
+  const fileInputRef = useRef(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [toDelete, setToDelete] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
 
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const set = (key) => (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "image") setPreviewFailed(false);
+  };
 
   useEffect(() => {
     dispatch(fetchCategories({ all: true }));
   }, [dispatch]);
 
-  const openAdd = () => {
+  const resetModalState = () => {
     setEditing(null);
     setForm(emptyForm);
+    setUploading(false);
+    setPreviewFailed(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const openAdd = () => {
+    resetModalState();
     setModalOpen(true);
   };
 
   const openEdit = (cat) => {
     setEditing(cat.id);
-    setForm(cat);
+    setForm({
+      name: cat.name || "",
+      description: cat.description || "",
+      image: cat.image || "",
+      status: cat.status || "ACTIVE",
+    });
+    setUploading(false);
+    setPreviewFailed(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (uploading || mutationLoading) return;
+    setModalOpen(false);
+    resetModalState();
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error("Please select a JPG, PNG, WebP, GIF, or AVIF image");
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_SIZE_MB}MB`);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploaded = await api.uploadImages(file);
+      const first = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      const url = first?.url;
+      if (!url) throw new Error("Upload did not return an image URL");
+      setForm((prev) => ({ ...prev, image: url }));
+      setPreviewFailed(false);
+      toast.success("Image uploaded");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to upload image",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    setForm((prev) => ({ ...prev, image: "" }));
+    setPreviewFailed(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const save = async () => {
@@ -67,11 +151,15 @@ export default function AdminCategoryListView() {
       toast.error("Category name is required");
       return;
     }
+    if (uploading) {
+      toast.error("Please wait for the image upload to finish");
+      return;
+    }
 
     const payload = {
       name: form.name.trim(),
       description: form.description?.trim() || undefined,
-      image: form.image?.trim() || undefined,
+      image: form.image?.trim() || null,
       status: form.status,
     };
 
@@ -84,6 +172,7 @@ export default function AdminCategoryListView() {
         toast.success("Category created");
       }
       setModalOpen(false);
+      resetModalState();
     } catch (error) {
       toast.error(error || "Failed to save category");
     }
@@ -110,6 +199,8 @@ export default function AdminCategoryListView() {
       toast.error(error || "Failed to delete category");
     }
   };
+
+  const previewSrc = form.image?.trim() || "";
 
   return (
     <div className="space-y-6">
@@ -197,14 +288,22 @@ export default function AdminCategoryListView() {
 
       <Modal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         title={editing ? "Edit category" : "Add category"}
         footer={
           <>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={closeModal}
+              disabled={uploading || mutationLoading}
+            >
               Cancel
             </Button>
-            <Button onClick={save} loading={mutationLoading}>
+            <Button
+              onClick={save}
+              loading={mutationLoading}
+              disabled={uploading}
+            >
               Save category
             </Button>
           </>
@@ -227,12 +326,71 @@ export default function AdminCategoryListView() {
               className="input-base resize-none"
             />
           </div>
-          <Input
-            label="Image URL"
-            value={form.image}
-            onChange={set("image")}
-            placeholder="https://…"
-          />
+
+          <div className="space-y-3">
+            <Input
+              label="Image URL"
+              value={form.image}
+              onChange={set("image")}
+              placeholder="https://…"
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                leftIcon={ArrowUpTrayIcon}
+                loading={uploading}
+                onClick={handleUploadClick}
+              >
+                {uploading ? "Uploading…" : "Upload image"}
+              </Button>
+              {previewSrc ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearImage}
+                  disabled={uploading}
+                >
+                  Clear image
+                </Button>
+              ) : null}
+              <p className="text-xs text-slate-400">
+                JPG, PNG, WebP, GIF, or AVIF · max {MAX_SIZE_MB}MB
+              </p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_TYPES.join(",")}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              {previewSrc && !previewFailed ? (
+                <img
+                  src={previewSrc}
+                  alt={form.name || "Category preview"}
+                  className="h-40 w-full object-cover"
+                  onError={() => setPreviewFailed(true)}
+                />
+              ) : (
+                <div className="flex h-40 flex-col items-center justify-center gap-2 text-slate-400">
+                  <PhotoIcon className="h-8 w-8" />
+                  <p className="text-xs">
+                    {previewFailed
+                      ? "Preview unavailable — check the image URL"
+                      : "Image preview"}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           <Select label="Status" value={form.status} onChange={set("status")}>
             <option value="ACTIVE">Active</option>
             <option value="INACTIVE">Inactive</option>
