@@ -63,7 +63,10 @@ export default function AdminOrderDetailsView() {
 
   const handleStatusChange = (nextStatus) => {
     if (!order) return;
-    if (nextStatus === ORDER_STATUS.CANCELLED && order.status !== ORDER_STATUS.CANCELLED) {
+    if (
+      nextStatus === ORDER_STATUS.CANCELLED &&
+      order.status !== ORDER_STATUS.CANCELLED
+    ) {
       setPendingCancelStatus(nextStatus);
       return;
     }
@@ -132,38 +135,13 @@ export default function AdminOrderDetailsView() {
         </div>
       </div>
 
-      <div className="card p-6">
-        <h2 className="font-semibold text-slate-900">Manage Order</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Select
-            label="Order status"
-            value={order.status}
-            disabled={updating}
-            onChange={(e) => handleStatusChange(e.target.value)}
-          >
-            {Object.values(ORDER_STATUS).map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </Select>
-          <Select
-            label="Payment status"
-            value={order.paymentStatus}
-            disabled={updating}
-            onChange={(e) => handlePaymentChange(e.target.value)}
-          >
-            {Object.values(PAYMENT_STATUS).map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </Select>
-        </div>
-        <div className="mt-6">
-          <OrderStatusTimeline status={order.status} />
-        </div>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card p-6 lg:col-span-2">
-          <h2 className="font-semibold text-slate-900">Products</h2>
+          <div className="mt-6 border-b border-slate-100 pb-6">
+            <OrderStatusTimeline status={order.status} />
+          </div>
+
+          <h2 className="mt-6 font-semibold text-slate-900">Products</h2>
           <ul className="mt-4 divide-y divide-slate-100">
             {order.items.map((item, idx) => (
               <li
@@ -234,6 +212,31 @@ export default function AdminOrderDetailsView() {
         </div>
 
         <div className="space-y-6">
+          <div className="card p-6">
+            <h2 className="font-semibold text-slate-900">Manage Order</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Select
+                label="Order status"
+                value={order.status}
+                disabled={updating}
+                onChange={(e) => handleStatusChange(e.target.value)}
+              >
+                {Object.values(ORDER_STATUS).map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </Select>
+              <Select
+                label="Payment status"
+                value={order.paymentStatus}
+                disabled={updating}
+                onChange={(e) => handlePaymentChange(e.target.value)}
+              >
+                {Object.values(PAYMENT_STATUS).map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </Select>
+            </div>
+          </div>
           <div className="card p-6">
             <h2 className="font-semibold text-slate-900">Customer</h2>
             <div className="mt-3 flex items-start gap-3 text-sm text-slate-600">
