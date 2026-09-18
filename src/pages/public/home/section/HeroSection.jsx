@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowRightIcon,
+} from "@heroicons/react/24/outline";
 import { resolveMediaUrl } from "@/utils";
 
 const fallbackSlides = [
@@ -99,9 +104,10 @@ const HeroSection = ({ slides = [] }) => {
 
           <Link
             to={slide.buttonUrl || "/products"}
-            className="bg-primary-600 hover:bg-primary-300 mt-5 inline-flex rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-900 text-white transition sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
+            className="bg-primary-600 hover:bg-primary-300 mt-5 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
           >
             {slide.buttonText || "Explore"}
+            <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
           </Link>
         </div>
       </div>
@@ -126,18 +132,22 @@ const HeroSection = ({ slides = [] }) => {
           </div>
 
           {activeSlides.length > 1 && (
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={goToPrev}
-                className="rounded-md bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+                aria-label="Previous slide"
               >
-                Prev
+                <ChevronLeftIcon className="h-5 w-5" />
               </button>
               <button
+                type="button"
                 onClick={goToNext}
-                className="rounded-md bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+                aria-label="Next slide"
               >
-                Next
+                <ChevronRightIcon className="h-5 w-5" />
               </button>
             </div>
           )}
