@@ -9,7 +9,7 @@ import {
   removeFromCart,
 } from "@/features/cart";
 import { toggleMiniCart } from "@/features/ui";
-import { formatCurrency, getDiscountedPrice } from "@/utils";
+import { formatCurrency, getDiscountedPrice, resolveMediaUrl } from "@/utils";
 
 export default function MiniCart({ open }) {
   const dispatch = useDispatch();
@@ -84,7 +84,7 @@ export default function MiniCart({ open }) {
                   className="flex gap-3"
                 >
                   <img
-                    src={item.image}
+                    src={resolveMediaUrl(item.image)}
                     alt={item.name}
                     className="h-16 w-16 shrink-0 rounded-lg border border-slate-100 object-cover"
                   />

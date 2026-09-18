@@ -38,7 +38,7 @@ import {
 import { fetchColors, selectColors } from "@/features/colors";
 import { addToCart, getMissingVariantLabels } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
-import { classNames, range } from "@/utils";
+import { classNames, range, resolveMediaUrl } from "@/utils";
 import { api } from "@/services/api";
 
 function ProductDetailsSkeleton() {
@@ -373,9 +373,10 @@ export default function ProductDetailsView() {
     navigate("/checkout");
   };
 
-  const imageList = product.images?.length
+  const imageList = (product.images?.length
     ? product.images
-    : [product.image || "https://placehold.co/800x800?text=Product"];
+    : [product.image || "https://placehold.co/800x800?text=Product"]
+  ).map((img) => resolveMediaUrl(img) || img);
   const showGalleryControls = imageList.length > 1;
 
   const goToPrevImage = () => {
@@ -821,7 +822,7 @@ export default function ProductDetailsView() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={review.avatarUrl}
+                        src={resolveMediaUrl(review.avatarUrl)}
                         name={review.author}
                         size="md"
                       />

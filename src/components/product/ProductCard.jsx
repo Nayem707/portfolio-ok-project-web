@@ -17,7 +17,7 @@ import {
 } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import useAddProductToCart from "@/hooks/useAddProductToCart";
-import { classNames } from "@/utils";
+import { classNames, getProductImage } from "@/utils";
 
 export default function ProductCard({ product, lockWhenInCart = false }) {
   const dispatch = useDispatch();
@@ -62,7 +62,7 @@ export default function ProductCard({ product, lockWhenInCart = false }) {
         <div className="relative aspect-square overflow-hidden bg-slate-100">
           <Link to={`/products/${product.id}`}>
             <img
-              src={product.images?.[0] || product.image}
+              src={getProductImage(product)}
               alt={product.name}
               loading="lazy"
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"

@@ -12,6 +12,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Modal from "@/components/common/Modal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { resolveMediaUrl } from "@/utils";
 import {
   fetchHomepageSections,
   saveHomePageSection,
@@ -526,7 +527,7 @@ export default function HomePageManagementView() {
           {draft.image ? (
             <div className="overflow-hidden rounded-xl border border-slate-200">
               <img
-                src={draft.image}
+                src={resolveMediaUrl(draft.image)}
                 alt={draft.alt || "Popup preview"}
                 className="h-40 w-full object-cover"
               />

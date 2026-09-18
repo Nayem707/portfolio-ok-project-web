@@ -1,5 +1,5 @@
 import { SHIPPING_FLAT_RATE, FREE_SHIPPING_THRESHOLD } from "@/constants";
-import { getDiscountedPrice } from "@/utils";
+import { getDiscountedPrice, getProductImage } from "@/utils";
 
 export const resolveItemKey = (productId, color, size) =>
   `${productId}-${color || "default"}-${size || "default"}`;
@@ -95,7 +95,7 @@ export const buildCartItem = (product, quantity = 1) => {
     name: product.name,
     price: Number(product.price || 0),
     discount: Number(product.discount || 0),
-    image: product.images?.[0] || product.image || null,
+    image: getProductImage(product) || null,
     category: product.category || null,
     stock,
     quantity: clampedQty,

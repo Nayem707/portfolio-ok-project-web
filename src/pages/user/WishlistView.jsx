@@ -12,6 +12,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import Badge from "@/components/common/Badge";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import AddToCartVariantModal from "@/components/product/AddToCartVariantModal";
+import { resolveMediaUrl } from "@/utils";
 import {
   selectWishlistItems,
   fetchWishlist,
@@ -105,7 +106,7 @@ export default function WishlistView() {
             <div key={item.id} className="card flex gap-4 p-4">
               <Link to={`/products/${item.id}`} className="shrink-0">
                 <img
-                  src={item.image}
+                  src={resolveMediaUrl(item.image)}
                   alt={item.name}
                   className="h-24 w-24 rounded-lg border border-slate-100 object-cover"
                 />

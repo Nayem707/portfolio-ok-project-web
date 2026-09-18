@@ -5,6 +5,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import { APP_NAME } from "@/constants";
+import { resolveMediaUrl } from "@/utils";
 import {
   fetchHomepageSections,
   selectFirstVisitPopup,
@@ -75,7 +76,7 @@ export default function FirstVisitPopup() {
     >
       <div className="relative h-[min(78vh,32rem)] w-full sm:h-[min(72vh,34rem)] md:h-[min(68vh,30rem)]">
         <img
-          src={popup.image}
+          src={resolveMediaUrl(popup.image)}
           alt={popup.alt || `${APP_NAME} promotion`}
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}

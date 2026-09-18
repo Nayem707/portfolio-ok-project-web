@@ -7,7 +7,7 @@ import {
   getProductColorOptions,
   getProductSizeOptions,
 } from "@/features/cart";
-import { classNames } from "@/utils";
+import { classNames, getProductImage } from "@/utils";
 
 const COLOR_SWATCHES = {
   Black: "#111827",
@@ -89,7 +89,7 @@ export default function AddToCartVariantModal({
     >
       <div className="flex gap-4">
         <img
-          src={product.images?.[0] || product.image}
+          src={getProductImage(product)}
           alt={product.name}
           className="h-20 w-20 shrink-0 rounded-lg border border-slate-100 object-cover"
         />

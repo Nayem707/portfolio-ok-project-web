@@ -20,6 +20,7 @@ import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { api } from "@/services/api";
 import { PRODUCT_STATUS, toProductStatusKey } from "@/constants";
+import { resolveMediaUrl } from "@/utils";
 
 const empty = {
   name: "",
@@ -369,7 +370,7 @@ export default function ProductForm({
                     ].join(" ")}
                   >
                     <img
-                      src={img}
+                      src={resolveMediaUrl(img)}
                       alt={`Product image ${idx + 1}`}
                       className="h-full w-full object-cover"
                     />

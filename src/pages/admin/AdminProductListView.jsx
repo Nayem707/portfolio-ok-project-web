@@ -34,7 +34,7 @@ import {
   selectProductsMutationLoading,
 } from "@/features/products";
 import { fetchCategories, selectCategories } from "@/features/categories";
-import { formatCurrency, formatDate } from "@/utils";
+import { formatCurrency, formatDate, getProductImage } from "@/utils";
 import {
   PRODUCT_STATUS,
   toProductStatusKey,
@@ -119,7 +119,7 @@ export default function AdminProductListView() {
       render: (p) => (
         <div className="flex items-center gap-3">
           <img
-            src={p.images?.[0]}
+            src={getProductImage(p)}
             alt={p.name}
             className="h-11 w-11 rounded-lg border border-slate-100 object-cover"
           />
@@ -210,7 +210,7 @@ export default function AdminProductListView() {
     <div className="card p-4">
       <div className="flex gap-3">
         <img
-          src={p.images?.[0]}
+          src={getProductImage(p)}
           alt={p.name}
           className="h-16 w-16 rounded-lg border border-slate-100 object-cover"
         />

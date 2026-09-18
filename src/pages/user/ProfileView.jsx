@@ -7,6 +7,7 @@ import Button from "@/components/common/Button";
 import Avatar from "@/components/common/Avatar";
 import { selectCurrentUser, updateProfile } from "@/features/auth";
 import { api } from "@/services/api";
+import { resolveMediaUrl } from "@/utils";
 
 const ACCEPTED_TYPES = [
   "image/jpeg",
@@ -55,7 +56,8 @@ export default function ProfileView() {
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  const displayAvatarSrc = previewUrl || form.avatarUrl || null;
+  const displayAvatarSrc =
+    previewUrl || resolveMediaUrl(form.avatarUrl) || null;
 
   const openFilePicker = () => {
     fileInputRef.current?.click();

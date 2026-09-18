@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { resolveMediaUrl } from "@/utils";
 
 export default function CategoryCard({ category, productCount }) {
   const targetCategory = category.slug || category.id;
@@ -10,7 +11,7 @@ export default function CategoryCard({ category, productCount }) {
     >
       <img
         src={
-          category.image ||
+          resolveMediaUrl(category.image) ||
           "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80"
         }
         alt={category.name}

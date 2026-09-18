@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import Button from "@/components/common/Button";
+import { resolveMediaUrl } from "@/utils";
 
 const fallbackPromo = {
   left: {
@@ -33,7 +34,7 @@ export default function PromoSection({ promo }) {
     <section className="grid gap-4 sm:grid-cols-2">
       <div className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-slate-900 p-8 text-white">
         <img
-          src={data.left.image}
+          src={resolveMediaUrl(data.left.image)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-30"
         />
@@ -58,7 +59,7 @@ export default function PromoSection({ promo }) {
 
       <div className="bg-accent-500 relative flex flex-col justify-center overflow-hidden rounded-2xl p-8 text-white">
         <img
-          src={data.right.image}
+          src={resolveMediaUrl(data.right.image)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-25"
         />

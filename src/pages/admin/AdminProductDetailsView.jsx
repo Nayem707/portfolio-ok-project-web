@@ -20,7 +20,7 @@ import {
 } from "@/features/products";
 import { fetchColors, selectColors } from "@/features/colors";
 import { api } from "@/services/api";
-import { formatDate, formatCurrency } from "@/utils";
+import { formatDate, formatCurrency, resolveMediaUrl } from "@/utils";
 import { toProductStatusKey, toProductStatusLabel } from "@/constants";
 
 const statusColor = { ACTIVE: "green", DRAFT: "yellow", ARCHIVED: "gray" };
@@ -167,7 +167,7 @@ export default function AdminProductDetailsView() {
               {images.map((img, idx) => (
                 <img
                   key={idx}
-                  src={img}
+                  src={resolveMediaUrl(img)}
                   alt=""
                   className="aspect-square w-full rounded-lg border border-slate-100 object-cover"
                 />
@@ -298,7 +298,7 @@ export default function AdminProductDetailsView() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={review.avatarUrl}
+                        src={resolveMediaUrl(review.avatarUrl)}
                         name={review.author}
                         size="md"
                       />

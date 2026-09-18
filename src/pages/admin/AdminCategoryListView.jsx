@@ -26,7 +26,7 @@ import {
   updateCategory,
 } from "@/features/categories";
 import { api } from "@/services/api";
-import { formatDate } from "@/utils";
+import { formatDate, resolveMediaUrl } from "@/utils";
 
 const emptyForm = { name: "", description: "", image: "", status: "ACTIVE" };
 
@@ -231,7 +231,7 @@ export default function AdminCategoryListView() {
               <div className="relative h-32 bg-slate-100">
                 {cat.image ? (
                   <img
-                    src={cat.image}
+                    src={resolveMediaUrl(cat.image)}
                     alt={cat.name}
                     className="h-full w-full object-cover"
                   />
@@ -373,7 +373,7 @@ export default function AdminCategoryListView() {
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
               {previewSrc && !previewFailed ? (
                 <img
-                  src={previewSrc}
+                  src={resolveMediaUrl(previewSrc)}
                   alt={form.name || "Category preview"}
                   className="h-40 w-full object-cover"
                   onError={() => setPreviewFailed(true)}

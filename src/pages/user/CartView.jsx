@@ -19,7 +19,7 @@ import {
   setQuantity,
 } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
-import { formatCurrency, getDiscountedPrice } from "@/utils";
+import { formatCurrency, getDiscountedPrice, resolveMediaUrl } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
 const colorSwatches = {
@@ -102,7 +102,7 @@ export default function CartView() {
             >
               <Link to={`/products/${item.id}`} className="shrink-0">
                 <img
-                  src={item.image}
+                  src={resolveMediaUrl(item.image)}
                   alt={item.name}
                   className="h-28 w-full rounded-lg border border-slate-100 object-cover sm:w-28"
                 />

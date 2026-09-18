@@ -16,7 +16,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { selectCartItems, selectCartTotals } from "@/features/cart";
 import { placeOrder } from "@/features/orders";
 import { selectCurrentUser } from "@/features/auth";
-import { formatCurrency, getDiscountedPrice, classNames } from "@/utils";
+import { formatCurrency, getDiscountedPrice, classNames, resolveMediaUrl } from "@/utils";
 import { PAYMENT_METHODS } from "@/constants";
 
 const countries = [
@@ -260,7 +260,7 @@ export default function CheckoutView() {
                 >
                   <div className="relative shrink-0">
                     <img
-                      src={item.image}
+                      src={resolveMediaUrl(item.image)}
                       alt={item.name}
                       className="h-14 w-14 rounded-lg border border-slate-100 object-cover"
                     />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { resolveMediaUrl } from "@/utils";
 
 const fallbackSlides = [
   {
@@ -73,7 +74,7 @@ const HeroSection = ({ slides = [] }) => {
     <section className="relative min-h-90 overflow-hidden sm:min-h-107.5 lg:min-h-137.5">
       {/* Background Image */}
       <img
-        src={slide.image}
+        src={resolveMediaUrl(slide.image)}
         alt={slide.title}
         className="absolute inset-0 h-full w-full object-cover object-[68%_center] transition-opacity duration-700 sm:object-center"
       />
