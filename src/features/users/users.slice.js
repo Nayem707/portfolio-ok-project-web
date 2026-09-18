@@ -5,12 +5,18 @@ import { toUserStatusKey, toUserStatusLabel } from "@/constants";
 export const normalizeAdminUser = (user) => {
   if (!user) return null;
   const avatarUrl = user.avatarUrl || user.avatar || null;
+  const authProvider = user.authProvider || "LOCAL";
   return {
     id: user.id,
     name: user.name || "",
     email: user.email || "",
     role: user.role || "USER",
     status: toUserStatusLabel(user.status),
+    authProvider,
+    isGoogleVerified:
+      typeof user.isGoogleVerified === "boolean"
+        ? user.isGoogleVerified
+        : String(authProvider).toUpperCase() === "GOOGLE",
     avatarUrl,
     avatar: avatarUrl,
     phone: user.phone || "",
