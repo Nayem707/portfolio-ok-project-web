@@ -161,6 +161,7 @@ const cartSlice = createSlice({
     items: [],
     subtotal: 0,
     totalItems: 0,
+    pendingProductIds: [],
     loading: false,
     mutating: false,
     error: null,
@@ -172,6 +173,7 @@ const cartSlice = createSlice({
       state.items = [];
       state.subtotal = 0;
       state.totalItems = 0;
+      state.pendingProductIds = [];
       state.loading = false;
       state.mutating = false;
       state.error = null;
@@ -202,16 +204,32 @@ const cartSlice = createSlice({
         state.error = action.payload || "Failed to load cart";
         state.initialized = true;
       })
-      .addCase(addToCart.pending, (state) => {
+      .addCase(addToCart.pending, (state, action) => {
         state.mutating = true;
         state.error = null;
+        const productId = action.meta.arg?.id;
+        if (productId && !state.pendingProductIds.includes(productId)) {
+          state.pendingProductIds.push(productId);
+        }
       })
       .addCase(addToCart.fulfilled, (state, action) => {
         state.mutating = false;
+        const productId = action.meta.arg?.id;
+        if (productId) {
+          state.pendingProductIds = state.pendingProductIds.filter(
+            (id) => id !== productId,
+          );
+        }
         setFromPayload(state, action);
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.mutating = false;
+        const productId = action.meta.arg?.id;
+        if (productId) {
+          state.pendingProductIds = state.pendingProductIds.filter(
+            (id) => id !== productId,
+          );
+        }
         state.error = action.payload || "Failed to add item to cart";
       })
       .addCase(setQuantity.pending, (state) => {

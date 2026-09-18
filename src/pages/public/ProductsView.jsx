@@ -379,7 +379,11 @@ export default function ProductsView() {
               onRetry={retryProducts}
             />
           ) : (
-            <ProductGrid products={products} loading={productsLoading} />
+            <ProductGrid
+              products={products}
+              loading={productsLoading}
+              lockWhenInCart
+            />
           )}
           {totalPages > 1 && (
             <div className="mt-10">

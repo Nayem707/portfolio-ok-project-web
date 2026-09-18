@@ -1,23 +1,34 @@
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { HeartIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  HeartIcon,
+  ShoppingBagIcon,
+} from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import Rating from "@/components/common/Rating";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Badge from "@/components/common/Badge";
-import { addToCart } from "@/features/cart";
+import {
+  addToCart,
+  selectIsProductAddPending,
+  selectIsProductInCart,
+} from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames } from "@/utils";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, lockWhenInCart = false }) {
   const dispatch = useDispatch();
   const wishlist = useSelector(selectWishlistItems);
+  const inCart = useSelector(selectIsProductInCart(product.id));
+  const addPending = useSelector(selectIsProductAddPending(product.id));
   const isWishlisted = wishlist.some((i) => i.id === product.id);
   const outOfStock = product.stock === 0;
+  const cartLocked = lockWhenInCart && (inCart || addPending);
 
   const handleAddToCart = async () => {
-    if (outOfStock) return;
+    if (outOfStock || cartLocked) return;
     try {
       await dispatch(addToCart(product)).unwrap();
       toast.success(`${product.name} added to cart`, {
@@ -107,14 +118,28 @@ export default function ProductCard({ product }) {
             discount={product.discount}
             hideDecimals
           />
-          <button
-            onClick={handleAddToCart}
-            disabled={outOfStock}
-            className="bg-primary-600 hover:bg-primary-700 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Add to cart"
-          >
-            <ShoppingBagIcon className="h-4.5 w-4.5" />
-          </button>
+          {lockWhenInCart && cartLocked && !outOfStock ? (
+            <button
+              type="button"
+              disabled
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200/80"
+              aria-label="Added to cart"
+              title="Added to cart"
+            >
+              <CheckIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Added</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={outOfStock || cartLocked}
+              className="bg-primary-600 hover:bg-primary-700 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Add to cart"
+            >
+              <ShoppingBagIcon className="h-4.5 w-4.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
