@@ -41,21 +41,48 @@ export const matchesCartItem = (item, selector) => {
   return item.id === selector.id && !itemColor && !itemSize;
 };
 
+export const getProductColorOptions = (product) => {
+  if (!Array.isArray(product?.colors) || product.colors.length === 0) {
+    return [];
+  }
+  return product.colors
+    .map((color) => (typeof color === "string" ? color : color?.name))
+    .filter(Boolean);
+};
+
+export const getProductSizeOptions = (product) => {
+  if (!Array.isArray(product?.sizes) || product.sizes.length === 0) {
+    return [];
+  }
+  return product.sizes
+    .map((size) => (typeof size === "string" ? size : size?.name))
+    .filter(Boolean);
+};
+
+export const getMissingVariantLabels = (
+  product,
+  selectedColor = null,
+  selectedSize = null,
+) => {
+  const missing = [];
+  if (getProductColorOptions(product).length > 0 && !selectedColor) {
+    missing.push("color");
+  }
+  if (getProductSizeOptions(product).length > 0 && !selectedSize) {
+    missing.push("size");
+  }
+  return missing;
+};
+
+export const requiresVariantSelection = (
+  product,
+  selectedColor = null,
+  selectedSize = null,
+) => getMissingVariantLabels(product, selectedColor, selectedSize).length > 0;
+
 export const buildCartItem = (product, quantity = 1) => {
-  const colorOptions = Array.isArray(product.colors) ? product.colors : [];
-  const sizeOptions = Array.isArray(product.sizes) ? product.sizes : [];
-  const selectedColor =
-    product.selectedColor ||
-    (typeof colorOptions[0] === "string"
-      ? colorOptions[0]
-      : colorOptions[0]?.name) ||
-    null;
-  const selectedSize =
-    product.selectedSize ||
-    (typeof sizeOptions[0] === "string"
-      ? sizeOptions[0]
-      : sizeOptions[0]?.name) ||
-    null;
+  const selectedColor = product.selectedColor || null;
+  const selectedSize = product.selectedSize || null;
   const qty = Math.max(1, Number(quantity) || 1);
   const stock = Number(product.stock ?? 0);
   const clampedQty = stock > 0 ? Math.min(qty, stock) : qty;

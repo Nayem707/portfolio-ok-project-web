@@ -35,8 +35,7 @@ import {
   selectProductDetailsLoading,
 } from "@/features/products";
 import { fetchColors, selectColors } from "@/features/colors";
-import { fetchSizes, selectSizes } from "@/features/sizes";
-import { addToCart } from "@/features/cart";
+import { addToCart, getMissingVariantLabels } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { classNames, range } from "@/utils";
 import { api } from "@/services/api";
@@ -96,14 +95,14 @@ export default function ProductDetailsView() {
   const productLoading = useSelector(selectProductDetailsLoading);
   const productError = useSelector(selectProductDetailsError);
   const colors = useSelector(selectColors);
-  const sizes = useSelector(selectSizes);
   const wishlist = useSelector(selectWishlistItems);
   const [related, setRelated] = useState([]);
   const [primaryImageReady, setPrimaryImageReady] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState("Black");
-  const [selectedSize, setSelectedSize] = useState("Standard");
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [variantError, setVariantError] = useState("");
   const [visibleReviews, setVisibleReviews] = useState(6);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
@@ -133,7 +132,6 @@ export default function ProductDetailsView() {
     setReviews([]);
     dispatch(fetchProductByIdOrSlug(id));
     dispatch(fetchColors());
-    dispatch(fetchSizes());
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -185,38 +183,26 @@ export default function ProductDetailsView() {
     "Rose Gold": "#d97706",
   };
   const productColors = useMemo(() => {
-    const names = product?.colors?.length
-      ? product.colors
-      : product?.category === "Fashion" ||
-          product?.category === "Sports & Outdoors"
-        ? ["Black", "White", "Navy", "Sand", "Olive"]
-        : (colors || []).map((item) => item.name);
-
-    const fallback = ["Black", "White", "Silver", "Rose Gold"];
-    const selected = names.length > 0 ? names : fallback;
-
-    return selected.map((color) => ({
+    const names = product?.colors?.length ? product.colors : [];
+    return names.map((color) => ({
       name: color,
-      value: colorSwatches[color] || color,
+      value:
+        colorSwatches[color] ||
+        colors.find((item) => item.name === color)?.hex ||
+        color,
     }));
   }, [product, colors]);
-  const productSizes = useMemo(() => {
-    if (product?.sizes?.length) return product.sizes;
-    if (
-      product?.category === "Fashion" ||
-      product?.category === "Sports & Outdoors"
-    ) {
-      return ["XS", "S", "M", "L", "XL"];
-    }
-    const names = (sizes || []).map((item) => item.name);
-    return names.length ? names : ["Standard"];
-  }, [product, sizes]);
+  const productSizes = useMemo(
+    () => (product?.sizes?.length ? product.sizes : []),
+    [product],
+  );
 
   useEffect(() => {
-    setSelectedColor(productColors[0]?.name || "Black");
-    setSelectedSize(productSizes[0] || "Standard");
+    setSelectedColor(null);
+    setSelectedSize(null);
     setQuantity(1);
-  }, [product?.id, productColors, productSizes]);
+    setVariantError("");
+  }, [product?.id]);
 
   useEffect(() => {
     setShowWhatsappAttention(false);
@@ -328,6 +314,19 @@ export default function ProductDetailsView() {
   const visibleReviewItems = productReviews.slice(0, visibleReviews);
 
   const handleAddToCart = () => {
+    const missing = getMissingVariantLabels(
+      product,
+      selectedColor,
+      selectedSize,
+    );
+    if (missing.length) {
+      setVariantError(`Please select ${missing.join(" and ")}`);
+      toast.error(`Please select ${missing.join(" and ")}`, {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     dispatch(
       addToCart({
         ...product,
@@ -336,8 +335,14 @@ export default function ProductDetailsView() {
         selectedSize,
       }),
     );
+    setVariantError("");
+    const variantLabel = [selectedColor, selectedSize]
+      .filter(Boolean)
+      .join(", ");
     toast.success(
-      `${product.name} (${selectedColor}, ${selectedSize}) added to cart`,
+      variantLabel
+        ? `${product.name} (${variantLabel}) added to cart`
+        : `${product.name} added to cart`,
       {
         position: "bottom-right",
       },
@@ -345,6 +350,19 @@ export default function ProductDetailsView() {
   };
 
   const handleBuyNow = () => {
+    const missing = getMissingVariantLabels(
+      product,
+      selectedColor,
+      selectedSize,
+    );
+    if (missing.length) {
+      setVariantError(`Please select ${missing.join(" and ")}`);
+      toast.error(`Please select ${missing.join(" and ")}`, {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     dispatch(
       addToCart({
         ...product,
@@ -579,7 +597,10 @@ export default function ProductDetailsView() {
                     <button
                       key={colorOption.name}
                       type="button"
-                      onClick={() => setSelectedColor(colorOption.name)}
+                      onClick={() => {
+                        setSelectedColor(colorOption.name);
+                        setVariantError("");
+                      }}
                       aria-label={colorOption.name}
                       title={colorOption.name}
                       className={classNames(
@@ -610,7 +631,10 @@ export default function ProductDetailsView() {
                   <button
                     key={size}
                     type="button"
-                    onClick={() => setSelectedSize(size)}
+                    onClick={() => {
+                      setSelectedSize(size);
+                      setVariantError("");
+                    }}
                     className={classNames(
                       "rounded-full border px-3 py-1.5 text-sm transition",
                       selectedSize === size
@@ -623,6 +647,10 @@ export default function ProductDetailsView() {
                 ))}
               </div>
             </div>
+          )}
+
+          {variantError && (
+            <p className="mt-4 text-sm text-red-600">{variantError}</p>
           )}
 
           {!outOfStock && (

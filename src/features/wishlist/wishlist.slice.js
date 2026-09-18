@@ -12,6 +12,8 @@ const mapWishlist = (items = []) =>
     image: item.image,
     rating: Number(item.rating || 0),
     stock: item.stock,
+    colors: Array.isArray(item.colors) ? item.colors : [],
+    sizes: Array.isArray(item.sizes) ? item.sizes : [],
     createdAt: item.createdAt,
   }));
 

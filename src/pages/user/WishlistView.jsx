@@ -11,13 +11,14 @@ import EmptyState from "@/components/common/EmptyState";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import Badge from "@/components/common/Badge";
 import PriceDisplay from "@/components/common/PriceDisplay";
+import AddToCartVariantModal from "@/components/product/AddToCartVariantModal";
 import {
   selectWishlistItems,
   fetchWishlist,
   removeFromWishlist,
   clearWishlist,
 } from "@/features/wishlist";
-import { addToCart } from "@/features/cart";
+import useAddProductToCart from "@/hooks/useAddProductToCart";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ErrorState from "@/components/common/ErrorState";
 
@@ -27,6 +28,13 @@ export default function WishlistView() {
   const loading = useSelector((state) => state.wishlist.loading);
   const mutating = useSelector((state) => state.wishlist.mutating);
   const error = useSelector((state) => state.wishlist.error);
+  const {
+    pendingProduct,
+    variantModalOpen,
+    requestAddToCart,
+    confirmVariantSelection,
+    cancelVariantSelection,
+  } = useAddProductToCart();
 
   if (loading) {
     return (
@@ -128,16 +136,12 @@ export default function WishlistView() {
                     size="sm"
                     leftIcon={ShoppingBagIcon}
                     disabled={outOfStock}
-                    onClick={() => {
-                      dispatch(addToCart(item));
-                      toast.success("Added to cart", {
-                        position: "bottom-right",
-                      });
-                    }}
+                    onClick={() => requestAddToCart(item)}
                   >
                     Add to cart
                   </Button>
                   <button
+                    type="button"
                     onClick={async () => {
                       try {
                         await dispatch(removeFromWishlist(item.id)).unwrap();
@@ -162,6 +166,13 @@ export default function WishlistView() {
           );
         })}
       </div>
+
+      <AddToCartVariantModal
+        open={variantModalOpen}
+        product={pendingProduct}
+        onClose={cancelVariantSelection}
+        onConfirm={confirmVariantSelection}
+      />
     </div>
   );
 }

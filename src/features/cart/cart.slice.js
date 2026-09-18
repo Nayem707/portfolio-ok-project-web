@@ -7,6 +7,7 @@ import {
   matchesCartItem,
   normaliseSelector,
   refreshLineTotals,
+  requiresVariantSelection,
   resolveItemKey,
 } from "./cart.utils";
 
@@ -76,7 +77,16 @@ const cartSlice = createSlice({
       if (!product?.id) return;
 
       const quantity = Math.max(1, Number(product.quantity) || 1);
-      const draft = buildCartItem(product, quantity);
+      const selectedColor = product.selectedColor || null;
+      const selectedSize = product.selectedSize || null;
+      if (requiresVariantSelection(product, selectedColor, selectedSize)) {
+        return;
+      }
+
+      const draft = buildCartItem(
+        { ...product, selectedColor, selectedSize },
+        quantity,
+      );
       const existing = state.items.find(
         (item) => item.itemKey === draft.itemKey,
       );

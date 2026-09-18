@@ -18,7 +18,7 @@ import {
   removeFromCart,
   setQuantity,
 } from "@/features/cart";
-import { toggleWishlist } from "@/features/wishlist";
+import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { formatCurrency, getDiscountedPrice } from "@/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
@@ -47,6 +47,7 @@ const colorSwatches = {
 export default function CartView() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
+  const wishlist = useSelector(selectWishlistItems);
   const { subtotal, shipping, total } = useSelector(selectCartTotals);
 
   const savings = items.reduce(
@@ -168,21 +169,23 @@ export default function CartView() {
                   />
                   <div className="flex items-center gap-1">
                     <button
+                      type="button"
                       onClick={async () => {
+                        const wasWishlisted = wishlist.some(
+                          (entry) => entry.id === item.id,
+                        );
                         try {
                           await dispatch(toggleWishlist(item)).unwrap();
-                          dispatch(
-                            removeFromCart({
-                              id: item.id,
-                              color: item.selectedColor,
-                              size: item.selectedSize,
-                              itemKey: item.itemKey,
-                              cartItemId: item.cartItemId,
-                            }),
+                          toast.success(
+                            wasWishlisted
+                              ? "Removed from wishlist"
+                              : "Added to wishlist",
+                            { position: "bottom-right" },
                           );
-                          toast.success("Moved to wishlist");
                         } catch (err) {
-                          toast.error(err || "Failed to move item");
+                          toast.error(err || "Failed to update wishlist", {
+                            position: "bottom-right",
+                          });
                         }
                       }}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100"
