@@ -1,14 +1,20 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import Logo from "@/components/navigation/Logo";
 
 export default function AuthLayout() {
+  const navigate = useNavigate();
+
+  const handleBackToStore = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Brand panel */}
       <div className="bg-primary-700 relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 text-white lg:flex">
-        <div className="from-primary-600 to-primary-900 absolute inset-0 bg-gradient-to-br" />
+        <div className="from-primary-600/20 to-primary-900 absolute inset-0 bg-gradient-to-br" />
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-50"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1000&q=80')",
@@ -19,8 +25,8 @@ export default function AuthLayout() {
         <div className="relative">
           <Logo textClassName="text-white" />
         </div>
-        <div className="relative max-w-md">
-          <h2 className="text-3xl leading-tight font-bold">
+        <div className="relative max-w-xl">
+          <h2 className="text-5xl leading-tight font-bold">
             Shopping made simple, delightful, and fast.
           </h2>
           <p className="text-primary-100 mt-4">
@@ -52,9 +58,13 @@ export default function AuthLayout() {
           </div>
           <Outlet />
           <p className="mt-8 text-center text-xs text-slate-400">
-            <Link to="/" className="hover:text-primary-600">
+            <a
+              href="#"
+              onClick={handleBackToStore}
+              className="hover:text-primary-600"
+            >
               ← Back to store
-            </Link>
+            </a>
           </p>
         </div>
       </div>
