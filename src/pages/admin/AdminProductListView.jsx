@@ -22,17 +22,36 @@ import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { selectProducts, deleteProduct } from "@/features/products";
-import { selectCategories } from "@/features/categories";
+import {
+  deleteProduct,
+  fetchProducts,
+  selectProducts,
+  selectProductsError,
+  selectProductsLoading,
+} from "@/features/products";
+import { fetchCategories, selectCategories } from "@/features/categories";
 import { formatCurrency, formatDate } from "@/utils";
 import { PRODUCT_STATUS } from "@/constants";
 
-const statusColor = { Active: "green", Draft: "yellow", Archived: "gray" };
+const STATUS_LABEL = {
+  ACTIVE: "Active",
+  DRAFT: "Draft",
+  ARCHIVED: "Archived",
+};
+const statusColor = { ACTIVE: "green", DRAFT: "yellow", ARCHIVED: "gray" };
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+const ADMIN_PRODUCT_LIMIT = 100;
+
+const toStatusKey = (value) => String(value || "").toUpperCase();
+const statusLabel = (status) => STATUS_LABEL[toStatusKey(status)] || status;
 
 export default function AdminProductListView() {
   const products = useSelector(selectProducts);
+  const productsLoading = useSelector(selectProductsLoading);
+  const productsError = useSelector(selectProductsError);
   const categories = useSelector(selectCategories);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -49,8 +68,8 @@ export default function AdminProductListView() {
       products.filter(
         (p) =>
           p.name.toLowerCase().includes(search.toLowerCase()) &&
-          (!category || p.category === category) &&
-          (!status || p.status === status),
+          (!category || p.category === category || p.categoryId === category) &&
+          (!status || toStatusKey(p.status) === toStatusKey(status)),
       ),
     [products, search, category, status],
   );
@@ -63,13 +82,13 @@ export default function AdminProductListView() {
 
   const overview = useMemo(() => {
     const active = products.filter(
-      (p) => p.status === PRODUCT_STATUS.ACTIVE,
+      (p) => toStatusKey(p.status) === "ACTIVE",
     ).length;
     const draft = products.filter(
-      (p) => p.status === PRODUCT_STATUS.DRAFT,
+      (p) => toStatusKey(p.status) === "DRAFT",
     ).length;
     const archived = products.filter(
-      (p) => p.status === PRODUCT_STATUS.ARCHIVED,
+      (p) => toStatusKey(p.status) === "ARCHIVED",
     ).length;
     const outOfStock = products.filter((p) => p.stock === 0).length;
 
@@ -81,6 +100,11 @@ export default function AdminProductListView() {
       outOfStock,
     };
   }, [products]);
+
+  useEffect(() => {
+    dispatch(fetchProducts({ limit: ADMIN_PRODUCT_LIMIT }));
+    dispatch(fetchCategories({ all: true }));
+  }, [dispatch]);
 
   useEffect(() => {
     setPage(1);
@@ -141,7 +165,9 @@ export default function AdminProductListView() {
       key: "status",
       header: "Status",
       render: (p) => (
-        <Badge color={statusColor[p.status] || "gray"}>{p.status}</Badge>
+        <Badge color={statusColor[toStatusKey(p.status)] || "gray"}>
+          {statusLabel(p.status)}
+        </Badge>
       ),
     },
     {
@@ -199,7 +225,9 @@ export default function AdminProductListView() {
             <span className="font-semibold text-slate-900">
               {formatCurrency(p.price)}
             </span>
-            <Badge color={statusColor[p.status] || "gray"}>{p.status}</Badge>
+            <Badge color={statusColor[toStatusKey(p.status)] || "gray"}>
+              {statusLabel(p.status)}
+            </Badge>
           </div>
         </div>
       </div>
@@ -292,7 +320,9 @@ export default function AdminProductListView() {
             >
               <option value="">All categories</option>
               {categories.map((c) => (
-                <option key={c.id}>{c.name}</option>
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
               ))}
             </Select>
           </div>
@@ -321,20 +351,36 @@ export default function AdminProductListView() {
         </div>
       </div>
 
-      <Table
-        columns={columns}
-        data={pagedProducts}
-        rowKey="id"
-        renderCard={renderCard}
-        emptyState={
-          <EmptyState
-            title="No products found"
-            description="Try adjusting your search or filters."
+      {productsError ? (
+        <ErrorState
+          title="Could not load products"
+          description={productsError}
+          onRetry={() =>
+            dispatch(fetchProducts({ limit: ADMIN_PRODUCT_LIMIT }))
+          }
+        />
+      ) : productsLoading && !products.length ? (
+        <div className="card p-10">
+          <LoadingSpinner label="Loading products..." />
+        </div>
+      ) : (
+        <>
+          <Table
+            columns={columns}
+            data={pagedProducts}
+            rowKey="id"
+            renderCard={renderCard}
+            emptyState={
+              <EmptyState
+                title="No products found"
+                description="Try adjusting your search or filters."
+              />
+            }
           />
-        }
-      />
 
-      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+        </>
+      )}
 
       <ConfirmDialog
         open={!!toDelete}
