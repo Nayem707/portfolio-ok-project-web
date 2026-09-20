@@ -208,7 +208,7 @@ export default function Navbar() {
             Categories
           </NavLink>
           <span className="h-4 w-px bg-slate-200" />
-          {categories.slice(0, 8).map((cat) => {
+          {categories.slice(0, 4).map((cat) => {
             const categoryKey = cat.slug || cat.id;
             return (
               <Link
@@ -220,6 +220,14 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {categories.length > 4 && (
+            <Link
+              to="/categories"
+              className="hover:text-primary-600 text-sm font-semibold text-slate-700 transition"
+            >
+              Show more
+            </Link>
+          )}
         </nav>
       </div>
     </header>
