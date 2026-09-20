@@ -5,6 +5,8 @@ import {
   FunnelIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
+  Squares2X2Icon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import ProductGrid from "@/components/product/ProductGrid";
 import Pagination from "@/components/common/Pagination";
@@ -27,7 +29,7 @@ import {
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
-import { classNames } from "@/utils";
+import { classNames, resolveMediaUrl } from "@/utils";
 import useDebounce from "@/hooks/useDebounce";
 
 const parseMultiParam = (value) =>
@@ -196,33 +198,65 @@ export default function ProductsView() {
         </h3>
         <div className="space-y-1">
           <button
+            type="button"
             onClick={() => updateParam("category", "")}
             className={classNames(
-              "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
+              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
               !category
                 ? "bg-primary-50 text-primary-700 font-medium"
                 : "text-slate-600 hover:bg-slate-50",
             )}
           >
-            All Products
-            <span className="text-xs text-slate-400">{totalItems}</span>
+            <span
+              className={classNames(
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                !category ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500",
+              )}
+            >
+              <Squares2X2Icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-left">All Products</span>
+            <span className="shrink-0 text-xs text-slate-400">{totalItems}</span>
           </button>
           <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
             {categories.map((cat) => {
               const count = cat._count?.products ?? 0;
+              const isActive = category === (cat.slug || cat.id);
+              const imageUrl = resolveMediaUrl(cat.image);
               return (
                 <button
                   key={cat.id}
+                  type="button"
                   onClick={() => updateParam("category", cat.slug || cat.id)}
                   className={classNames(
-                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition",
-                    category === (cat.slug || cat.id)
+                    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
+                    isActive
                       ? "bg-primary-50 text-primary-700 font-medium"
                       : "text-slate-600 hover:bg-slate-50",
                   )}
                 >
-                  {cat.name}
-                  <span className="text-xs text-slate-400">{count}</span>
+                  <span
+                    className={classNames(
+                      "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md",
+                      isActive
+                        ? "bg-primary-100 text-primary-700"
+                        : "bg-slate-100 text-slate-500",
+                    )}
+                  >
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <TagIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    {cat.name}
+                  </span>
+                  <span className="shrink-0 text-xs text-slate-400">{count}</span>
                 </button>
               );
             })}
@@ -232,7 +266,7 @@ export default function ProductsView() {
 
       <div>
         <h3 className="mb-3 text-sm font-semibold text-slate-800">Colors</h3>
-        <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+        <div className="space-y-2">
           {colors.map((color) => {
             const optionKey = color.id || color.name;
             const optionValue = color.id || color.name;
@@ -256,7 +290,7 @@ export default function ProductsView() {
 
       <div>
         <h3 className="mb-3 text-sm font-semibold text-slate-800">Sizes</h3>
-        <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+        <div className="space-y-2">
           {sizes.map((size) => {
             const optionKey = size.id || size.name;
             const optionValue = size.id || size.name;
@@ -345,7 +379,7 @@ export default function ProductsView() {
       <div className="mt-6 grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* Desktop filters */}
         <aside className="hidden lg:block">
-          <div className="card sticky top-32 min-h-112 p-5">{FilterPanel}</div>
+          <div className="card min-h-112 p-5">{FilterPanel}</div>
         </aside>
 
         {/* Mobile filter drawer */}
