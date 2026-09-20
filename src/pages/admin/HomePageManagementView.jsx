@@ -83,8 +83,14 @@ export default function HomePageManagementView() {
   const [editorKey, setEditorKey] = useState(null);
   const [draft, setDraft] = useState(null);
   const [uploadingSlideIndex, setUploadingSlideIndex] = useState(null);
+  const [uploadingPromoSide, setUploadingPromoSide] = useState(null);
   const heroFileInputRef = useRef(null);
   const heroUploadIndexRef = useRef(null);
+  const promoFileInputRef = useRef(null);
+  const promoUploadSideRef = useRef(null);
+
+  const isUploadingMedia =
+    uploadingSlideIndex !== null || uploadingPromoSide !== null;
 
   useEffect(() => {
     dispatch(fetchHomepageSections());
@@ -99,16 +105,18 @@ export default function HomePageManagementView() {
     setEditorKey(key);
     setDraft(JSON.parse(JSON.stringify(sections[key])));
     setUploadingSlideIndex(null);
+    setUploadingPromoSide(null);
   };
 
   const closeEditor = () => {
-    if (uploadingSlideIndex !== null) {
+    if (isUploadingMedia) {
       toast.error("Please wait for the image upload to finish");
       return;
     }
     setEditorKey(null);
     setDraft(null);
     setUploadingSlideIndex(null);
+    setUploadingPromoSide(null);
   };
 
   const updateDraft = (next) => setDraft(next);
@@ -122,10 +130,26 @@ export default function HomePageManagementView() {
     });
   };
 
+  const updatePromoSide = (side, patch) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [side]: { ...(prev[side] || {}), ...patch },
+      };
+    });
+  };
+
   const openHeroUpload = (index) => {
-    if (uploadingSlideIndex !== null) return;
+    if (isUploadingMedia) return;
     heroUploadIndexRef.current = index;
     heroFileInputRef.current?.click();
+  };
+
+  const openPromoUpload = (side) => {
+    if (isUploadingMedia) return;
+    promoUploadSideRef.current = side;
+    promoFileInputRef.current?.click();
   };
 
   const handleHeroImageUpload = async (e) => {
@@ -163,9 +187,46 @@ export default function HomePageManagementView() {
     }
   };
 
+  const handlePromoImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const side = promoUploadSideRef.current;
+    promoUploadSideRef.current = null;
+    if (!file || !side || !draft) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Please select a JPG, PNG, WebP, GIF, or AVIF image");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_IMAGE_SIZE_MB}MB`);
+      return;
+    }
+
+    setUploadingPromoSide(side);
+    try {
+      const uploaded = await api.uploadImages(file);
+      const first = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      const url = first?.url;
+      if (!url) throw new Error("Upload did not return an image URL");
+      updatePromoSide(side, { image: url });
+      toast.success(
+        `${side === "left" ? "Left" : "Right"} promo image uploaded`,
+      );
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to upload image",
+      );
+    } finally {
+      setUploadingPromoSide(null);
+    }
+  };
+
   const saveSection = async () => {
     if (!editorKey || !draft || saving) return;
-    if (uploadingSlideIndex !== null) {
+    if (isUploadingMedia) {
       toast.error("Please wait for the image upload to finish");
       return;
     }
@@ -177,6 +238,7 @@ export default function HomePageManagementView() {
       setEditorKey(null);
       setDraft(null);
       setUploadingSlideIndex(null);
+      setUploadingPromoSide(null);
     } catch (err) {
       toast.error(err || "Failed to save section");
     }
@@ -596,12 +658,56 @@ export default function HomePageManagementView() {
                   label="Image URL"
                   value={draft[key]?.image || ""}
                   onChange={(e) =>
-                    updateDraft({
-                      ...draft,
-                      [key]: { ...draft[key], image: e.target.value },
-                    })
+                    updatePromoSide(key, { image: e.target.value })
                   }
+                  placeholder="https://… or upload below"
                 />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={ArrowUpTrayIcon}
+                    loading={uploadingPromoSide === key}
+                    disabled={isUploadingMedia && uploadingPromoSide !== key}
+                    onClick={() => openPromoUpload(key)}
+                  >
+                    {uploadingPromoSide === key
+                      ? "Uploading…"
+                      : "Upload image"}
+                  </Button>
+                  {draft[key]?.image ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isUploadingMedia}
+                      onClick={() => updatePromoSide(key, { image: "" })}
+                    >
+                      Clear image
+                    </Button>
+                  ) : null}
+                  <p className="text-xs text-slate-400">
+                    JPG, PNG, WebP, GIF, or AVIF · max {MAX_IMAGE_SIZE_MB}MB
+                  </p>
+                </div>
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  {draft[key]?.image ? (
+                    <img
+                      src={resolveMediaUrl(draft[key].image)}
+                      alt={draft[key]?.title || `${label} preview`}
+                      className="h-40 w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-40 flex-col items-center justify-center gap-2 text-slate-400">
+                      <PhotoIcon className="h-8 w-8" />
+                      <p className="text-xs">Promo image preview</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -743,14 +849,14 @@ export default function HomePageManagementView() {
             <Button
               variant="outline"
               onClick={closeEditor}
-              disabled={saving || uploadingSlideIndex !== null}
+              disabled={saving || isUploadingMedia}
             >
               Cancel
             </Button>
             <Button
               onClick={saveSection}
               loading={saving}
-              disabled={uploadingSlideIndex !== null}
+              disabled={isUploadingMedia}
             >
               Save / Update
             </Button>
@@ -764,6 +870,15 @@ export default function HomePageManagementView() {
             accept={ACCEPTED_IMAGE_TYPES.join(",")}
             className="hidden"
             onChange={handleHeroImageUpload}
+          />
+        )}
+        {editorKey === "promo" && (
+          <input
+            ref={promoFileInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            className="hidden"
+            onChange={handlePromoImageUpload}
           />
         )}
         {renderSectionEditor()}
