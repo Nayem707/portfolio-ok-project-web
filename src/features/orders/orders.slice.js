@@ -13,6 +13,7 @@ const normalizeOrder = (order) => ({
   id: order.id,
   orderNumber: order.orderNumber,
   date: order.createdAt,
+  currency: order.currency || "BDT",
   status: toOrderStatusLabel(order.status),
   paymentStatus: toPaymentStatusLabel(order.paymentStatus),
   paymentMethod:

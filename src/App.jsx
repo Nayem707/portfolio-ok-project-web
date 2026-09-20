@@ -10,6 +10,7 @@ import {
 import { hydrateCart, resetCartState } from "@/features/cart";
 import { fetchWishlist, resetWishlistState } from "@/features/wishlist";
 import { clearMyOrderState } from "@/features/orders";
+import { fetchSettings } from "@/features/settings";
 import { api } from "@/services/api";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
 
   useEffect(() => {
     dispatch(hydrateCart());
+    dispatch(fetchSettings());
   }, [dispatch]);
 
 

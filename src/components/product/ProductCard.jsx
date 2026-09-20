@@ -117,6 +117,7 @@ export default function ProductCard({ product, lockWhenInCart = false }) {
             <PriceDisplay
               price={product.price}
               discount={product.discount}
+              baseCurrency={product.baseCurrency || "BDT"}
               hideDecimals
             />
             {lockWhenInCart && cartLocked && !outOfStock ? (

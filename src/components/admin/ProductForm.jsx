@@ -27,6 +27,7 @@ const empty = {
   description: "",
   category: "",
   price: "",
+  baseCurrency: "BDT",
   discount: 0,
   stock: "",
   sku: "",
@@ -66,6 +67,7 @@ const normalizeImages = (images) =>
 const fromInitial = (initial) => ({
   ...empty,
   ...initial,
+  baseCurrency: initial?.baseCurrency || "BDT",
   category: initial?.category || "",
   status: toProductStatusKey(initial?.status) || "ACTIVE",
   images: normalizeImages(initial?.images),
@@ -253,6 +255,7 @@ export default function ProductForm({
       categoryId: selectedCategory?.id || initial?.categoryId,
       description: form.description?.trim() || undefined,
       price: Number(form.price),
+      baseCurrency: form.baseCurrency || initial?.baseCurrency || "BDT",
       discount: Number(form.discount) || 0,
       stock: Number(form.stock),
       status: toProductStatusKey(form.status) || "ACTIVE",
@@ -447,13 +450,17 @@ export default function ProductForm({
           <h2 className="font-semibold text-slate-900">Pricing & Inventory</h2>
           <div className="mt-4 space-y-4">
             <Input
-              label="Price ($)"
+              label="Price (BDT)"
               type="number"
               step="0.01"
               value={form.price}
               onChange={set("price")}
               error={errors.price}
             />
+            <p className="text-xs text-slate-500">
+              Enter the base price in BDT. Storefront conversion is applied from
+              Admin Settings and does not change this value.
+            </p>
             <Input
               label="Discount (%)"
               type="number"

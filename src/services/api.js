@@ -364,4 +364,19 @@ export const api = {
     const response = await axiosInstance.get("/admin/dashboard/stats");
     return getData(response);
   },
+
+  getSettings: async () => {
+    const response = await axiosInstance.get("/settings");
+    return getData(response);
+  },
+
+  updateStoreSettings: async (payload) => {
+    const response = await axiosInstance.patch("/settings/store", payload);
+    return getData(response);
+  },
+
+  updateShippingSettings: async (payload) => {
+    const response = await axiosInstance.patch("/settings/shipping", payload);
+    return getData(response);
+  },
 };

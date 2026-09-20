@@ -101,6 +101,7 @@ export default function AddToCartVariantModal({
             <PriceDisplay
               price={product.price}
               discount={product.discount}
+              baseCurrency={product.baseCurrency || "BDT"}
               size="sm"
             />
           </div>

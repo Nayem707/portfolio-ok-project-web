@@ -192,6 +192,7 @@ export default function AdminProductDetailsView() {
             <PriceDisplay
               price={product.price}
               discount={product.discount}
+              baseCurrency={product.baseCurrency || "BDT"}
               size="lg"
             />
           </div>
@@ -253,7 +254,14 @@ export default function AdminProductDetailsView() {
               ["Category", product.category],
               ["Stock", product.stock],
               ["Discount", `${product.discount}%`],
-              ["Base price", formatCurrency(product.price)],
+              ["Base price", formatCurrency(product.price, {
+                from: product.baseCurrency || "BDT",
+                currency: product.baseCurrency || "BDT",
+                convert: false,
+              })],
+              ["Display price", formatCurrency(product.price, {
+                from: product.baseCurrency || "BDT",
+              })],
               ["Created", formatDate(product.createdAt)],
             ].map(([label, value]) => (
               <div key={label}>

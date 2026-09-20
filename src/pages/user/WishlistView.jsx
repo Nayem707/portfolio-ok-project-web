@@ -129,6 +129,7 @@ export default function WishlistView() {
                   <PriceDisplay
                     price={item.price}
                     discount={item.discount}
+                    baseCurrency={item.baseCurrency || "BDT"}
                     size="sm"
                   />
                 </div>

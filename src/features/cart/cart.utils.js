@@ -94,6 +94,7 @@ export const buildCartItem = (product, quantity = 1) => {
     itemKey,
     name: product.name,
     price: Number(product.price || 0),
+    baseCurrency: product.baseCurrency || "BDT",
     discount: Number(product.discount || 0),
     image: getProductImage(product) || null,
     category: product.category || null,
@@ -115,16 +116,20 @@ export const refreshLineTotals = (items = []) =>
     ).toFixed(2),
   }));
 
-export const calcCartTotals = (items = []) => {
+export const calcCartTotals = (
+  items = [],
+  {
+    shippingFlatRate = SHIPPING_FLAT_RATE,
+    freeShippingMin = FREE_SHIPPING_THRESHOLD,
+  } = {},
+) => {
   const subtotal = items.reduce(
     (sum, item) =>
       sum + getDiscountedPrice(item.price, item.discount) * item.quantity,
     0,
   );
   const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : SHIPPING_FLAT_RATE;
+    subtotal === 0 || subtotal >= freeShippingMin ? 0 : shippingFlatRate;
   const total = subtotal + shipping;
   return {
     subtotal: +subtotal.toFixed(2),

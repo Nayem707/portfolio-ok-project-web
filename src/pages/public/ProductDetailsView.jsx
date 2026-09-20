@@ -561,6 +561,7 @@ export default function ProductDetailsView() {
             <PriceDisplay
               price={product.price}
               discount={product.discount}
+              baseCurrency={product.baseCurrency || "BDT"}
               size="xl"
             />
           </div>

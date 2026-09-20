@@ -1,5 +1,6 @@
-import { getDiscountedPrice, formatCurrency } from "@/utils";
-import { classNames } from "@/utils";
+import { useSelector } from "react-redux";
+import { getDiscountedPrice, formatCurrency, classNames } from "@/utils";
+import { selectCurrency, selectBdtPerUsd } from "@/features/settings";
 
 export default function PriceDisplay({
   price,
@@ -7,22 +8,23 @@ export default function PriceDisplay({
   size = "md",
   className,
   hideDecimals = false,
+  baseCurrency = "BDT",
 }) {
+  const currency = useSelector(selectCurrency);
+  const bdtPerUsd = useSelector(selectBdtPerUsd);
   const final = getDiscountedPrice(price, discount);
   const hasDiscount = discount > 0;
-  const formatWholeCurrency = (value) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(value) || 0);
-  const displayedFinal = hideDecimals
-    ? formatWholeCurrency(Math.trunc(final))
-    : formatCurrency(final);
-  const displayedOriginal = hideDecimals
-    ? formatWholeCurrency(Math.trunc(price))
-    : formatCurrency(price);
+
+  const formatValue = (value) =>
+    formatCurrency(value, {
+      from: baseCurrency,
+      currency,
+      bdtPerUsd,
+    });
+
+  const displayedFinal = formatValue(hideDecimals ? Math.trunc(final) : final);
+  const displayedOriginal = formatValue(hideDecimals ? Math.trunc(price) : price);
+
   const sizes = {
     sm: "text-sm",
     md: "text-base",

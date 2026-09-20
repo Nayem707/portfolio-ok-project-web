@@ -15,12 +15,12 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import {
   selectCartItems,
   selectCartTotals,
+  selectFreeShippingMin,
   removeFromCart,
   setQuantity,
 } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { formatCurrency, getDiscountedPrice, resolveMediaUrl } from "@/utils";
-import { FREE_SHIPPING_THRESHOLD } from "@/constants";
 
 const colorSwatches = {
   Black: "#111827",
@@ -49,13 +49,14 @@ export default function CartView() {
   const items = useSelector(selectCartItems);
   const wishlist = useSelector(selectWishlistItems);
   const { subtotal, shipping, total } = useSelector(selectCartTotals);
+  const freeShippingMin = useSelector(selectFreeShippingMin);
 
   const savings = items.reduce(
     (sum, i) =>
       sum + (i.price - getDiscountedPrice(i.price, i.discount)) * i.quantity,
     0,
   );
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const remaining = Math.max(0, freeShippingMin - subtotal);
 
   if (items.length === 0) {
     return (
