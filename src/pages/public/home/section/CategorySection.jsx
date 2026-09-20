@@ -37,7 +37,7 @@ export default function CategorySection({
         />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {categories.map((category) => (
+          {categories.slice(0, 12).map((category) => (
             <CategoryCard
               key={category.id}
               category={category}

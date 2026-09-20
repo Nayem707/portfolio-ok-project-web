@@ -35,6 +35,9 @@ const empty = {
   availableColors: [],
   availableSizes: [],
   status: "ACTIVE",
+  featured: false,
+  popular: false,
+  newArrival: false,
 };
 
 const ACCEPTED_TYPES = [
@@ -68,6 +71,9 @@ const fromInitial = (initial) => ({
   ...empty,
   ...initial,
   baseCurrency: initial?.baseCurrency || "BDT",
+  featured: Boolean(initial?.featured),
+  popular: Boolean(initial?.popular),
+  newArrival: Boolean(initial?.newArrival),
   category: initial?.category || "",
   status: toProductStatusKey(initial?.status) || "ACTIVE",
   images: normalizeImages(initial?.images),
@@ -259,6 +265,9 @@ export default function ProductForm({
       discount: Number(form.discount) || 0,
       stock: Number(form.stock),
       status: toProductStatusKey(form.status) || "ACTIVE",
+      featured: Boolean(form.featured),
+      popular: Boolean(form.popular),
+      newArrival: Boolean(form.newArrival),
       images: form.images,
       colorIds:
         colors.length > 0
@@ -506,6 +515,39 @@ export default function ProductForm({
                 </option>
               ))}
             </Select>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-700">
+                Homepage collections
+              </p>
+              <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                {[
+                  { key: "featured", label: "Featured Products" },
+                  { key: "popular", label: "Popular Right Now" },
+                  { key: "newArrival", label: "New Arrivals" },
+                ].map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      className="text-primary-600 focus:ring-primary-500 h-4 w-4 rounded border-slate-300"
+                      checked={Boolean(form[key])}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          [key]: e.target.checked,
+                        }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500">
+                Products marked here appear in the matching homepage sections.
+              </p>
+            </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-slate-700">
                 Available colors
