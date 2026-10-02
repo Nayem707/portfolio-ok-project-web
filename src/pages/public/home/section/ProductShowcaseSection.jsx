@@ -8,7 +8,7 @@ function SectionBanner({ title, subtitle, to, image }) {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-orange-100 bg-linear-to-r from-orange-50 via-amber-50/60 to-orange-50 px-3 py-3 shadow-sm sm:gap-4 sm:px-5">
+    <div className="border-primary-100 from-primary-50 to-accent-50/60 mb-6 flex items-center gap-3 rounded-2xl border bg-linear-to-r via-white px-3 py-3 shadow-sm sm:gap-4 sm:px-5">
       <div className="bg-primary-100 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm ring-2 ring-white sm:h-14 sm:w-14">
         {image && !imageFailed ? (
           <img
