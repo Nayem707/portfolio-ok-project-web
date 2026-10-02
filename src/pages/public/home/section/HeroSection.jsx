@@ -88,27 +88,29 @@ const HeroSection = ({ slides = [] }) => {
       <div className="to-primary-600 absolute inset-0 bg-gradient-to-l from-transparent" />
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-90 items-center px-4 sm:min-h-107.5 sm:px-6 lg:min-h-137.5">
-        <div className="max-w-xs text-yellow-400 sm:max-w-xl lg:max-w-4xl">
-          <p className="mb-2 text-xs font-semibold tracking-[0.16em] text-yellow-400 uppercase sm:mb-3 sm:text-sm sm:tracking-widest">
-            {slide.subtitle}
-          </p>
+      <div className="container-app relative z-10 flex min-h-90 items-center sm:min-h-107.5 lg:min-h-137.5">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="max-w-xs text-yellow-400 sm:max-w-xl lg:max-w-4xl">
+            <p className="mb-2 text-xs font-semibold tracking-[0.16em] text-yellow-400 uppercase sm:mb-3 sm:text-sm sm:tracking-widest">
+              {slide.subtitle}
+            </p>
 
-          <h1 className="text-2xl leading-tight font-bold text-white uppercase sm:text-4xl md:text-5xl lg:text-6xl">
-            {slide.title}
-          </h1>
+            <h1 className="text-2xl leading-tight font-bold text-white uppercase sm:text-4xl md:text-5xl lg:text-6xl">
+              {slide.title}
+            </h1>
 
-          <p className="mt-3 max-w-sm text-sm text-gray-200 sm:mt-4 sm:max-w-md sm:text-base md:mt-5 md:max-w-xl md:text-lg">
-            {slide.description}
-          </p>
+            <p className="mt-3 max-w-sm text-sm text-gray-200 sm:mt-4 sm:max-w-md sm:text-base md:mt-5 md:max-w-xl md:text-lg">
+              {slide.description}
+            </p>
 
-          <Link
-            to={slide.buttonUrl || "/products"}
-            className="bg-primary-600 hover:bg-primary-300 border-primary-400/60 hover:border-primary-300 mt-5 inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold text-white transition sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
-          >
-            {slide.buttonText || "Explore"}
-            <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-          </Link>
+            <Link
+              to={slide.buttonUrl || "/products"}
+              className="bg-primary-600 hover:bg-primary-300 border-primary-400/60 hover:border-primary-300 mt-5 inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold text-white transition sm:mt-6 sm:px-6 sm:py-3 sm:text-base md:mt-8"
+            >
+              {slide.buttonText || "Explore"}
+              <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+            </Link>
+          </div>
         </div>
       </div>
 

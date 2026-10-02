@@ -1,133 +1,204 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import toast from "react-hot-toast";
 import {
-  EnvelopeIcon,
+  ChevronRightIcon,
+  ClockIcon,
   MapPinIcon,
   PhoneIcon,
-} from "@heroicons/react/24/outline";
-import Logo from "@/components/navigation/Logo";
-import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
+  ShoppingCartIcon,
+  TruckIcon,
+} from "@heroicons/react/24/solid";
+import { LifebuoyIcon } from "@heroicons/react/24/outline";
 
-const columns = [
+const HELPLINE = "+8801748148175";
+
+const importantLinks = [
+  { label: "About Us", to: "/" },
+  { label: "Terms & Conditions", to: "/" },
+  { label: "Privacy & Security", to: "/" },
+  { label: "Return & Refund Policy", to: "/" },
+  { label: "Customer Care & Help", to: "/" },
+];
+
+const supportLinks = [
+  { label: "Order Tracking", to: "/account/orders", icon: TruckIcon },
+  { label: "Shopping Cart", to: "/cart", icon: ShoppingCartIcon },
+  { label: "Customer Helpline", href: `tel:${HELPLINE}`, icon: LifebuoyIcon },
+];
+
+const socialLinks = [
   {
-    title: "Shop",
-    links: [
-      { label: "All Products", to: "/products" },
-      { label: "Categories", to: "/categories" },
-      { label: "New Arrivals", to: "/products?sort=newest" },
-      { label: "Deals", to: "/products" },
-    ],
+    label: "Facebook",
+    href: "https://facebook.com",
+    className: "bg-[#1877F2]",
+    path: "M14 8.5V6.8c0-.8.5-1 .9-1H17V2.1L14.1 2C10.9 2 10.2 4.4 10.2 6v2.5H8v3.8h2.2V22H14v-9.7h2.8l.4-3.8H14z",
   },
   {
-    title: "Account",
-    links: [
-      { label: "My Account", to: "/account" },
-      { label: "Orders", to: "/account/orders" },
-      { label: "Wishlist", to: "/wishlist" },
-      { label: "Cart", to: "/cart" },
-    ],
+    label: "Instagram",
+    href: "https://instagram.com",
+    className:
+      "bg-[radial-gradient(circle_at_30%_110%,#fdf497_0%,#fd5949_45%,#d6249f_60%,#285AEB_90%)]",
+    path: "M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm4.9-8.9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 4.6c2.4 0 2.7 0 3.6.1 2.4.1 3.6 1.3 3.7 3.7.1.9.1 1.2.1 3.6s0 2.7-.1 3.6c-.1 2.4-1.3 3.6-3.7 3.7-.9.1-1.2.1-3.6.1s-2.7 0-3.6-.1c-2.4-.1-3.6-1.3-3.7-3.7-.1-.9-.1-1.2-.1-3.6s0-2.7.1-3.6C4.8 6 6 4.8 8.4 4.7c.9-.1 1.2-.1 3.6-.1zM12 3c-2.4 0-2.8 0-3.7.1C5 3.2 3.2 5 3.1 8.3 3 9.2 3 9.6 3 12s0 2.8.1 3.7c.1 3.3 1.9 5.1 5.2 5.2.9.1 1.3.1 3.7.1s2.8 0 3.7-.1c3.3-.1 5.1-1.9 5.2-5.2.1-.9.1-1.3.1-3.7s0-2.8-.1-3.7C20.8 5 19 3.2 15.7 3.1 14.8 3 14.4 3 12 3z",
   },
   {
-    title: "Company",
-    links: [
-      { label: "About Us", to: "/" },
-      { label: "Careers", to: "/" },
-      { label: "Privacy Policy", to: "/" },
-      { label: "Terms of Service", to: "/" },
-    ],
+    label: "TikTok",
+    href: "https://tiktok.com",
+    className: "bg-black ring-1 ring-white/15",
+    path: "M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.1v12.4a2.6 2.6 0 1 1-2.6-2.6c.3 0 .5 0 .8.1V9.8a5.7 5.7 0 1 0 4.9 5.6V9.1a7.3 7.3 0 0 0 4.3 1.4V7.4a4.3 4.3 0 0 1-3.2-1.6z",
+  },
+  {
+    label: "YouTube",
+    href: "https://youtube.com",
+    className: "bg-[#FF0000]",
+    path: "M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z",
+  },
+  {
+    label: "WhatsApp",
+    href: `https://wa.me/${HELPLINE.replace("+", "")}`,
+    className: "bg-[#25D366]",
+    path: "M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.2-.1-1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.2-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z",
+  },
+  {
+    label: "Messenger",
+    href: "https://m.me",
+    className: "bg-gradient-to-br from-[#00B2FF] to-[#006AFF]",
+    path: "M12 2C6.4 2 2 6.1 2 11.7c0 2.9 1.2 5.5 3.3 7.2V22l3-1.7c.9.3 1.8.4 2.8.4 5.6 0 10-4.1 10-9.7S17.6 2 12 2zm1 13-2.5-2.7L5.6 15l5.4-5.7 2.6 2.7 4.8-2.7L13 15z",
+  },
+  {
+    label: "Call",
+    href: `tel:${HELPLINE}`,
+    className: "bg-[#F0532D]",
+    path: "M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z",
   },
 ];
 
-export default function Footer() {
-  const [email, setEmail] = useState("");
-
-  const subscribe = (e) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    toast.success("Subscribed to our newsletter!");
-    setEmail("");
-  };
-
+function FooterHeading({ children }) {
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-white">
+    <div className="mb-5">
+      <h4 className="text-[15px] font-bold text-white">{children}</h4>
+      <span className="mt-2 block h-0.5 w-9 rounded-full bg-red-500" />
+    </div>
+  );
+}
+
+export default function Footer() {
+  return (
+    <footer className="mt-16 border-t border-red-500/20 bg-[#0b0e17] text-slate-300">
       <div className="container-app py-12">
-        <div className="grid gap-10 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <Logo />
-            <p className="mt-4 max-w-sm text-sm text-slate-500">
-              Your modern destination for quality products at fair prices. Fast
-              shipping, easy returns, and a shopping experience you’ll love.
+        <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          <div>
+            <Link
+              to="/"
+              className="inline-flex items-center rounded-lg border-2 border-orange-300 bg-white px-4 py-2 text-xl font-extrabold tracking-tight"
+            >
+              <span className="text-[#1f2b6c]">Shoply</span>
+              <span className="text-accent-500">.com</span>
+            </Link>
+            <p className="mt-4 text-[13px] leading-relaxed text-slate-400">
+              Ubay.shop — your trusted online shopping destination. With trendy
+              and attractive lifestyle products, we are always ready to serve
+              you.
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-slate-500">
-              <li className="flex items-center gap-2">
-                <MapPinIcon className="h-4.5 w-4.5 text-slate-400" /> 123 Market
-                St, San Francisco, CA
-              </li>
-              <li className="flex items-center gap-2">
-                <PhoneIcon className="h-4.5 w-4.5 text-slate-400" /> +1 (800)
-                555-0199
-              </li>
-              <li className="flex items-center gap-2">
-                <EnvelopeIcon className="h-4.5 w-4.5 text-slate-400" />{" "}
-                support@shoply.com
+            <div className="mt-5 flex flex-wrap gap-1.5">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target={social.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className={`flex h-8 w-8 items-center justify-center rounded-md text-white transition hover:-translate-y-0.5 hover:opacity-90 ${social.className}`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path d={social.path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <FooterHeading>Important Links</FooterHeading>
+            <ul className="space-y-3">
+              {importantLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.to}
+                    className="group flex items-center gap-2 text-[13px] text-slate-300 transition hover:text-white"
+                  >
+                    <ChevronRightIcon className="h-3 w-3 text-red-500 transition group-hover:translate-x-0.5" />
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <FooterHeading>Customer Support</FooterHeading>
+            <ul className="space-y-3">
+              {supportLinks.map(({ label, to, href, icon: Icon }) => {
+                const content = (
+                  <>
+                    <Icon className="h-4 w-4 text-red-500" />
+                    {label}
+                  </>
+                );
+                const className =
+                  "flex items-center gap-2 text-[13px] text-slate-300 transition hover:text-white";
+                return (
+                  <li key={label}>
+                    {to ? (
+                      <Link to={to} className={className}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <a href={href} className={className}>
+                        {content}
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+              <li className="flex items-center gap-2 text-[13px] text-slate-400">
+                <ClockIcon className="h-4 w-4 text-red-500" />
+                Every day, 10 AM — 10 PM
               </li>
             </ul>
           </div>
 
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h4 className="text-sm font-semibold text-slate-800">
-                {col.title}
-              </h4>
-              <ul className="mt-4 space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="hover:text-primary-600 text-sm text-slate-500 transition"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 rounded-2xl bg-slate-900 p-6 sm:p-8">
-          <div className="flex flex-col items-center gap-4 text-center md:flex-row md:justify-between md:text-left">
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Subscribe to our newsletter
-              </h3>
-              <p className="mt-1 text-sm text-slate-300">
-                Get the latest deals and product drops in your inbox.
+          <div>
+            <FooterHeading>Showroom & Office</FooterHeading>
+            <div className="rounded-xl border border-white/10 bg-white/3 p-4">
+              <p className="flex items-center gap-1.5 text-[13px] font-bold text-white">
+                <MapPinIcon className="h-4 w-4 text-red-500" />
+                Head Office:
               </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-slate-400">
+                Shop No: 37, 3rd Floor, Mukta Tower, Uttara, Dhaka-1230
+              </p>
+              <a
+                href={`tel:${HELPLINE}`}
+                className="border-accent-500/50 bg-accent-500/10 text-accent-300 hover:bg-accent-500/20 mt-4 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold transition"
+              >
+                <PhoneIcon className="h-4 w-4" />
+                Helpline: {HELPLINE}
+              </a>
             </div>
-            <form onSubmit={subscribe} className="flex w-full max-w-md gap-2">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="bg-white"
-              />
-              <Button type="submit" variant="accent" className="shrink-0">
-                Subscribe
-              </Button>
-            </form>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-slate-100">
-        <div className="container-app flex flex-col items-center justify-between gap-3 py-5 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} Shoply. All rights reserved.</p>
-          <p>Built with React, Redux Toolkit & Tailwind CSS.</p>
-        </div>
+      <div className="border-t border-white/10">
+        <p className="container-app py-5 text-center text-[13px] text-slate-400">
+          Copyright © {new Date().getFullYear()}{" "}
+          <span className="font-bold text-white">Ubay.Shop</span>. All rights
+          reserved.
+        </p>
       </div>
     </footer>
   );

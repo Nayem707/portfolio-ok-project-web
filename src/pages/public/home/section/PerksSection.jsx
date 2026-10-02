@@ -39,18 +39,20 @@ export default function PerksSection({ perks: incomingPerks = perks }) {
 
   return (
     <section className="bg-primary-600 border-b border-slate-200">
-      <div className="container-app grid grid-cols-2 gap-4 py-6 lg:grid-cols-4">
-        {finalPerks.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="flex items-center gap-3">
-            <span className="bg-primary-50 text-primary-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
-              <Icon className="h-6 w-6" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">{title}</p>
-              <p className="text-xs text-slate-200">{desc}</p>
+      <div className="container-app">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 py-6 lg:grid-cols-4">
+          {finalPerks.map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="flex items-center gap-3">
+              <span className="bg-primary-50 text-primary-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
+                <Icon className="h-6 w-6" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-100">{title}</p>
+                <p className="text-xs text-slate-200">{desc}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -101,39 +101,41 @@ export default function HomeView() {
   }
 
   return (
-    <div>
+    <div className="w-full bg-red-50">
       <HeroSection slides={slides} />
       <PerksSection perks={sections.perks?.items || []} />
 
-      <div className="container-app space-y-16 py-14">
-        {sections.category?.active !== false && (
-          <CategorySection
-            title={sections.category?.title}
-            subtitle={sections.category?.subtitle}
-            categories={categories}
-            categoryCounts={categoryCounts}
-            loading={categoriesLoading}
-            error={categoriesError}
-            onRetry={() => dispatch(fetchCategories())}
-          />
-        )}
-
-        {productSections
-          .filter(({ key }) => sections[key]?.active !== false)
-          .map(({ key, title, subtitle, to }) => (
-            <ProductShowcaseSection
-              key={key}
-              title={sections[key]?.title || title}
-              subtitle={sections[key]?.subtitle || subtitle}
-              to={sections[key]?.to || to}
-              products={productCollections[key]}
-              loading={homepageLoading}
+      <div className="container-app py-14">
+        <div className="mx-auto max-w-7xl space-y-16">
+          {sections.category?.active !== false && (
+            <CategorySection
+              title={sections.category?.title}
+              subtitle={sections.category?.subtitle}
+              categories={categories}
+              categoryCounts={categoryCounts}
+              loading={categoriesLoading}
+              error={categoriesError}
+              onRetry={() => dispatch(fetchCategories())}
             />
-          ))}
+          )}
 
-        {sections.promo?.active !== false && (
-          <PromoSection promo={sections.promo} />
-        )}
+          {productSections
+            .filter(({ key }) => sections[key]?.active !== false)
+            .map(({ key, title, subtitle, to }) => (
+              <ProductShowcaseSection
+                key={key}
+                title={sections[key]?.title || title}
+                subtitle={sections[key]?.subtitle || subtitle}
+                to={sections[key]?.to || to}
+                products={productCollections[key]}
+                loading={homepageLoading}
+              />
+            ))}
+
+          {sections.promo?.active !== false && (
+            <PromoSection promo={sections.promo} />
+          )}
+        </div>
       </div>
     </div>
   );

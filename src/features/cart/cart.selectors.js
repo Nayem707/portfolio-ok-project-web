@@ -10,20 +10,18 @@ export const selectCartCount = createSelector(selectCartItems, (items) =>
   items.reduce((sum, i) => sum + i.quantity, 0),
 );
 
-const selectShippingRates = (state) => ({
-  shippingFlatRate:
-    state.settings?.data?.shippingFlatRate ?? SHIPPING_FLAT_RATE,
-  freeShippingMin:
-    state.settings?.data?.freeShippingMin ?? FREE_SHIPPING_THRESHOLD,
-});
+const selectShippingFlatRate = (state) =>
+  state.settings?.data?.shippingFlatRate ?? SHIPPING_FLAT_RATE;
 
 export const selectFreeShippingMin = (state) =>
   state.settings?.data?.freeShippingMin ?? FREE_SHIPPING_THRESHOLD;
 
 export const selectCartTotals = createSelector(
   selectCartItems,
-  selectShippingRates,
-  (items, rates) => calcCartTotals(items, rates),
+  selectShippingFlatRate,
+  selectFreeShippingMin,
+  (items, shippingFlatRate, freeShippingMin) =>
+    calcCartTotals(items, { shippingFlatRate, freeShippingMin }),
 );
 
 export const selectIsProductInCart = (productId) => (state) =>
