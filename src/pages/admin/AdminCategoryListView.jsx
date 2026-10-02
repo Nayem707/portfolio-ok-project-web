@@ -348,14 +348,6 @@ export default function AdminCategoryListView() {
       >
         <div className="space-y-4">
           <Input
-            label="Category title"
-            value={form.title}
-            onChange={set("title")}
-            placeholder="e.g. ওয়াটারপ্রুফ বেডশিট"
-            maxLength={150}
-            hint="Shown to customers. Any language. Leave empty to use the category name."
-          />
-          <Input
             label="Category name (English)"
             value={form.name}
             onChange={set("name")}
@@ -367,6 +359,14 @@ export default function AdminCategoryListView() {
                 ? `URL: /products?category=${categorySlug}`
                 : "English only. Used to build the category URL."
             }
+          />
+          <Input
+            label="Category title"
+            value={form.title}
+            onChange={set("title")}
+            placeholder="e.g. ওয়াটারপ্রুফ বেডশিট"
+            maxLength={150}
+            hint="Shown to customers. Any language. Leave empty to use the category name."
           />
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">

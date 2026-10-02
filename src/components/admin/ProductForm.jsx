@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   ArrowUpTrayIcon,
+  PlusIcon,
   StarIcon,
   TrashIcon,
   ChevronLeftIcon,
@@ -24,12 +25,11 @@ const MAX_HIGHLIGHTS = 5;
 
 const toHighlightSlots = (points) => {
   const list = Array.isArray(points)
-    ? points.filter((point) => typeof point === "string")
+    ? points
+        .filter((point) => typeof point === "string" && point.trim())
+        .slice(0, MAX_HIGHLIGHTS)
     : [];
-  return Array.from(
-    { length: MAX_HIGHLIGHTS },
-    (_, idx) => list[idx] || "",
-  );
+  return list.length ? list : [""];
 };
 
 const empty = {
@@ -105,6 +105,8 @@ export default function ProductForm({
   const colors = useSelector(selectColors);
   const sizes = useSelector(selectSizes);
   const fileInputRef = useRef(null);
+  const highlightInputsRef = useRef([]);
+  const focusHighlightRef = useRef(null);
   const [form, setForm] = useState(() => fromInitial(initial));
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
@@ -137,6 +139,26 @@ export default function ProductForm({
       ),
     }));
   };
+  const addHighlight = () => {
+    if (form.shortDescription.length >= MAX_HIGHLIGHTS) return;
+    focusHighlightRef.current = form.shortDescription.length;
+    setForm((prev) => ({
+      ...prev,
+      shortDescription: [...prev.shortDescription, ""],
+    }));
+  };
+  const removeHighlight = (idx) => {
+    setForm((prev) => {
+      const next = prev.shortDescription.filter((_, i) => i !== idx);
+      return { ...prev, shortDescription: next.length ? next : [""] };
+    });
+  };
+
+  useEffect(() => {
+    if (focusHighlightRef.current === null) return;
+    highlightInputsRef.current[focusHighlightRef.current]?.focus();
+    focusHighlightRef.current = null;
+  }, [form.shortDescription.length]);
 
   const toggleSelection = (key, value) => {
     setForm((prev) => {
@@ -333,20 +355,63 @@ export default function ProductForm({
               </label>
               <p className="mb-2 text-xs text-slate-500">
                 Up to {MAX_HIGHLIGHTS} short points shown as a bullet list above
-                the description. Leave empty to hide the section.
+                the description. Click + to add another point. Leave empty to
+                hide the section.
               </p>
               <div className="space-y-2">
-                {form.shortDescription.map((point, idx) => (
-                  <Input
-                    key={idx}
-                    value={point}
-                    onChange={setHighlight(idx)}
-                    maxLength={200}
-                    placeholder={`Highlight ${idx + 1}`}
-                    aria-label={`Highlight ${idx + 1}`}
-                  />
-                ))}
+                {form.shortDescription.map((point, idx) => {
+                  const isLast = idx === form.shortDescription.length - 1;
+                  const canAdd =
+                    isLast && form.shortDescription.length < MAX_HIGHLIGHTS;
+                  const canRemove =
+                    form.shortDescription.length > 1 || point.trim();
+                  return (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input
+                        ref={(el) => {
+                          highlightInputsRef.current[idx] = el;
+                        }}
+                        value={point}
+                        onChange={setHighlight(idx)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (canAdd && point.trim()) addHighlight();
+                          }
+                        }}
+                        maxLength={200}
+                        placeholder={`Highlight ${idx + 1}`}
+                        aria-label={`Highlight ${idx + 1}`}
+                      />
+                      {canRemove && (
+                        <button
+                          type="button"
+                          onClick={() => removeHighlight(idx)}
+                          aria-label={`Remove highlight ${idx + 1}`}
+                          title="Remove"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                        >
+                          <TrashIcon className="h-4.5 w-4.5" />
+                        </button>
+                      )}
+                      {canAdd && (
+                        <button
+                          type="button"
+                          onClick={addHighlight}
+                          aria-label="Add highlight"
+                          title="Add highlight"
+                          className="bg-primary-600 hover:bg-primary-700 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition"
+                        >
+                          <PlusIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+              <p className="mt-1.5 text-xs text-slate-400">
+                {form.shortDescription.length}/{MAX_HIGHLIGHTS} highlights
+              </p>
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
