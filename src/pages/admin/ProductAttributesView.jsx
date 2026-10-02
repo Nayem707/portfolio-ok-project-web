@@ -6,11 +6,13 @@ import {
   SwatchIcon,
   ArrowsPointingOutIcon,
   ChevronRightIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { fetchCategories, selectCategories } from "@/features/categories";
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
+import { MOCK_PACKAGES } from "@/features/packages/packages.mock";
 import { ADMIN_PATHS } from "@/routes/admin/admin.paths";
 
 const cards = [
@@ -38,6 +40,14 @@ const cards = [
     icon: ArrowsPointingOutIcon,
     iconBg: "bg-amber-100 text-amber-700",
   },
+  {
+    key: "package",
+    title: "Packages",
+    description: "Create combo packages like Chador + Porda sets.",
+    to: `/admin/${ADMIN_PATHS.ATTRIBUTES_PACKAGES}`,
+    icon: ArchiveBoxIcon,
+    iconBg: "bg-purple-100 text-purple-700",
+  },
 ];
 
 export default function ProductAttributesView() {
@@ -56,13 +66,14 @@ export default function ProductAttributesView() {
     category: categories.length,
     color: colors.length,
     size: sizes.length,
+    package: MOCK_PACKAGES.length,
   };
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Attributes"
-        subtitle="Open a specific section to manage category, color, and size data."
+        subtitle="Open a specific section to manage category, color, size, and package data."
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

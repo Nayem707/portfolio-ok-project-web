@@ -8,6 +8,7 @@ import AdminProductDetailsView from "@/pages/admin/AdminProductDetailsView";
 import AdminCategoryListView from "@/pages/admin/AdminCategoryListView";
 import AdminColorListView from "@/pages/admin/AdminColorListView";
 import AdminSizeListView from "@/pages/admin/AdminSizeListView";
+import AdminPackageListView from "@/pages/admin/AdminPackageListView";
 import ProductAttributesView from "@/pages/admin/ProductAttributesView";
 import HomePageManagementView from "@/pages/admin/HomePageManagementView";
 import AdminOrderListView from "@/pages/admin/AdminOrderListView";
@@ -46,6 +47,10 @@ export const adminRoutes = (
     <Route
       path={ADMIN_PATHS.ATTRIBUTES_SIZES}
       element={<AdminSizeListView />}
+    />
+    <Route
+      path={ADMIN_PATHS.ATTRIBUTES_PACKAGES}
+      element={<AdminPackageListView />}
     />
     <Route
       path={ADMIN_PATHS.HOME_PAGE_MANAGEMENT}
