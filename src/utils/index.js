@@ -133,6 +133,26 @@ export const classNames = (...classes) => classes.filter(Boolean).join(" ");
 export const getCategoryLabel = (category) =>
   category?.title?.trim() || category?.name || "";
 
+/** International digits for a phone number; local BD numbers (01XXXXXXXXX) get the 880 prefix. */
+const toInternationalDigits = (phone = "") => {
+  const digits = String(phone).replace(/\D/g, "");
+  if (!digits) return "";
+  if (String(phone).trim().startsWith("+") || digits.startsWith("880")) {
+    return digits;
+  }
+  return digits.startsWith("0") ? `88${digits}` : digits;
+};
+
+export const toPhoneHref = (phone) => {
+  const digits = toInternationalDigits(phone);
+  return digits ? `tel:+${digits}` : "";
+};
+
+export const toWhatsAppUrl = (phone) => {
+  const digits = toInternationalDigits(phone);
+  return digits ? `https://wa.me/${digits}` : "";
+};
+
 /** English category names (used to build the URL slug). */
 export const ENGLISH_CATEGORY_NAME = /^[A-Za-z0-9][A-Za-z0-9 &'(),./-]*$/;
 

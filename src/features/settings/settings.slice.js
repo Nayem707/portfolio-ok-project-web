@@ -5,22 +5,45 @@ import {
   setRuntimeBdtPerUsd,
   setRuntimeCurrency,
 } from "@/utils/currencyRuntime";
+import { APP_NAME, SOCIAL_LINK_KEYS } from "@/constants";
 
 const SETTINGS_CACHE_KEY = "shoply_settings_currency";
 const RATE_CACHE_KEY = "shoply_settings_bdt_per_usd";
 
+const defaultSocialLinks = Object.fromEntries(
+  SOCIAL_LINK_KEYS.map((key) => [key, ""]),
+);
+
+// Contact/footer fields stay empty until the API responds so the storefront
+// never shows placeholder contact details.
 const defaultSettings = {
-  storeName: "Shoply",
-  supportEmail: "support@shoply.com",
-  phone: "+1 (800) 555-0199",
+  storeName: APP_NAME,
+  supportEmail: "",
+  phone: "",
   currency: "USD",
   bdtPerUsd: DEFAULT_BDT_PER_USD,
-  address: "123 Market St, San Francisco, CA",
+  address: "",
   shippingFlatRate: 12,
   freeShippingMin: 150,
   deliveryInsideDhaka: 70,
   deliveryOutsideDhaka: 150,
+  whatsapp: "",
+  logoUrl: "",
+  footerDescription: "",
+  supportHours: "",
+  copyrightName: "",
+  socialLinks: defaultSocialLinks,
 };
+
+const mergeSettings = (current, incoming = {}) => ({
+  ...current,
+  ...incoming,
+  socialLinks: {
+    ...defaultSocialLinks,
+    ...current?.socialLinks,
+    ...incoming?.socialLinks,
+  },
+});
 
 const cachedCurrency =
   typeof localStorage !== "undefined"
@@ -123,7 +146,7 @@ const settingsSlice = createSlice({
       .addCase(fetchSettings.fulfilled, (state, action) => {
         state.loading = false;
         state.hydrated = true;
-        state.data = { ...defaultSettings, ...action.payload };
+        state.data = mergeSettings(defaultSettings, action.payload);
         applySettingsSideEffects(state.data);
       })
       .addCase(fetchSettings.rejected, (state, action) => {
@@ -137,7 +160,7 @@ const settingsSlice = createSlice({
       })
       .addCase(saveStoreSettings.fulfilled, (state, action) => {
         state.saving = false;
-        state.data = { ...state.data, ...action.payload };
+        state.data = mergeSettings(state.data, action.payload);
         applySettingsSideEffects(state.data);
       })
       .addCase(saveStoreSettings.rejected, (state, action) => {
@@ -150,7 +173,7 @@ const settingsSlice = createSlice({
       })
       .addCase(saveShippingSettings.fulfilled, (state, action) => {
         state.saving = false;
-        state.data = { ...state.data, ...action.payload };
+        state.data = mergeSettings(state.data, action.payload);
       })
       .addCase(saveShippingSettings.rejected, (state, action) => {
         state.saving = false;

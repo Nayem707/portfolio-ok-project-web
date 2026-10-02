@@ -1,13 +1,12 @@
 export const APP_NAME = "Shoply";
 
-export const SHOP_CONTACT = {
-  phone: "01713881993",
-  whatsapp: "01713881993",
-  email: "alifadressshop@gmail.com",
-  address: "Abu Sayeed Bazar, Kamrangirchar, Dhaka",
-};
-export const SHOP_PHONE_HREF = `tel:+88${SHOP_CONTACT.phone}`;
-export const SHOP_WHATSAPP_URL = `https://wa.me/88${SHOP_CONTACT.whatsapp}`;
+export const SOCIAL_LINK_KEYS = [
+  "facebook",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "messenger",
+];
 
 export const ROLES = {
   USER: "USER",

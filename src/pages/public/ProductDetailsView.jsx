@@ -15,7 +15,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import WhatsAppIcon from "@/components/common/WhatsAppIcon";
-import { SHOP_CONTACT, SHOP_PHONE_HREF, SHOP_WHATSAPP_URL } from "@/constants";
+import { selectSettings } from "@/features/settings";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
@@ -59,7 +59,9 @@ import {
   isRichTextEmpty,
   range,
   resolveMediaUrl,
+  toPhoneHref,
   toRichTextHtml,
+  toWhatsAppUrl,
 } from "@/utils";
 import { api } from "@/services/api";
 
@@ -125,6 +127,7 @@ export default function ProductDetailsView() {
   const wishlist = useSelector(selectWishlistItems);
   const homeSections = useSelector(selectHomePageSections);
   const homeHydrated = useSelector(selectHomePageHydrated);
+  const settings = useSelector(selectSettings);
   const [related, setRelated] = useState([]);
   const [primaryImageReady, setPrimaryImageReady] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -564,9 +567,15 @@ export default function ProductDetailsView() {
     typeof window !== "undefined"
       ? `${window.location.origin}${location.pathname}${location.search}${location.hash}`
       : "";
-  const whatsappHref = `${SHOP_WHATSAPP_URL}?text=${encodeURIComponent(
-    `Hi! I am interested in this product: ${currentProductUrl}`,
-  )}`;
+  const shopPhone = settings?.phone?.trim() || "";
+  const shopWhatsapp = settings?.whatsapp?.trim() || "";
+  const phoneHref = toPhoneHref(shopPhone);
+  const whatsappUrl = toWhatsAppUrl(shopWhatsapp);
+  const whatsappHref = whatsappUrl
+    ? `${whatsappUrl}?text=${encodeURIComponent(
+        `Hi! I am interested in this product: ${currentProductUrl}`,
+      )}`
+    : "";
 
   return (
     <div
@@ -885,42 +894,53 @@ export default function ProductDetailsView() {
               </Button>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <a
-                href={SHOP_PHONE_HREF}
-                className="border-primary-200 bg-primary-50 hover:bg-primary-100 flex items-center gap-3 rounded-xl border px-4 py-3 transition"
+            {(phoneHref || whatsappHref) && (
+              <div
+                className={classNames(
+                  "mt-4 grid gap-3",
+                  phoneHref && whatsappHref && "sm:grid-cols-2",
+                )}
               >
-                <span className="bg-primary-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white">
-                  <PhoneIcon className="h-4.5 w-4.5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs text-slate-500">
-                    Call to order
-                  </span>
-                  <span className="text-primary-700 block text-sm font-bold">
-                    {SHOP_CONTACT.phone}
-                  </span>
-                </span>
-              </a>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl border border-[#25D366]/30 bg-[#25D366]/10 px-4 py-3 transition hover:bg-[#25D366]/20"
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
-                  <WhatsAppIcon className="h-5 w-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs text-slate-500">
-                    Order on WhatsApp
-                  </span>
-                  <span className="block text-sm font-bold text-[#128C7E]">
-                    {SHOP_CONTACT.whatsapp}
-                  </span>
-                </span>
-              </a>
-            </div>
+                {phoneHref && (
+                  <a
+                    href={phoneHref}
+                    className="border-primary-200 bg-primary-50 hover:bg-primary-100 flex items-center gap-3 rounded-xl border px-4 py-3 transition"
+                  >
+                    <span className="bg-primary-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white">
+                      <PhoneIcon className="h-4.5 w-4.5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-xs text-slate-500">
+                        Call to order
+                      </span>
+                      <span className="text-primary-700 block text-sm font-bold">
+                        {shopPhone}
+                      </span>
+                    </span>
+                  </a>
+                )}
+                {whatsappHref && (
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-xl border border-[#25D366]/30 bg-[#25D366]/10 px-4 py-3 transition hover:bg-[#25D366]/20"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
+                      <WhatsAppIcon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-xs text-slate-500">
+                        Order on WhatsApp
+                      </span>
+                      <span className="block text-sm font-bold text-[#128C7E]">
+                        {shopWhatsapp}
+                      </span>
+                    </span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1194,19 +1214,21 @@ export default function ProductDetailsView() {
         </div>
       </Modal>
 
-      <a
-        href={whatsappHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Ask about this product on WhatsApp"
-        className={classNames(
-          "fixed right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:h-14 sm:w-14",
-          showWhatsappAttention && "animate-whatsapp-attention",
-        )}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
-      >
-        <WhatsAppIcon className="h-7 w-7 sm:h-8 sm:w-8" />
-      </a>
+      {whatsappHref && (
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ask about this product on WhatsApp"
+          className={classNames(
+            "fixed right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:h-14 sm:w-14",
+            showWhatsappAttention && "animate-whatsapp-attention",
+          )}
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        >
+          <WhatsAppIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+        </a>
+      )}
     </div>
   );
 }
