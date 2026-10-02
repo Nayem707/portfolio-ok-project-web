@@ -9,7 +9,7 @@ const fallbackPromo = {
     title: "Up to 30% off Electronics",
     description: "Upgrade your tech with our best deals of the season.",
     buttonText: "Shop Deals",
-    buttonUrl: "/products?category=electronics",
+    buttonUrl: "/products",
     image:
       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
   },
@@ -18,7 +18,7 @@ const fallbackPromo = {
     title: "Fresh Fashion Drops",
     description: "Discover the newest styles added to our collection.",
     buttonText: "Explore",
-    buttonUrl: "/products?category=fashion",
+    buttonUrl: "/products?sort=newest",
     image:
       "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80",
   },

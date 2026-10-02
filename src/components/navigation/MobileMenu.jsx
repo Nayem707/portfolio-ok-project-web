@@ -69,7 +69,9 @@ export default function MobileMenu({ open }) {
               <li key={cat.id}>
                 <button
                   onClick={() =>
-                    go(`/products?category=${encodeURIComponent(cat.name)}`)
+                    go(
+                      `/products?category=${encodeURIComponent(cat.slug || cat.id)}`,
+                    )
                   }
                   className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-100"
                 >

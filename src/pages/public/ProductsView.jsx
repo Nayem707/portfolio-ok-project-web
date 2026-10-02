@@ -29,7 +29,8 @@ import {
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
-import { classNames, resolveMediaUrl } from "@/utils";
+import { classNames, formatCurrency, resolveMediaUrl } from "@/utils";
+import { api } from "@/services/api";
 import useDebounce from "@/hooks/useDebounce";
 
 const parseMultiParam = (value) =>
@@ -37,6 +38,14 @@ const parseMultiParam = (value) =>
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+
+const parsePriceParam = (value) => {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? price : null;
+};
+
+const toPriceCeiling = (price) =>
+  Math.max(100, Math.ceil((Number(price) || 0) / 100) * 100);
 
 export default function ProductsView() {
   const dispatch = useDispatch();
@@ -54,8 +63,12 @@ export default function ProductsView() {
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "featured");
   const [maxPrice, setMaxPrice] = useState(
-    Number(searchParams.get("maxPrice")) || 300,
+    parsePriceParam(searchParams.get("maxPrice")),
   );
+  const [catalogStats, setCatalogStats] = useState({
+    total: null,
+    priceCeiling: null,
+  });
   const [selectedColors, setSelectedColors] = useState(
     parseMultiParam(searchParams.get("color")),
   );
@@ -70,7 +83,7 @@ export default function ProductsView() {
     setSearch(searchParams.get("search") || "");
     setCategory(searchParams.get("category") || "");
     setSort(searchParams.get("sort") || "featured");
-    setMaxPrice(Number(searchParams.get("maxPrice")) || 300);
+    setMaxPrice(parsePriceParam(searchParams.get("maxPrice")));
     setSelectedColors(parseMultiParam(searchParams.get("color")));
     setSelectedSizes(parseMultiParam(searchParams.get("size")));
     setPage(Number(searchParams.get("page")) || 1);
@@ -83,28 +96,41 @@ export default function ProductsView() {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(
-      fetchProducts({
-        page,
-        limit: PAGE_SIZE,
-        search: debouncedSearch || undefined,
-        category: category || undefined,
-        maxPrice: maxPrice || undefined,
-        color: selectedColors.length ? selectedColors.join(",") : undefined,
-        size: selectedSizes.length ? selectedSizes.join(",") : undefined,
-        sort: sort || undefined,
-      }),
-    );
-  }, [
-    dispatch,
-    page,
-    debouncedSearch,
-    category,
-    maxPrice,
-    selectedColors,
-    selectedSizes,
-    sort,
-  ]);
+    let active = true;
+    api
+      .getProducts({ page: 1, limit: 1, sort: "price-desc" })
+      .then((response) => {
+        if (!active) return;
+        setCatalogStats({
+          total: response?.meta?.total ?? null,
+          priceCeiling: toPriceCeiling(response?.data?.[0]?.price),
+        });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const colorParam = selectedColors.join(",");
+  const sizeParam = selectedSizes.join(",");
+  const listParams = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: debouncedSearch || undefined,
+      category: category || undefined,
+      maxPrice: maxPrice ?? undefined,
+      color: colorParam || undefined,
+      size: sizeParam || undefined,
+      sort: sort || undefined,
+    }),
+    [page, debouncedSearch, category, maxPrice, colorParam, sizeParam, sort],
+  );
+
+  useEffect(() => {
+    dispatch(fetchProducts(listParams));
+  }, [dispatch, listParams]);
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
@@ -141,7 +167,7 @@ export default function ProductsView() {
   };
 
   const clearFilters = () => {
-    setMaxPrice(300);
+    setMaxPrice(null);
     setSearch("");
     setSelectedColors([]);
     setSelectedSizes([]);
@@ -158,20 +184,16 @@ export default function ProductsView() {
 
   const totalItems = productsMeta?.total ?? products.length;
   const totalPages = productsMeta?.totalPages ?? 1;
+  const allProductsCount = catalogStats.total ?? totalItems;
+  const priceCeiling = Math.max(
+    catalogStats.priceCeiling ?? 0,
+    toPriceCeiling(maxPrice),
+  );
+  const priceStep = priceCeiling > 1000 ? 50 : 10;
+  const priceValue = maxPrice ?? priceCeiling;
 
   const retryProducts = () => {
-    dispatch(
-      fetchProducts({
-        page,
-        limit: PAGE_SIZE,
-        search: debouncedSearch || undefined,
-        category: category || undefined,
-        maxPrice: maxPrice || undefined,
-        color: selectedColors.length ? selectedColors.join(",") : undefined,
-        size: selectedSizes.length ? selectedSizes.join(",") : undefined,
-        sort: sort || undefined,
-      }),
-    );
+    dispatch(fetchProducts(listParams));
   };
 
   const FilterPanel = (
@@ -210,13 +232,19 @@ export default function ProductsView() {
             <span
               className={classNames(
                 "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                !category ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500",
+                !category
+                  ? "bg-primary-100 text-primary-700"
+                  : "bg-slate-100 text-slate-500",
               )}
             >
               <Squares2X2Icon className="h-4 w-4" />
             </span>
-            <span className="min-w-0 flex-1 truncate text-left">All Products</span>
-            <span className="shrink-0 text-xs text-slate-400">{totalItems}</span>
+            <span className="min-w-0 flex-1 truncate text-left">
+              All Products
+            </span>
+            <span className="shrink-0 text-xs text-slate-400">
+              {allProductsCount}
+            </span>
           </button>
           <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
             {categories.map((cat) => {
@@ -256,7 +284,9 @@ export default function ProductsView() {
                   <span className="min-w-0 flex-1 truncate text-left">
                     {cat.name}
                   </span>
-                  <span className="shrink-0 text-xs text-slate-400">{count}</span>
+                  <span className="shrink-0 text-xs text-slate-400">
+                    {count}
+                  </span>
                 </button>
               );
             })}
@@ -316,20 +346,23 @@ export default function ProductsView() {
         <h3 className="mb-3 text-sm font-semibold text-slate-800">Max Price</h3>
         <input
           type="range"
-          min="10"
-          max="300"
-          step="10"
-          value={maxPrice}
+          min={priceStep}
+          max={priceCeiling}
+          step={priceStep}
+          value={priceValue}
           onChange={(e) => {
             const value = Number(e.target.value);
-            setMaxPrice(value);
-            updateParam("maxPrice", String(value));
+            const next = value >= priceCeiling ? null : value;
+            setMaxPrice(next);
+            updateParam("maxPrice", next ? String(next) : "");
           }}
           className="accent-primary-600 w-full"
         />
         <div className="mt-1 flex justify-between text-xs text-slate-500">
-          <span>$10</span>
-          <span className="font-semibold text-slate-700">${maxPrice}</span>
+          <span>{formatCurrency(priceStep)}</span>
+          <span className="font-semibold text-slate-700">
+            {formatCurrency(priceValue)}
+          </span>
         </div>
       </div>
 

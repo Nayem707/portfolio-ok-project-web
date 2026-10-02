@@ -14,7 +14,12 @@ import {
   selectOrderDetailsLoading,
   selectOrdersError,
 } from "@/features/orders";
-import { formatCurrency, formatDate, getDiscountedPrice, getProductImage } from "@/utils";
+import {
+  formatCurrency,
+  formatDate,
+  getDiscountedPrice,
+  getProductImage,
+} from "@/utils";
 
 export default function OrderDetailsView() {
   const dispatch = useDispatch();
@@ -117,17 +122,26 @@ export default function OrderDetailsView() {
                 className="flex items-start gap-3 py-3 sm:items-center sm:gap-4"
               >
                 <img
-                  src={getProductImage(item, "https://placehold.co/88x88?text=Item")}
+                  src={getProductImage(
+                    item,
+                    "https://placehold.co/88x88?text=Item",
+                  )}
                   alt={item.name}
                   className="h-14 w-14 rounded-lg border border-slate-100 object-cover sm:h-16 sm:w-16"
                 />
                 <div className="min-w-0 flex-1">
-                  <Link
-                    to={`/products/${item.id}`}
-                    className="hover:text-primary-700 line-clamp-1 text-sm font-medium text-slate-800"
-                  >
-                    {item.name}
-                  </Link>
+                  {item.productId ? (
+                    <Link
+                      to={`/products/${item.productId}`}
+                      className="hover:text-primary-700 line-clamp-1 text-sm font-medium text-slate-800"
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <p className="line-clamp-1 text-sm font-medium text-slate-800">
+                      {item.name}
+                    </p>
+                  )}
                   <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
                 </div>
                 <p className="text-sm font-semibold text-slate-900 sm:text-base">

@@ -51,7 +51,9 @@ export const fetchNewArrivalProducts = createAsyncThunk(
     try {
       return await api.getNewArrivals(limit);
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Failed to load new arrivals"));
+      return rejectWithValue(
+        getErrorMessage(error, "Failed to load new arrivals"),
+      );
     }
   },
 );
@@ -134,6 +136,7 @@ const initialState = {
   popularItems: [],
   newArrivalItems: [],
   currentProduct: null,
+  listRequestId: null,
   detailsRequestedKey: null,
   loading: false,
   detailsLoading: false,
@@ -160,17 +163,20 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchProducts.pending, (state, action) => {
+        state.listRequestId = action.meta.requestId;
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
+        if (action.meta.requestId !== state.listRequestId) return;
         state.loading = false;
         state.items = action.payload.items;
         state.listMeta = action.payload.meta;
         state.error = null;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        if (action.meta.requestId !== state.listRequestId) return;
         state.loading = false;
         state.error = action.payload || "Failed to load products";
       })
@@ -203,7 +209,6 @@ const productSlice = createSlice({
         state.detailsLoading = false;
         state.currentProduct = action.payload;
         state.detailsError = null;
-        upsertItem(state.items, action.payload);
       })
       .addCase(fetchProductByIdOrSlug.rejected, (state, action) => {
         if (action.meta.aborted) return;
