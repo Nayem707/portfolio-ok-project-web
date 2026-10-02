@@ -71,7 +71,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],      },
+        sans: ["Inter", "system-ui", "sans-serif"],
+      },
       boxShadow: {
         card: "0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
         "card-hover":
@@ -98,12 +99,17 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.25s ease-out",
         "slide-in-left": "slide-in-left 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.2s ease-out",
         "whatsapp-attention": "whatsapp-attention 0.7s ease-in-out 1",
+        marquee: "marquee 40s linear infinite",
       },
     },
   },

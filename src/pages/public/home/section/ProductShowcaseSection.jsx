@@ -36,10 +36,10 @@ function SectionBanner({ title, subtitle, to, image }) {
       {to && (
         <Link
           to={to}
-          className="bg-primary-950 hover:bg-primary-800 flex shrink-0 items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-xs font-semibold text-white shadow-sm transition sm:text-sm"
+          className="from-primary-700 to-primary-500 hover:from-primary-800 hover:to-primary-600 shadow-primary-500/30 flex shrink-0 items-center gap-2 rounded-full bg-linear-to-r py-1.5 pr-1.5 pl-4 text-xs font-semibold text-white shadow-md transition sm:text-sm"
         >
           View all
-          <span className="text-primary-950 flex h-6 w-6 items-center justify-center rounded-full bg-white">
+          <span className="text-primary-700 flex h-6 w-6 items-center justify-center rounded-full bg-white">
             <ArrowRightIcon className="h-3.5 w-3.5" />
           </span>
         </Link>
