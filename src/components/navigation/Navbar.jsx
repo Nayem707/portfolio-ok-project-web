@@ -12,6 +12,9 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ChevronDownIcon,
+  TruckIcon,
+  HomeIcon,
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import Logo from "@/components/navigation/Logo";
 import SearchBar from "@/components/common/SearchBar";
@@ -34,6 +37,13 @@ const navLinkClass = ({ isActive }) =>
     "text-sm font-medium transition",
     isActive ? "text-primary-700" : "text-slate-600 hover:text-primary-600",
   );
+
+const MAIN_LINKS = [
+  { label: "Home", to: "/", end: true, icon: HomeIcon },
+  { label: "All Products", to: "/products", icon: BuildingStorefrontIcon },
+  { label: "Categories", to: "/categories", icon: Squares2X2Icon },
+  { label: "Track Order", to: "/track-order", icon: TruckIcon },
+];
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -110,6 +120,21 @@ export default function Navbar() {
             >
               <MagnifyingGlassIcon className="h-6 w-6" />
             </button>
+
+            <NavLink
+              to="/track-order"
+              className={({ isActive }) =>
+                classNames(
+                  "hover:text-primary-600 flex items-center gap-1.5 rounded-lg p-2 text-sm font-medium transition hover:bg-slate-100",
+                  isActive ? "text-primary-600 bg-slate-100" : "text-slate-600",
+                )
+              }
+              aria-label="Track Order"
+              title="Track Order"
+            >
+              <TruckIcon className="h-6 w-6" />
+              <span className="hidden xl:inline">Track Order</span>
+            </NavLink>
 
             <Link
               to="/wishlist"
@@ -198,15 +223,22 @@ export default function Navbar() {
 
         {/* Category nav */}
         <nav className="hidden items-center gap-6 border-t border-slate-100 py-3 lg:flex">
-          <NavLink to="/" end className={navLinkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/products" className={navLinkClass}>
-            All Products
-          </NavLink>
-          <NavLink to="/categories" className={navLinkClass}>
-            Categories
-          </NavLink>
+          {MAIN_LINKS.map(({ label, to, end, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={(state) =>
+                classNames(
+                  navLinkClass(state),
+                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap",
+                )
+              }
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </NavLink>
+          ))}
           <span className="h-4 w-px bg-slate-200" />
           {categories.slice(0, 4).map((cat) => {
             const categoryKey = cat.slug || cat.id;

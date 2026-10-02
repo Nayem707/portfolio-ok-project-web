@@ -47,6 +47,7 @@ export default function MobileMenu({ open }) {
               { label: "Home", to: "/" },
               { label: "All Products", to: "/products" },
               { label: "Categories", to: "/categories" },
+              { label: "Track Order", to: "/track-order" },
               { label: "Wishlist", to: "/wishlist" },
               { label: "Cart", to: "/cart" },
             ].map((link) => (

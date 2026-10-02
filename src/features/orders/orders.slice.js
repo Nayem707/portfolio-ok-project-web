@@ -9,7 +9,7 @@ import {
 } from "@/constants";
 import { getProductImage } from "@/utils";
 
-const normalizeOrder = (order) => ({
+export const normalizeOrder = (order) => ({
   id: order.id,
   orderNumber: order.orderNumber,
   date: order.createdAt,

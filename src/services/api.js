@@ -152,6 +152,13 @@ export const api = {
     return getData(response);
   },
 
+  trackOrder: async (orderNumber) => {
+    const response = await axiosInstance.get(
+      `/orders/track/${encodeURIComponent(orderNumber)}`,
+    );
+    return getData(response);
+  },
+
   updateOrderStatus: async (orderId, payload) => {
     const response = await axiosInstance.patch(
       `/orders/${orderId}/status`,

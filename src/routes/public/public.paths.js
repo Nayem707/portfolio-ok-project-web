@@ -3,5 +3,6 @@ export const PUBLIC_PATHS = {
   PRODUCTS: "/products",
   PRODUCT_DETAILS: "/products/:id",
   CATEGORIES: "/categories",
+  TRACK_ORDER: "/track-order",
   NOT_FOUND: "*",
 };

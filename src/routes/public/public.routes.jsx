@@ -5,6 +5,7 @@ import ProductsView from "@/pages/public/ProductsView";
 import ProductDetailsView from "@/pages/public/ProductDetailsView";
 import CategoriesView from "@/pages/public/CategoriesView";
 import NotFoundView from "@/pages/public/NotFoundView";
+import TrackOrderView from "@/pages/public/TrackOrderView";
 
 import { PUBLIC_PATHS } from "@/routes/public/public.paths";
 
@@ -13,6 +14,7 @@ const publicRouteConfig = [
   { path: PUBLIC_PATHS.PRODUCTS, element: <ProductsView /> },
   { path: PUBLIC_PATHS.PRODUCT_DETAILS, element: <ProductDetailsView /> },
   { path: PUBLIC_PATHS.CATEGORIES, element: <CategoriesView /> },
+  { path: PUBLIC_PATHS.TRACK_ORDER, element: <TrackOrderView /> },
 ];
 
 export const publicRoutes = publicRouteConfig.map(({ path, element }) => (

@@ -20,7 +20,7 @@ const importantLinks = [
 ];
 
 const supportLinks = [
-  { label: "Order Tracking", to: "/account/orders", icon: TruckIcon },
+  { label: "Order Tracking", to: "/track-order", icon: TruckIcon },
   { label: "Shopping Cart", to: "/cart", icon: ShoppingCartIcon },
   { label: "Customer Helpline", href: `tel:${HELPLINE}`, icon: LifebuoyIcon },
 ];

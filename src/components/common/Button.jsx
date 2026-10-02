@@ -13,6 +13,8 @@ const variants = {
     "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm",
   accent:
     "bg-accent-500 text-white hover:bg-accent-600 focus-visible:ring-accent-400 shadow-sm",
+  light:
+    "bg-white text-primary-700 hover:bg-primary-50 focus-visible:ring-white shadow-sm",
 };
 
 const sizes = {
