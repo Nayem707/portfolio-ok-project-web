@@ -76,7 +76,18 @@ export default function OrderDetailsView() {
               Thank you for your order!
             </p>
             <p className="text-sm text-emerald-600">
-              Your order has been placed and is being processed.
+              Your order{" "}
+              <span className="font-semibold whitespace-nowrap text-emerald-800">
+                {order.orderNumber}
+              </span>{" "}
+              has been placed and is being processed. You can{" "}
+              <Link
+                to="/track-order"
+                className="font-medium underline underline-offset-2 hover:text-emerald-800"
+              >
+                track your order
+              </Link>{" "}
+              anytime with your mobile number.
             </p>
           </div>
         </div>

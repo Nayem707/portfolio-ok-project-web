@@ -231,7 +231,7 @@ export default function CheckoutView() {
           },
         }),
       ).unwrap();
-      toast.success("Order placed successfully!", {
+      toast.success(`Order ${order.orderNumber} placed successfully!`, {
         position: "bottom-right",
       });
       navigate(`/account/orders/${order.id}`, {

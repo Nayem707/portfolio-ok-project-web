@@ -152,10 +152,16 @@ export const api = {
     return getData(response);
   },
 
-  trackOrder: async (orderNumber) => {
-    const response = await axiosInstance.get(
-      `/orders/track/${encodeURIComponent(orderNumber)}`,
-    );
+  trackOrders: async (phone) => {
+    const response = await axiosInstance.post("/orders/track", { phone });
+    return getData(response);
+  },
+
+  trackOrderDetails: async (phone, orderNumber) => {
+    const response = await axiosInstance.post("/orders/track/details", {
+      phone,
+      orderNumber,
+    });
     return getData(response);
   },
 
