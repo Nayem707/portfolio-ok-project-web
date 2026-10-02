@@ -101,7 +101,7 @@ export default function HomeView() {
   }
 
   return (
-    <div className="w-full bg-red-50">
+    <div className="">
       <HeroSection slides={slides} />
       <PerksSection perks={sections.perks?.items || []} />
 
