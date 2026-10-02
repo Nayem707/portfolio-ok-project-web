@@ -147,7 +147,7 @@ export default function TrackOrderView() {
                       setInput(e.target.value);
                       if (inputError) setInputError("");
                     }}
-                    placeholder={`Order number, e.g. ${EXAMPLE_ORDER_NUMBER}`}
+                    placeholder="Enter your order number, e.g. #ORD-20261002-001"
                     autoComplete="off"
                     spellCheck={false}
                     aria-invalid={!!inputError}
