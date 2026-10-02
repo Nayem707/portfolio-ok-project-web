@@ -27,6 +27,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import ErrorState from "@/components/common/ErrorState";
 import Skeleton from "@/components/common/Skeleton";
 import Avatar from "@/components/common/Avatar";
+import RichTextContent from "@/components/common/RichTextContent";
 import useAuth from "@/hooks/useAuth";
 import {
   clearCurrentProduct,
@@ -373,9 +374,10 @@ export default function ProductDetailsView() {
     navigate("/checkout");
   };
 
-  const imageList = (product.images?.length
-    ? product.images
-    : [product.image || "https://placehold.co/800x800?text=Product"]
+  const imageList = (
+    product.images?.length
+      ? product.images
+      : [product.image || "https://placehold.co/800x800?text=Product"]
   ).map((img) => resolveMediaUrl(img) || img);
   const showGalleryControls = imageList.length > 1;
 
@@ -566,9 +568,10 @@ export default function ProductDetailsView() {
             />
           </div>
 
-          <p className="mt-5 leading-relaxed text-slate-600">
-            {product.description}
-          </p>
+          <RichTextContent
+            value={product.description}
+            className="mt-5 leading-relaxed text-slate-600"
+          />
 
           <div className="mt-5 flex items-center gap-2">
             {outOfStock ? (

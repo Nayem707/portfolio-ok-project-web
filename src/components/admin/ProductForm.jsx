@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -12,15 +12,13 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
-import {
-  fetchCategories,
-  selectCategories,
-} from "@/features/categories";
+import RichTextEditor from "@/components/common/RichTextEditor";
+import { fetchCategories, selectCategories } from "@/features/categories";
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { api } from "@/services/api";
 import { PRODUCT_STATUS, toProductStatusKey } from "@/constants";
-import { resolveMediaUrl } from "@/utils";
+import { isRichTextEmpty, resolveMediaUrl } from "@/utils";
 
 const empty = {
   name: "",
@@ -70,6 +68,7 @@ const normalizeImages = (images) =>
 const fromInitial = (initial) => ({
   ...empty,
   ...initial,
+  description: initial?.description || "",
   baseCurrency: initial?.baseCurrency || "BDT",
   featured: Boolean(initial?.featured),
   popular: Boolean(initial?.popular),
@@ -111,6 +110,10 @@ export default function ProductForm({
   }, [initial]);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const setDescription = useCallback(
+    (description) => setForm((prev) => ({ ...prev, description })),
+    [],
+  );
 
   const toggleSelection = (key, value) => {
     setForm((prev) => {
@@ -204,9 +207,7 @@ export default function ProductForm({
       });
       updateImages(merged);
       toast.success(
-        urls.length === 1
-          ? "Image uploaded"
-          : `${urls.length} images uploaded`,
+        urls.length === 1 ? "Image uploaded" : `${urls.length} images uploaded`,
       );
     } catch (error) {
       toast.error(
@@ -259,7 +260,11 @@ export default function ProductForm({
       name: form.name.trim(),
       sku: form.sku.trim(),
       categoryId: selectedCategory?.id || initial?.categoryId,
-      description: form.description?.trim() || undefined,
+      description: isRichTextEmpty(form.description)
+        ? initial
+          ? ""
+          : undefined
+        : form.description.trim(),
       price: Number(form.price),
       baseCurrency: form.baseCurrency || initial?.baseCurrency || "BDT",
       discount: Number(form.discount) || 0,
@@ -300,11 +305,9 @@ export default function ProductForm({
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Description
               </label>
-              <textarea
+              <RichTextEditor
                 value={form.description}
-                onChange={set("description")}
-                rows={5}
-                className="input-base resize-none"
+                onChange={setDescription}
                 placeholder="Describe the product…"
               />
             </div>

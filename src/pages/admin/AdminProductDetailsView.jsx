@@ -11,6 +11,7 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Avatar from "@/components/common/Avatar";
+import RichTextContent from "@/components/common/RichTextContent";
 import {
   fetchProductByIdOrSlug,
   selectCurrentProduct,
@@ -174,13 +175,18 @@ export default function AdminProductDetailsView() {
               ))}
             </div>
           ) : (
-            <EmptyState title="No images" description="This product has no images yet." />
+            <EmptyState
+              title="No images"
+              description="This product has no images yet."
+            />
           )}
         </div>
 
         <div className="card p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
-            <Badge color={statusColor[toProductStatusKey(product.status)] || "gray"}>
+            <Badge
+              color={statusColor[toProductStatusKey(product.status)] || "gray"}
+            >
               {toProductStatusLabel(product.status)}
             </Badge>
             <Rating value={product.rating} reviews={product.reviews} />
@@ -196,9 +202,15 @@ export default function AdminProductDetailsView() {
               size="lg"
             />
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-slate-600">
-            {product.description || "No description provided."}
-          </p>
+          <RichTextContent
+            value={product.description}
+            className="mt-4 text-sm leading-relaxed text-slate-600"
+            fallback={
+              <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                No description provided.
+              </p>
+            }
+          />
 
           <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 text-sm md:grid-cols-2">
             <div>
@@ -254,14 +266,20 @@ export default function AdminProductDetailsView() {
               ["Category", product.category],
               ["Stock", product.stock],
               ["Discount", `${product.discount}%`],
-              ["Base price", formatCurrency(product.price, {
-                from: product.baseCurrency || "BDT",
-                currency: product.baseCurrency || "BDT",
-                convert: false,
-              })],
-              ["Display price", formatCurrency(product.price, {
-                from: product.baseCurrency || "BDT",
-              })],
+              [
+                "Base price",
+                formatCurrency(product.price, {
+                  from: product.baseCurrency || "BDT",
+                  currency: product.baseCurrency || "BDT",
+                  convert: false,
+                }),
+              ],
+              [
+                "Display price",
+                formatCurrency(product.price, {
+                  from: product.baseCurrency || "BDT",
+                }),
+              ],
               ["Created", formatDate(product.createdAt)],
             ].map(([label, value]) => (
               <div key={label}>

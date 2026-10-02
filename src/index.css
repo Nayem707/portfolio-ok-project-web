@@ -35,6 +35,48 @@
   .container-app {
     @apply mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8;
   }
+  .rich-text {
+    @apply break-words;
+  }
+  .rich-text > * + * {
+    @apply mt-3;
+  }
+  .rich-text h2 {
+    @apply text-lg leading-snug font-bold text-slate-900;
+  }
+  .rich-text h3 {
+    @apply text-base leading-snug font-semibold text-slate-900;
+  }
+  .rich-text h4 {
+    @apply font-semibold text-slate-800;
+  }
+  .rich-text * + h2,
+  .rich-text * + h3,
+  .rich-text * + h4 {
+    @apply mt-5;
+  }
+  .rich-text strong {
+    @apply font-semibold text-slate-800;
+  }
+  .rich-text em {
+    @apply italic;
+  }
+  .rich-text u {
+    @apply underline;
+  }
+  .rich-text ul {
+    @apply list-disc space-y-1.5 pl-5;
+  }
+  .rich-text ol {
+    @apply list-decimal space-y-1.5 pl-5;
+  }
+  .rich-text li {
+    @apply pl-1;
+  }
+  .rich-text li > ul,
+  .rich-text li > ol {
+    @apply mt-1.5;
+  }
 }
 
 @layer utilities {

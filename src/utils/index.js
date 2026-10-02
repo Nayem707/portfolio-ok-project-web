@@ -1,6 +1,16 @@
 import { formatCurrency } from "@/utils/currency";
 
-export { formatCurrency, convertAmount, normalizeCurrency } from "@/utils/currency";
+export {
+  formatCurrency,
+  convertAmount,
+  normalizeCurrency,
+} from "@/utils/currency";
+export {
+  isRichTextEmpty,
+  plainTextToHtml,
+  sanitizeRichText,
+  toRichTextHtml,
+} from "@/utils/richText";
 
 export const formatDate = (value) => {
   if (!value) return "";
