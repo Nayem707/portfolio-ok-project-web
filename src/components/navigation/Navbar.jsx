@@ -225,7 +225,7 @@ export default function Navbar() {
               to="/categories"
               className="hover:text-primary-600 text-sm font-semibold text-slate-700 transition"
             >
-              Show more
+              Show More...
             </Link>
           )}
         </nav>
