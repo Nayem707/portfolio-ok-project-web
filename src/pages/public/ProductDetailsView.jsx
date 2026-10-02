@@ -5,14 +5,14 @@ import {
   HeartIcon,
   ShoppingBagIcon,
   BoltIcon,
-  TruckIcon,
-  ShieldCheckIcon,
-  ArrowPathIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EyeIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { StarIcon } from "@heroicons/react/24/solid";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -37,49 +37,65 @@ import {
   selectProductDetailsLoading,
 } from "@/features/products";
 import { fetchColors, selectColors } from "@/features/colors";
+import {
+  fetchPublicHomepage,
+  selectHomePageHydrated,
+  selectHomePageSections,
+} from "@/features/homepage";
+import PerksSection from "@/pages/public/home/section/PerksSection";
 import { addToCart, getMissingVariantLabels } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
-import { classNames, range, resolveMediaUrl } from "@/utils";
+import {
+  classNames,
+  isRichTextEmpty,
+  range,
+  resolveMediaUrl,
+  toRichTextHtml,
+} from "@/utils";
 import { api } from "@/services/api";
+
+const MAX_VISIBLE_THUMBS = 5;
 
 function ProductDetailsSkeleton() {
   return (
     <div className="container-app py-8" aria-busy="true" aria-live="polite">
-      <Skeleton className="h-4 w-48" />
-      <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div>
-          <Skeleton className="aspect-square w-full" rounded="rounded-2xl" />
-          <div className="mt-4 flex gap-3">
-            {range(4).map((i) => (
-              <Skeleton key={i} className="h-20 w-20" />
-            ))}
+      <div className="mx-auto w-full max-w-7xl">
+        <Skeleton className="h-4 w-48" />
+        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
+          <div>
+            <Skeleton className="aspect-square w-full" rounded="rounded-2xl" />
+            <div className="mt-4 flex gap-3">
+              {range(4).map((i) => (
+                <Skeleton key={i} className="h-20 w-20" />
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="space-y-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-9 w-4/5" />
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-8 w-32" />
-          <div className="space-y-2 pt-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-          <Skeleton className="h-6 w-28" />
-          <div className="flex gap-3 pt-2">
-            {range(4).map((i) => (
-              <Skeleton key={i} className="h-9 w-9" rounded="rounded-full" />
-            ))}
-          </div>
-          <div className="flex gap-2 pt-2">
-            {range(4).map((i) => (
-              <Skeleton key={i} className="h-10 w-14" />
-            ))}
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Skeleton className="h-12 w-28" />
-            <Skeleton className="h-12 flex-1" />
-            <Skeleton className="h-12 flex-1" />
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-9 w-4/5" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-8 w-32" />
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <Skeleton className="h-6 w-28" />
+            <div className="flex gap-3 pt-2">
+              {range(4).map((i) => (
+                <Skeleton key={i} className="h-9 w-9" rounded="rounded-full" />
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2">
+              {range(4).map((i) => (
+                <Skeleton key={i} className="h-10 w-14" />
+              ))}
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Skeleton className="h-12 w-28" />
+              <Skeleton className="h-12 flex-1" />
+              <Skeleton className="h-12 flex-1" />
+            </div>
           </div>
         </div>
       </div>
@@ -98,6 +114,8 @@ export default function ProductDetailsView() {
   const productError = useSelector(selectProductDetailsError);
   const colors = useSelector(selectColors);
   const wishlist = useSelector(selectWishlistItems);
+  const homeSections = useSelector(selectHomePageSections);
+  const homeHydrated = useSelector(selectHomePageHydrated);
   const [related, setRelated] = useState([]);
   const [primaryImageReady, setPrimaryImageReady] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -114,6 +132,49 @@ export default function ProductDetailsView() {
   const [editingReviewId, setEditingReviewId] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [showWhatsappAttention, setShowWhatsappAttention] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const imageCount = Math.max(product?.images?.length || 0, 1);
+  const thumbsRef = useRef(null);
+  const [thumbScroll, setThumbScroll] = useState({ prev: false, next: false });
+
+  const updateThumbScroll = useCallback(() => {
+    const el = thumbsRef.current;
+    if (!el) return;
+    setThumbScroll({
+      prev: el.scrollLeft > 1,
+      next: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+    });
+  }, []);
+
+  const scrollThumbs = (direction) => {
+    const el = thumbsRef.current;
+    if (el)
+      el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    updateThumbScroll();
+    window.addEventListener("resize", updateThumbScroll);
+    return () => window.removeEventListener("resize", updateThumbScroll);
+  }, [updateThumbScroll, primaryImageReady, imageCount]);
+
+  useEffect(() => {
+    const el = thumbsRef.current;
+    const thumb = el?.children[activeImage];
+    if (!thumb) return;
+    if (thumb.offsetLeft < el.scrollLeft) {
+      el.scrollTo({ left: thumb.offsetLeft, behavior: "smooth" });
+    } else if (
+      thumb.offsetLeft + thumb.offsetWidth >
+      el.scrollLeft + el.clientWidth
+    ) {
+      const firstVisible = Math.max(0, activeImage - (MAX_VISIBLE_THUMBS - 1));
+      el.scrollTo({
+        left: el.children[firstVisible].offsetLeft,
+        behavior: "smooth",
+      });
+    }
+  }, [activeImage]);
 
   const matchesRoute =
     !!product && !!id && (product.id === id || product.slug === id);
@@ -125,9 +186,14 @@ export default function ProductDetailsView() {
   }, [dispatch]);
 
   useEffect(() => {
+    if (!homeHydrated) dispatch(fetchPublicHomepage());
+  }, [dispatch, homeHydrated]);
+
+  useEffect(() => {
     if (!id) return;
     setPrimaryImageReady(false);
     setActiveImage(0);
+    setLightboxOpen(false);
     setRelated([]);
     setReviews([]);
     dispatch(fetchProductByIdOrSlug(id));
@@ -203,6 +269,24 @@ export default function ProductDetailsView() {
     setQuantity(1);
     setVariantError("");
   }, [product?.id]);
+
+  useEffect(() => {
+    if (!lightboxOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+      else if (e.key === "ArrowLeft")
+        setActiveImage((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
+      else if (e.key === "ArrowRight")
+        setActiveImage((prev) => (prev + 1) % imageCount);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [lightboxOpen, imageCount]);
 
   useEffect(() => {
     setShowWhatsappAttention(false);
@@ -293,11 +377,13 @@ export default function ProductDetailsView() {
   if (productError && !matchesRoute && !productLoading) {
     return (
       <div className="container-app py-8">
-        <ErrorState
-          title="Could not load product"
-          description={productError}
-          onRetry={() => id && dispatch(fetchProductByIdOrSlug(id))}
-        />
+        <div className="mx-auto w-full max-w-7xl">
+          <ErrorState
+            title="Could not load product"
+            description={productError}
+            onRetry={() => id && dispatch(fetchProductByIdOrSlug(id))}
+          />
+        </div>
       </div>
     );
   }
@@ -310,6 +396,13 @@ export default function ProductDetailsView() {
 
   const isWishlisted = wishlist.some((i) => i.id === product.id);
   const outOfStock = product.stock === 0;
+  const highlights = (
+    Array.isArray(product.shortDescription) ? product.shortDescription : []
+  )
+    .map((point) => (typeof point === "string" ? point.trim() : ""))
+    .filter(Boolean)
+    .slice(0, 5);
+  const hasDescription = !isRichTextEmpty(toRichTextHtml(product.description));
   const productReviews = reviews;
   const visibleReviewItems = productReviews.slice(0, visibleReviews);
 
@@ -472,425 +565,499 @@ export default function ProductDetailsView() {
       key={product.id}
       className="container-app py-8 transition-opacity duration-300 ease-out"
     >
-      <Breadcrumb
-        items={[
-          { label: "Products", to: "/products" },
-          {
-            label: product.category,
-            to: `/products?category=${product.categoryId}`,
-          },
-          { label: product.name },
-        ]}
-      />
+      <div className="mx-auto w-full max-w-7xl">
+        <Breadcrumb
+          items={[
+            { label: "Products", to: "/products" },
+            {
+              label: product.category,
+              to: `/products?category=${product.categoryId}`,
+            },
+            { label: product.name },
+          ]}
+        />
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        {/* Gallery */}
-        <div>
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
+          {/* Gallery */}
+          <div>
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                className="group block w-full cursor-zoom-in focus:outline-none"
+                aria-label="View full size image"
+              >
+                <img
+                  src={imageList[activeImage]}
+                  alt={product.name}
+                  className="aspect-square w-full object-cover"
+                />
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition duration-200 group-hover:bg-slate-900/25 group-hover:opacity-100 group-focus-visible:bg-slate-900/25 group-focus-visible:opacity-100">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur">
+                    <EyeIcon className="h-6 w-6" />
+                  </span>
+                </span>
+              </button>
+              {showGalleryControls && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goToPrevImage}
+                    className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNextImage}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                    aria-label="Next image"
+                  >
+                    <ChevronRightIcon className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+              {product.discount > 0 && (
+                <Badge color="red" className="absolute top-4 left-4">
+                  -{Math.round(product.discount)}% OFF
+                </Badge>
+              )}
+            </div>
+            {showGalleryControls && (
+              <div className="relative mt-4">
+                <div
+                  ref={thumbsRef}
+                  onScroll={updateThumbScroll}
+                  className="no-scrollbar relative flex snap-x snap-mandatory gap-3 overflow-x-auto"
+                >
+                  {imageList.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImage(idx)}
+                      aria-label={`Show image ${idx + 1}`}
+                      className={classNames(
+                        "aspect-square w-[calc((100%-3rem)/5)] shrink-0 snap-start overflow-hidden rounded-lg border-2 transition",
+                        activeImage === idx
+                          ? "border-primary-600"
+                          : "border-slate-200",
+                      )}
+                    >
+                      <img
+                        src={img}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+                {imageList.length > MAX_VISIBLE_THUMBS && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => scrollThumbs(-1)}
+                      disabled={!thumbScroll.prev}
+                      className="absolute top-1/2 left-1 -translate-y-1/2 rounded-full bg-white/90 p-1.5 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+                      aria-label="Previous thumbnails"
+                    >
+                      <ChevronLeftIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollThumbs(1)}
+                      disabled={!thumbScroll.next}
+                      className="absolute top-1/2 right-1 -translate-y-1/2 rounded-full bg-white/90 p-1.5 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+                      aria-label="Next thumbnails"
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-primary-600 text-sm font-medium">
+                {product.category}
+              </span>
+              {outOfStock ? (
+                <Badge color="red" dot>
+                  Out of stock
+                </Badge>
+              ) : product.stock < 15 ? (
+                <Badge color="yellow" dot>
+                  Only {product.stock} left in stock
+                </Badge>
+              ) : (
+                <Badge color="green" dot>
+                  In stock
+                </Badge>
+              )}
+            </div>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+              {product.name}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
+              <Rating
+                value={product.rating}
+                reviews={product.reviews}
+                size="md"
+              />
+              <span className="text-sm text-slate-400">SKU: {product.sku}</span>
+            </div>
+
+            <div className="mt-5">
+              <PriceDisplay
+                price={product.price}
+                discount={product.discount}
+                baseCurrency={product.baseCurrency || "BDT"}
+                size="xl"
+                amountClassName="text-primary-600"
+              />
+            </div>
+
+            {highlights.length > 0 && (
+              <div className="mt-5">
+                <ul
+                  aria-label="Highlights"
+                  className="space-y-2.5 text-sm text-slate-600"
+                >
+                  {highlights.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {productColors.length > 0 && (
+              <div className="mt-6">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Color
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  {productColors.map((colorOption) => {
+                    const isSelected = selectedColor === colorOption.name;
+                    return (
+                      <button
+                        key={colorOption.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(colorOption.name);
+                          setVariantError("");
+                        }}
+                        aria-label={colorOption.name}
+                        title={colorOption.name}
+                        className={classNames(
+                          "relative h-9 w-9 rounded-full border-2 transition-all duration-200",
+                          isSelected
+                            ? "ring-primary-200 scale-105 ring-2"
+                            : "border-slate-200 hover:border-slate-400",
+                        )}
+                        style={{ backgroundColor: colorOption.value }}
+                      >
+                        {isSelected && (
+                          <span className="absolute inset-1 rounded-full border-2 border-white/90" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {productSizes.length > 0 && (
+              <div className="mt-6">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Size
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {productSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSize(size);
+                        setVariantError("");
+                      }}
+                      className={classNames(
+                        "rounded-full border px-3 py-1.5 text-sm transition",
+                        selectedSize === size
+                          ? "border-primary-600 bg-primary-50 text-primary-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {variantError && (
+              <p className="mt-4 text-sm text-red-600">{variantError}</p>
+            )}
+
+            {!outOfStock && (
+              <div className="mt-6 flex items-center gap-4">
+                <span className="text-sm font-medium text-slate-700">
+                  Quantity
+                </span>
+                <QuantitySelector
+                  value={quantity}
+                  onChange={setQuantity}
+                  max={product.stock}
+                />
+              </div>
+            )}
+
+            <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 sm:flex sm:flex-wrap">
+              <Button
+                size="lg"
+                leftIcon={ShoppingBagIcon}
+                onClick={handleAddToCart}
+                disabled={outOfStock}
+                className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
+              >
+                Add to Cart
+              </Button>
+              <Button
+                size="lg"
+                variant="accent"
+                leftIcon={BoltIcon}
+                onClick={handleBuyNow}
+                disabled={outOfStock}
+                className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
+              >
+                Buy Now
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await dispatch(toggleWishlist(product)).unwrap();
+                    toast.success(
+                      isWishlisted
+                        ? "Removed from wishlist"
+                        : "Added to wishlist",
+                      {
+                        position: "bottom-right",
+                      },
+                    );
+                  } catch (error) {
+                    toast.error(error || "Failed to update wishlist", {
+                      position: "bottom-right",
+                    });
+                  }
+                }}
+                className={classNames(
+                  "shrink-0 px-3 py-2.5 sm:px-5 sm:py-3",
+                  isWishlisted && "border-red-200 text-red-500",
+                )}
+              >
+                {isWishlisted ? (
+                  <HeartSolid className="h-5 w-5" />
+                ) : (
+                  <HeartIcon className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {homeSections.perks?.active !== false && (
+          <PerksSection
+            perks={homeSections.perks?.items || []}
+            className="mt-12 overflow-hidden rounded-xl"
+          />
+        )}
+
+        {hasDescription && (
+          <div className="card mt-8 p-6 md:p-10 lg:p-12">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Description
+            </h3>
+            <RichTextContent
+              value={product.description}
+              className="mt-4 text-sm leading-relaxed text-slate-600"
+            />
+          </div>
+        )}
+
+        {/* Related products */}
+        <section className="mt-12">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <SectionHeader
+              title="Customer Reviews"
+              subtitle={`Real feedback for ${product.name}`}
+            />
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditingReviewId("");
+                  setReviewForm({ rating: 5, comment: "" });
+                  setIsReviewModalOpen(true);
+                }}
+              >
+                Write a Review
+              </Button>
+            )}
+          </div>
+
+          {reviewsLoading ? (
+            <div className="py-10 text-center text-sm text-slate-500">
+              Loading reviews...
+            </div>
+          ) : reviewsError ? (
+            <div className="py-10 text-center text-sm text-red-600">
+              {reviewsError}
+            </div>
+          ) : productReviews.length === 0 ? (
+            <div className="border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500">
+              No reviews yet.
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {visibleReviewItems.map((review) => {
+                const isMine = isAuthenticated && review.userId === user?.id;
+                return (
+                  <article key={review.id} className="card p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={resolveMediaUrl(review.avatarUrl)}
+                          name={review.author}
+                          size="md"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {review.author}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {review.date}
+                          </p>
+                        </div>
+                      </div>
+                      <Rating value={review.rating} showValue={false} />
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                      {review.comment}
+                    </p>
+                    {isMine && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingReviewId(review.id);
+                            setReviewForm({
+                              rating: review.rating,
+                              comment: review.comment,
+                            });
+                            setIsReviewModalOpen(true);
+                          }}
+                          className="text-primary-600 hover:text-primary-700 text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="text-xs font-medium text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {visibleReviews < productReviews.length && (
+            <div className="mt-5 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setVisibleReviews((prev) => prev + 3)}
+              >
+                Show More
+              </Button>
+            </div>
+          )}
+        </section>
+
+        {related.length > 0 && (
+          <section className="mt-14">
+            <SectionHeader title="Related Products" />
+            <ProductGrid products={related} />
+          </section>
+        )}
+      </div>
+
+      {lightboxOpen &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${product.name} image viewer`}
+            className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 sm:p-10"
+            onClick={() => setLightboxOpen(false)}
+          >
             <img
               src={imageList[activeImage]}
               alt={product.name}
-              className="aspect-square w-full object-cover"
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
             />
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+              aria-label="Close image viewer"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
             {showGalleryControls && (
               <>
                 <button
                   type="button"
-                  onClick={goToPrevImage}
-                  className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToPrevImage();
+                  }}
+                  className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20 sm:left-6"
                   aria-label="Previous image"
                 >
-                  <ChevronLeftIcon className="h-5 w-5" />
+                  <ChevronLeftIcon className="h-6 w-6" />
                 </button>
                 <button
                   type="button"
-                  onClick={goToNextImage}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToNextImage();
+                  }}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20 sm:right-6"
                   aria-label="Next image"
                 >
-                  <ChevronRightIcon className="h-5 w-5" />
+                  <ChevronRightIcon className="h-6 w-6" />
                 </button>
+                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-sm text-white">
+                  {activeImage + 1} / {imageList.length}
+                </span>
               </>
             )}
-            {product.discount > 0 && (
-              <Badge color="red" className="absolute top-4 left-4">
-                -{Math.round(product.discount)}% OFF
-              </Badge>
-            )}
-          </div>
-          {showGalleryControls && (
-            <div className="mt-4 flex gap-3">
-              {imageList.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(idx)}
-                  className={classNames(
-                    "h-20 w-20 overflow-hidden rounded-lg border-2 transition",
-                    activeImage === idx
-                      ? "border-primary-600"
-                      : "border-slate-200",
-                  )}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div>
-          <span className="text-primary-600 text-sm font-medium">
-            {product.category}
-          </span>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-            {product.name}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
-            <Rating
-              value={product.rating}
-              reviews={product.reviews}
-              size="md"
-            />
-            <span className="text-sm text-slate-400">SKU: {product.sku}</span>
-          </div>
-
-          <div className="mt-5">
-            <PriceDisplay
-              price={product.price}
-              discount={product.discount}
-              baseCurrency={product.baseCurrency || "BDT"}
-              size="xl"
-            />
-          </div>
-
-          <RichTextContent
-            value={product.description}
-            className="mt-5 leading-relaxed text-slate-600"
-          />
-
-          <div className="mt-5 flex items-center gap-2">
-            {outOfStock ? (
-              <Badge color="red" dot>
-                Out of stock
-              </Badge>
-            ) : product.stock < 15 ? (
-              <Badge color="yellow" dot>
-                Only {product.stock} left in stock
-              </Badge>
-            ) : (
-              <Badge color="green" dot>
-                In stock
-              </Badge>
-            )}
-          </div>
-
-          {productColors.length > 0 && (
-            <div className="mt-6">
-              <span className="mb-2 block text-sm font-medium text-slate-700">
-                Color
-              </span>
-              <div className="flex flex-wrap gap-3">
-                {productColors.map((colorOption) => {
-                  const isSelected = selectedColor === colorOption.name;
-                  return (
-                    <button
-                      key={colorOption.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedColor(colorOption.name);
-                        setVariantError("");
-                      }}
-                      aria-label={colorOption.name}
-                      title={colorOption.name}
-                      className={classNames(
-                        "relative h-9 w-9 rounded-full border-2 transition-all duration-200",
-                        isSelected
-                          ? "ring-primary-200 scale-105 ring-2"
-                          : "border-slate-200 hover:border-slate-400",
-                      )}
-                      style={{ backgroundColor: colorOption.value }}
-                    >
-                      {isSelected && (
-                        <span className="absolute inset-1 rounded-full border-2 border-white/90" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {productSizes.length > 0 && (
-            <div className="mt-6">
-              <span className="mb-2 block text-sm font-medium text-slate-700">
-                Size
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {productSizes.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSize(size);
-                      setVariantError("");
-                    }}
-                    className={classNames(
-                      "rounded-full border px-3 py-1.5 text-sm transition",
-                      selectedSize === size
-                        ? "border-primary-600 bg-primary-50 text-primary-700"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {variantError && (
-            <p className="mt-4 text-sm text-red-600">{variantError}</p>
-          )}
-
-          {!outOfStock && (
-            <div className="mt-6 flex items-center gap-4">
-              <span className="text-sm font-medium text-slate-700">
-                Quantity
-              </span>
-              <QuantitySelector
-                value={quantity}
-                onChange={setQuantity}
-                max={product.stock}
-              />
-            </div>
-          )}
-
-          <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 sm:flex sm:flex-wrap">
-            <Button
-              size="lg"
-              leftIcon={ShoppingBagIcon}
-              onClick={handleAddToCart}
-              disabled={outOfStock}
-              className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
-            >
-              Add to Cart
-            </Button>
-            <Button
-              size="lg"
-              variant="accent"
-              leftIcon={BoltIcon}
-              onClick={handleBuyNow}
-              disabled={outOfStock}
-              className="min-w-0 justify-center px-4 py-2.5 text-sm whitespace-nowrap sm:flex-1 sm:px-5 sm:py-3 sm:text-base"
-            >
-              Buy Now
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await dispatch(toggleWishlist(product)).unwrap();
-                  toast.success(
-                    isWishlisted
-                      ? "Removed from wishlist"
-                      : "Added to wishlist",
-                    {
-                      position: "bottom-right",
-                    },
-                  );
-                } catch (error) {
-                  toast.error(error || "Failed to update wishlist", {
-                    position: "bottom-right",
-                  });
-                }
-              }}
-              className={classNames(
-                "shrink-0 px-3 py-2.5 sm:px-5 sm:py-3",
-                isWishlisted && "border-red-200 text-red-500",
-              )}
-            >
-              {isWishlisted ? (
-                <HeartSolid className="h-5 w-5" />
-              ) : (
-                <HeartIcon className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-
-          {/* Perks */}
-          <div className="mt-8 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-3">
-            {[
-              { icon: TruckIcon, label: "Free shipping over $150" },
-              { icon: ArrowPathIcon, label: "30-day easy returns" },
-              { icon: ShieldCheckIcon, label: "Secure checkout" },
-            ].map((perk) => (
-              <div
-                key={perk.label}
-                className="flex items-center gap-2 text-sm text-slate-600"
-              >
-                <perk.icon className="text-primary-600 h-5 w-5" />
-                {perk.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Product information */}
-      <div className="mt-12 grid gap-6 lg:grid-cols-2">
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Product Information
-          </h3>
-          <dl className="mt-4 divide-y divide-slate-100 text-sm">
-            {[
-              ["Category", product.category],
-              ["SKU", product.sku],
-              [
-                "Availability",
-                outOfStock ? "Out of stock" : `${product.stock} in stock`,
-              ],
-              ["Rating", `${product.rating} / 5`],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between py-2.5">
-                <dt className="text-slate-500">{label}</dt>
-                <dd className="font-medium text-slate-800">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-slate-900">Highlights</h3>
-          <ul className="mt-4 space-y-2.5 text-sm text-slate-600">
-            {[
-              "Premium quality materials and craftsmanship",
-              "Backed by our satisfaction guarantee",
-              "Ships within 1–2 business days",
-              "Trusted by thousands of happy customers",
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-2">
-                <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Related products */}
-      <section className="mt-12">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <SectionHeader
-            title="Customer Reviews"
-            subtitle={`Real feedback for ${product.name}`}
-          />
-          {isAuthenticated && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setEditingReviewId("");
-                setReviewForm({ rating: 5, comment: "" });
-                setIsReviewModalOpen(true);
-              }}
-            >
-              Write a Review
-            </Button>
-          )}
-        </div>
-
-        {reviewsLoading ? (
-          <div className="py-10 text-center text-sm text-slate-500">
-            Loading reviews...
-          </div>
-        ) : reviewsError ? (
-          <div className="py-10 text-center text-sm text-red-600">
-            {reviewsError}
-          </div>
-        ) : productReviews.length === 0 ? (
-          <div className="border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500">
-            No reviews yet.
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {visibleReviewItems.map((review) => {
-              const isMine = isAuthenticated && review.userId === user?.id;
-              return (
-                <article key={review.id} className="card p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={resolveMediaUrl(review.avatarUrl)}
-                        name={review.author}
-                        size="md"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">
-                          {review.author}
-                        </p>
-                        <p className="text-xs text-slate-400">{review.date}</p>
-                      </div>
-                    </div>
-                    <Rating value={review.rating} showValue={false} />
-                  </div>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    {review.comment}
-                  </p>
-                  {isMine && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingReviewId(review.id);
-                          setReviewForm({
-                            rating: review.rating,
-                            comment: review.comment,
-                          });
-                          setIsReviewModalOpen(true);
-                        }}
-                        className="text-primary-600 hover:text-primary-700 text-xs font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteReview(review.id)}
-                        className="text-xs font-medium text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </article>
-              );
-            })}
-          </div>
+          </div>,
+          document.body,
         )}
-
-        {visibleReviews < productReviews.length && (
-          <div className="mt-5 flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => setVisibleReviews((prev) => prev + 3)}
-            >
-              Show More
-            </Button>
-          </div>
-        )}
-      </section>
-
-      {related.length > 0 && (
-        <section className="mt-14">
-          <SectionHeader title="Related Products" />
-          <ProductGrid products={related} />
-        </section>
-      )}
 
       <Modal
         open={isReviewModalOpen}

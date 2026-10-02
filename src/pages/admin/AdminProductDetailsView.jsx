@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowLeftIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  PencilSquareIcon,
+} from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
 import Rating from "@/components/common/Rating";
@@ -202,6 +206,16 @@ export default function AdminProductDetailsView() {
               size="lg"
             />
           </div>
+          {product.shortDescription?.length > 0 && (
+            <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              {product.shortDescription.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
           <RichTextContent
             value={product.description}
             className="mt-4 text-sm leading-relaxed text-slate-600"

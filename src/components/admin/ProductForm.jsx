@@ -20,8 +20,21 @@ import { api } from "@/services/api";
 import { PRODUCT_STATUS, toProductStatusKey } from "@/constants";
 import { isRichTextEmpty, resolveMediaUrl } from "@/utils";
 
+const MAX_HIGHLIGHTS = 5;
+
+const toHighlightSlots = (points) => {
+  const list = Array.isArray(points)
+    ? points.filter((point) => typeof point === "string")
+    : [];
+  return Array.from(
+    { length: MAX_HIGHLIGHTS },
+    (_, idx) => list[idx] || "",
+  );
+};
+
 const empty = {
   name: "",
+  shortDescription: toHighlightSlots(),
   description: "",
   category: "",
   price: "",
@@ -68,6 +81,7 @@ const normalizeImages = (images) =>
 const fromInitial = (initial) => ({
   ...empty,
   ...initial,
+  shortDescription: toHighlightSlots(initial?.shortDescription),
   description: initial?.description || "",
   baseCurrency: initial?.baseCurrency || "BDT",
   featured: Boolean(initial?.featured),
@@ -114,6 +128,15 @@ export default function ProductForm({
     (description) => setForm((prev) => ({ ...prev, description })),
     [],
   );
+  const setHighlight = (idx) => (e) => {
+    const { value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      shortDescription: prev.shortDescription.map((point, i) =>
+        i === idx ? value : point,
+      ),
+    }));
+  };
 
   const toggleSelection = (key, value) => {
     setForm((prev) => {
@@ -260,6 +283,9 @@ export default function ProductForm({
       name: form.name.trim(),
       sku: form.sku.trim(),
       categoryId: selectedCategory?.id || initial?.categoryId,
+      shortDescription: form.shortDescription
+        .map((point) => point.trim())
+        .filter(Boolean),
       description: isRichTextEmpty(form.description)
         ? initial
           ? ""
@@ -301,6 +327,27 @@ export default function ProductForm({
               onChange={set("name")}
               error={errors.name}
             />
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Highlights
+              </label>
+              <p className="mb-2 text-xs text-slate-500">
+                Up to {MAX_HIGHLIGHTS} short points shown as a bullet list above
+                the description. Leave empty to hide the section.
+              </p>
+              <div className="space-y-2">
+                {form.shortDescription.map((point, idx) => (
+                  <Input
+                    key={idx}
+                    value={point}
+                    onChange={setHighlight(idx)}
+                    maxLength={200}
+                    placeholder={`Highlight ${idx + 1}`}
+                    aria-label={`Highlight ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Description

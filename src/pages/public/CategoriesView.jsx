@@ -29,45 +29,49 @@ export default function CategoriesView() {
   if (error) {
     return (
       <div className="container-app py-8">
-        <ErrorState
-          title="Could not load categories"
-          description={error}
-          onRetry={() => dispatch(fetchCategories())}
-        />
+        <div className="mx-auto w-full max-w-7xl">
+          <ErrorState
+            title="Could not load categories"
+            description={error}
+            onRetry={() => dispatch(fetchCategories())}
+          />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container-app py-8">
-      <Breadcrumb items={[{ label: "Categories" }]} />
-      <div className="mt-6">
-        <h1 className="text-2xl font-bold text-slate-900">Browse Categories</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Explore our full range of product categories.
-        </p>
-      </div>
-
-      {categories.length === 0 ? (
-        <div className="mt-8">
-          <EmptyState
-            title="No categories available"
-            description="Categories will appear here when available."
-          />
+      <div className="mx-auto w-full max-w-7xl">
+        <Breadcrumb items={[{ label: "Categories" }]} />
+        <div className="mt-6">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Browse Categories
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Explore our full range of product categories.
+          </p>
         </div>
-      ) : (
-        <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.map((cat) => (
-            <div key={cat.id} className="space-y-3">
+
+        {categories.length === 0 ? (
+          <div className="mt-8">
+            <EmptyState
+              title="No categories available"
+              description="Categories will appear here when available."
+            />
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {categories.map((cat) => (
               <CategoryCard
+                key={cat.id}
                 category={cat}
                 productCount={cat._count?.products ?? 0}
               />
-              <p className="px-1 text-sm text-slate-500">{cat.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

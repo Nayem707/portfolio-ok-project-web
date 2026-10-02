@@ -7,6 +7,7 @@ export default function PriceDisplay({
   discount = 0,
   size = "md",
   className,
+  amountClassName = "text-slate-900",
   hideDecimals = false,
   baseCurrency = "BDT",
 }) {
@@ -33,7 +34,7 @@ export default function PriceDisplay({
   };
   return (
     <div className={classNames("flex items-baseline gap-1", className)}>
-      <span className={classNames("font-bold text-slate-900", sizes[size])}>
+      <span className={classNames("font-bold", amountClassName, sizes[size])}>
         {displayedFinal}
       </span>
       {hasDiscount && (

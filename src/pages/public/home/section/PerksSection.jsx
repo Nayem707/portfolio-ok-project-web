@@ -4,6 +4,7 @@ import {
   ShieldCheckIcon,
   TruckIcon,
 } from "@heroicons/react/24/outline";
+import { classNames } from "@/utils";
 
 const perks = [
   { icon: TruckIcon, title: "Free Shipping", desc: "On orders over $150" },
@@ -23,7 +24,10 @@ const iconByName = {
   CreditCardIcon,
 };
 
-export default function PerksSection({ perks: incomingPerks = perks }) {
+export default function PerksSection({
+  perks: incomingPerks = perks,
+  className = "border-b border-slate-200",
+}) {
   const resolvedPerks = (incomingPerks || [])
     .filter((item) => item?.active !== false)
     .map((item) => ({
@@ -38,7 +42,7 @@ export default function PerksSection({ perks: incomingPerks = perks }) {
   const finalPerks = resolvedPerks.length > 0 ? resolvedPerks : perks;
 
   return (
-    <section className="bg-primary-600 border-b border-slate-200">
+    <section className={classNames("bg-primary-800", className)}>
       <div className="container-app">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 py-6 lg:grid-cols-4">
           {finalPerks.map(({ icon: Icon, title, desc }) => (
