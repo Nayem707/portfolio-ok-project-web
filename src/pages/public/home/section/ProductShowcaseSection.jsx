@@ -4,7 +4,17 @@ import { ArrowRightIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import ProductGrid from "@/components/product/ProductGrid";
 import { getProductImage } from "@/utils";
 
-function SectionBanner({ title, subtitle, to, image }) {
+export const SECTION_BANNER_ACTION_CLASS =
+  "from-primary-700 to-primary-500 hover:from-primary-800 hover:to-primary-600 shadow-primary-500/30 flex shrink-0 items-center gap-2 rounded-full bg-linear-to-r py-1.5 pr-1.5 pl-4 text-xs font-semibold text-white shadow-md transition sm:text-sm";
+
+export function SectionBanner({
+  title,
+  subtitle,
+  to,
+  image,
+  icon: Icon = ShoppingBagIcon,
+  action,
+}) {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
@@ -18,7 +28,7 @@ function SectionBanner({ title, subtitle, to, image }) {
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <ShoppingBagIcon className="text-primary-600 h-6 w-6" />
+          <Icon className="text-primary-600 h-6 w-6" />
         )}
       </div>
 
@@ -33,11 +43,9 @@ function SectionBanner({ title, subtitle, to, image }) {
         )}
       </div>
 
-      {to && (
-        <Link
-          to={to}
-          className="from-primary-700 to-primary-500 hover:from-primary-800 hover:to-primary-600 shadow-primary-500/30 flex shrink-0 items-center gap-2 rounded-full bg-linear-to-r py-1.5 pr-1.5 pl-4 text-xs font-semibold text-white shadow-md transition sm:text-sm"
-        >
+      {action}
+      {to && !action && (
+        <Link to={to} className={SECTION_BANNER_ACTION_CLASS}>
           View all
           <span className="text-primary-700 flex h-6 w-6 items-center justify-center rounded-full bg-white">
             <ArrowRightIcon className="h-3.5 w-3.5" />

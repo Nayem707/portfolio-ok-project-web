@@ -5,10 +5,12 @@ import {
   HeartIcon,
   ShoppingBagIcon,
   BoltIcon,
+  ChatBubbleLeftRightIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   EyeIcon,
+  PencilSquareIcon,
   PhoneIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -25,7 +27,10 @@ import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import QuantitySelector from "@/components/common/QuantitySelector";
-import SectionHeader from "@/components/common/SectionHeader";
+import {
+  SECTION_BANNER_ACTION_CLASS,
+  SectionBanner,
+} from "@/pages/public/home/section/ProductShowcaseSection";
 import ProductGrid from "@/components/product/ProductGrid";
 import ErrorState from "@/components/common/ErrorState";
 import Skeleton from "@/components/common/Skeleton";
@@ -50,6 +55,7 @@ import { addToCart, getMissingVariantLabels } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import {
   classNames,
+  getProductImage,
   isRichTextEmpty,
   range,
   resolveMediaUrl,
@@ -939,25 +945,29 @@ export default function ProductDetailsView() {
 
         {/* Related products */}
         <section className="mt-12">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <SectionHeader
-              title="Customer Reviews"
-              subtitle={`Real feedback for ${product.name}`}
-            />
-            {isAuthenticated && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEditingReviewId("");
-                  setReviewForm({ rating: 5, comment: "" });
-                  setIsReviewModalOpen(true);
-                }}
-              >
-                Write a Review
-              </Button>
-            )}
-          </div>
+          <SectionBanner
+            title="Customer Reviews"
+            subtitle={`Real feedback for ${product.name}`}
+            icon={ChatBubbleLeftRightIcon}
+            action={
+              isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingReviewId("");
+                    setReviewForm({ rating: 5, comment: "" });
+                    setIsReviewModalOpen(true);
+                  }}
+                  className={SECTION_BANNER_ACTION_CLASS}
+                >
+                  Write a Review
+                  <span className="text-primary-700 flex h-6 w-6 items-center justify-center rounded-full bg-white">
+                    <PencilSquareIcon className="h-3.5 w-3.5" />
+                  </span>
+                </button>
+              )
+            }
+          />
 
           {reviewsLoading ? (
             <div className="py-10 text-center text-sm text-slate-500">
@@ -1043,7 +1053,13 @@ export default function ProductDetailsView() {
 
         {related.length > 0 && (
           <section className="mt-14">
-            <SectionHeader title="Related Products" />
+            <SectionBanner
+              key={getProductImage(related[0])}
+              title="Related Products"
+              subtitle={`More from ${product.categoryTitle || product.category}`}
+              image={getProductImage(related[0])}
+              to={`/products?category=${encodeURIComponent(product.categorySlug || product.categoryId)}`}
+            />
             <ProductGrid products={related} />
           </section>
         )}
