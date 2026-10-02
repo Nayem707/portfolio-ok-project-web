@@ -14,6 +14,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Modal from "@/components/common/Modal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import NoticeMarquee from "@/components/navigation/NoticeMarquee";
 import { resolveMediaUrl } from "@/utils";
 import { api } from "@/services/api";
 import {
@@ -35,6 +36,7 @@ const ACCEPTED_IMAGE_TYPES = [
 const MAX_IMAGE_SIZE_MB = 5;
 
 const sectionOrder = [
+  "marquee",
   "hero",
   "perks",
   "category",
@@ -45,7 +47,23 @@ const sectionOrder = [
   "firstVisitPopup",
 ];
 
+const activeMarqueeMessages = (section) =>
+  (section.messages || []).filter(
+    (message) => message.active !== false && message.text?.trim(),
+  );
+
+const MARQUEE_SPEED_OPTIONS = [
+  { value: "slow", label: "Slow" },
+  { value: "normal", label: "Normal" },
+  { value: "fast", label: "Fast" },
+];
+
 const sectionMeta = {
+  marquee: {
+    label: "Top Notice Marquee",
+    summary: (section) =>
+      `${activeMarqueeMessages(section).length} active messages`,
+  },
   hero: {
     label: "Hero Section",
     summary: (section) => `${section.slides?.length ?? 0} slides`,
@@ -230,9 +248,23 @@ export default function HomePageManagementView() {
       toast.error("Please wait for the image upload to finish");
       return;
     }
+    let data = draft;
+    if (editorKey === "marquee") {
+      data = {
+        ...draft,
+        badgeText: draft.badgeText?.trim() || "",
+        messages: (draft.messages || [])
+          .map((message) => ({ ...message, text: message.text?.trim() || "" }))
+          .filter((message) => message.text),
+      };
+      if (data.active !== false && !activeMarqueeMessages(data).length) {
+        toast.error("Add at least one active message or turn the marquee off");
+        return;
+      }
+    }
     try {
       await dispatch(
-        saveHomePageSection({ sectionKey: editorKey, data: draft }),
+        saveHomePageSection({ sectionKey: editorKey, data }),
       ).unwrap();
       toast.success(`${sectionMeta[editorKey]?.label ?? "Section"} saved`);
       setEditorKey(null);
@@ -280,6 +312,155 @@ export default function HomePageManagementView() {
 
   const renderSectionEditor = () => {
     if (!editorKey || !draft) return null;
+
+    if (editorKey === "marquee") {
+      const messages = draft.messages || [];
+      const updateMessage = (index, patch) => {
+        const nextMessages = [...messages];
+        nextMessages[index] = { ...nextMessages[index], ...patch };
+        updateDraft({ ...draft, messages: nextMessages });
+      };
+      const previewMessages = activeMarqueeMessages(draft);
+
+      return (
+        <div className="space-y-4">
+          <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <span>Marquee active</span>
+            <input
+              type="checkbox"
+              checked={draft.active ?? true}
+              onChange={(e) =>
+                updateDraft({ ...draft, active: e.target.checked })
+              }
+              className="h-4 w-4"
+            />
+          </label>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input
+              label="Badge text"
+              value={draft.badgeText || ""}
+              onChange={(e) =>
+                updateDraft({ ...draft, badgeText: e.target.value })
+              }
+              placeholder="e.g. জরুরি নোটিশ"
+              maxLength={40}
+            />
+            <div>
+              <label
+                htmlFor="marquee-speed"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Scroll speed
+              </label>
+              <select
+                id="marquee-speed"
+                value={draft.speed || "normal"}
+                onChange={(e) =>
+                  updateDraft({ ...draft, speed: e.target.value })
+                }
+                className="input-base"
+              >
+                {MARQUEE_SPEED_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900">Messages</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={PlusIcon}
+              onClick={() =>
+                updateDraft({
+                  ...draft,
+                  messages: [
+                    ...messages,
+                    { id: makeId(), text: "", active: true },
+                  ],
+                })
+              }
+            >
+              Add message
+            </Button>
+          </div>
+
+          {messages.length === 0 && (
+            <p className="rounded-xl border border-dashed border-slate-300 px-3 py-4 text-center text-sm text-slate-500">
+              No messages yet. Add one to show the marquee.
+            </p>
+          )}
+
+          {messages.map((message, index) => (
+            <div
+              key={message.id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+            >
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-slate-700">
+                  Message {index + 1}
+                </span>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={message.active ?? true}
+                      onChange={(e) =>
+                        updateMessage(index, { active: e.target.checked })
+                      }
+                    />
+                    Active
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateDraft({
+                        ...draft,
+                        messages: messages.filter((_, i) => i !== index),
+                      })
+                    }
+                    className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                    aria-label="Remove message"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <Input
+                value={message.text || ""}
+                onChange={(e) => updateMessage(index, { text: e.target.value })}
+                placeholder="Write the notice text"
+                maxLength={300}
+                aria-label={`Message ${index + 1}`}
+              />
+            </div>
+          ))}
+
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-slate-700">Preview</p>
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              {draft.active !== false && previewMessages.length ? (
+                <NoticeMarquee
+                  badgeText={draft.badgeText?.trim()}
+                  messages={previewMessages}
+                  speed={draft.speed}
+                />
+              ) : (
+                <p className="px-3 py-2.5 text-sm text-slate-400">
+                  The marquee is hidden on the storefront.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     if (editorKey === "hero") {
       return (
@@ -672,9 +853,7 @@ export default function HomePageManagementView() {
                     disabled={isUploadingMedia && uploadingPromoSide !== key}
                     onClick={() => openPromoUpload(key)}
                   >
-                    {uploadingPromoSide === key
-                      ? "Uploading…"
-                      : "Upload image"}
+                    {uploadingPromoSide === key ? "Uploading…" : "Upload image"}
                   </Button>
                   {draft[key]?.image ? (
                     <Button
@@ -803,6 +982,11 @@ export default function HomePageManagementView() {
             </div>
 
             <div className="mt-4 flex-1 space-y-2 text-sm text-slate-600">
+              {section.key === "marquee" && (
+                <p className="truncate">
+                  {activeMarqueeMessages(section)[0]?.text || "No messages"}
+                </p>
+              )}
               {section.key === "hero" && (
                 <p>
                   {section.slides?.filter((slide) => slide.active).length ?? 0}{" "}

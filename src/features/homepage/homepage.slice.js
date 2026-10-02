@@ -83,7 +83,27 @@ const defaultFirstVisitPopup = {
   alt: "Welcome promotion",
 };
 
+export const MARQUEE_SPEEDS = { slow: 30, normal: 50, fast: 80 };
+
+const defaultMarquee = {
+  badgeText: "জরুরি নোটিশ",
+  speed: "normal",
+  messages: [
+    {
+      id: 1,
+      text: "আমাদের শপে স্বাগতম! সারা দেশে ক্যাশ অন ডেলিভারি ও দ্রুততম সময়ে হোম ডেলিভারি সুবিধা।",
+      active: true,
+    },
+  ],
+};
+
 export const defaultSections = () => ({
+  marquee: {
+    key: "marquee",
+    label: "Top Notice Marquee",
+    active: true,
+    ...defaultMarquee,
+  },
   hero: {
     key: "hero",
     label: "Hero Section",

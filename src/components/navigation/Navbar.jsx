@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -15,10 +15,9 @@ import {
   TruckIcon,
   HomeIcon,
   BuildingStorefrontIcon,
-  MegaphoneIcon,
-  GiftIcon,
 } from "@heroicons/react/24/outline";
 import Logo from "@/components/navigation/Logo";
+import NoticeMarquee from "@/components/navigation/NoticeMarquee";
 import SearchBar from "@/components/common/SearchBar";
 import Dropdown, { DropdownItem } from "@/components/common/Dropdown";
 import Avatar from "@/components/common/Avatar";
@@ -31,6 +30,8 @@ import { resetCartState } from "@/features/cart";
 import { resetWishlistState } from "@/features/wishlist";
 import { clearMyOrderState } from "@/features/orders";
 import { fetchCategories, selectCategories } from "@/features/categories";
+import { defaultSections, mapHomepageSectionData } from "@/features/homepage";
+import { api } from "@/services/api";
 import { classNames } from "@/utils";
 import toast from "react-hot-toast";
 
@@ -47,46 +48,41 @@ const MAIN_LINKS = [
   { label: "Track Order", to: "/track-order", icon: TruckIcon },
 ];
 
-const NOTICE_LABEL = "জরুরি নোটিশ";
-const NOTICE_TEXT =
-  "আমাদের শপে স্বাগতম! সারা দেশে ক্যাশ অন ডেলিভারি ও দ্রুততম সময়ে হোম ডেলিভারি সুবিধা।";
-const NOTICE_REPEAT = 3;
+function TopNotice() {
+  const [marquee, setMarquee] = useState(null);
 
-function NoticeGroup({ hidden = false }) {
-  return (
-    <div
-      className="flex shrink-0 items-center"
-      aria-hidden={hidden || undefined}
-    >
-      {Array.from({ length: NOTICE_REPEAT }, (_, i) => (
-        <span
-          key={i}
-          className="flex items-center gap-2 pr-10 text-sm font-medium whitespace-nowrap text-slate-700"
-        >
-          <GiftIcon className="text-accent-500 h-4 w-4 shrink-0" />
-          {NOTICE_TEXT}
-        </span>
-      ))}
-    </div>
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getHomepageSections()
+      .then((sections) => {
+        if (!cancelled)
+          setMarquee(
+            mapHomepageSectionData(defaultSections(), sections).marquee,
+          );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const messages = useMemo(
+    () =>
+      (marquee?.messages || []).filter(
+        (message) => message.active !== false && message.text?.trim(),
+      ),
+    [marquee],
   );
-}
 
-function NoticeMarquee() {
+  if (!marquee || marquee.active === false || !messages.length) return null;
+
   return (
-    <div className="border-primary-100 bg-primary-50/60 border-b">
-      <div className="container-app flex h-9 items-center gap-3">
-        <span className="bg-primary-600 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm">
-          <MegaphoneIcon className="h-3.5 w-3.5" />
-          {NOTICE_LABEL}
-        </span>
-        <div className="relative min-w-0 flex-1 overflow-hidden mask-[linear-gradient(to_right,transparent,black_24px,black_calc(100%-24px),transparent)]">
-          <div className="animate-marquee flex w-max hover:[animation-play-state:paused] motion-reduce:animate-none">
-            <NoticeGroup />
-            <NoticeGroup hidden />
-          </div>
-        </div>
-      </div>
-    </div>
+    <NoticeMarquee
+      badgeText={marquee.badgeText}
+      messages={messages}
+      speed={marquee.speed}
+    />
   );
 }
 
@@ -134,7 +130,7 @@ export default function Navbar() {
 
   return (
     <>
-      <NoticeMarquee />
+      <TopNotice />
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="container-app">
           {/* Top row */}
