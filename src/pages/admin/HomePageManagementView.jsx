@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   ArrowUpTrayIcon,
+  Bars3Icon,
+  HomeIcon,
   PencilSquareIcon,
   PhotoIcon,
   PlusIcon,
+  RectangleGroupIcon,
+  Square2StackIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -25,6 +29,8 @@ import {
   selectHomePageSaving,
   selectHomePageSections,
 } from "@/features/homepage";
+import { selectSettings } from "@/features/settings";
+import FooterSettingsModal from "@/components/admin/FooterSettingsModal";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -35,16 +41,36 @@ const ACCEPTED_IMAGE_TYPES = [
 ];
 const MAX_IMAGE_SIZE_MB = 5;
 
-const sectionOrder = [
-  "marquee",
-  "hero",
-  "perks",
-  "category",
-  "featured",
-  "popular",
-  "newArrival",
-  "promo",
-  "firstVisitPopup",
+const sectionGroups = [
+  {
+    key: "navigation",
+    title: "Navigation & Header",
+    description: "Shown above the main menu on every page.",
+    icon: Bars3Icon,
+    sections: ["marquee"],
+  },
+  {
+    key: "home",
+    title: "Home Page Sections",
+    description: "Content blocks on the home page, in display order.",
+    icon: HomeIcon,
+    sections: [
+      "hero",
+      "perks",
+      "category",
+      "featured",
+      "popular",
+      "newArrival",
+      "promo",
+    ],
+  },
+  {
+    key: "popups",
+    title: "Popups",
+    description: "Overlays shown to visitors.",
+    icon: Square2StackIcon,
+    sections: ["firstVisitPopup"],
+  },
 ];
 
 const activeMarqueeMessages = (section) =>
@@ -92,12 +118,40 @@ const sectionMeta = {
 
 const makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+function ManagementGroup({ title, description, icon: Icon, count, children }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-3">
+        <span className="bg-primary-50 text-primary-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            {title}
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              {count}
+            </span>
+          </h2>
+          <p className="text-xs text-slate-500">{description}</p>
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>
+    </section>
+  );
+}
+
 export default function HomePageManagementView() {
   const dispatch = useDispatch();
   const sections = useSelector(selectHomePageSections);
   const loading = useSelector(selectHomePageLoading);
   const saving = useSelector(selectHomePageSaving);
   const hydrated = useSelector(selectHomePageHydrated);
+  const settings = useSelector(selectSettings);
+  const footerSocialCount = Object.values(settings?.socialLinks || {}).filter(
+    (link) => typeof link === "string" && link.trim(),
+  ).length;
+  const [footerEditorOpen, setFooterEditorOpen] = useState(false);
+  const closeFooterEditor = useCallback(() => setFooterEditorOpen(false), []);
   const [editorKey, setEditorKey] = useState(null);
   const [draft, setDraft] = useState(null);
   const [uploadingSlideIndex, setUploadingSlideIndex] = useState(null);
@@ -114,8 +168,12 @@ export default function HomePageManagementView() {
     dispatch(fetchHomepageSections());
   }, [dispatch]);
 
-  const sectionItems = useMemo(
-    () => sectionOrder.map((key) => ({ key, ...sections[key] })),
+  const groupedSections = useMemo(
+    () =>
+      sectionGroups.map((group) => ({
+        ...group,
+        items: group.sections.map((key) => ({ key, ...sections[key] })),
+      })),
     [sections],
   );
 
@@ -957,71 +1015,123 @@ export default function HomePageManagementView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <AdminPageHeader
         title="Home Page Management"
         subtitle="Manage and update the public storefront sections from one place."
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {sectionItems.map((section) => (
-          <div key={section.key} className="card flex h-full flex-col p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {sectionMeta[section.key]?.label ?? section.label}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {sectionMeta[section.key]?.summary?.(section) ??
-                    "Section overview"}
-                </p>
+      {groupedSections.map((group) => (
+        <ManagementGroup
+          key={group.key}
+          title={group.title}
+          description={group.description}
+          icon={group.icon}
+          count={group.items.length}
+        >
+          {group.items.map((section) => (
+            <div key={section.key} className="card flex h-full flex-col p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {sectionMeta[section.key]?.label ?? section.label}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {sectionMeta[section.key]?.summary?.(section) ??
+                      "Section overview"}
+                  </p>
+                </div>
+                <Badge color={section.active === false ? "gray" : "green"}>
+                  {section.active === false ? "Inactive" : "Active"}
+                </Badge>
               </div>
-              <Badge color={section.active === false ? "gray" : "green"}>
-                {section.active === false ? "Inactive" : "Active"}
-              </Badge>
-            </div>
 
-            <div className="mt-4 flex-1 space-y-2 text-sm text-slate-600">
-              {section.key === "marquee" && (
-                <p className="truncate">
-                  {activeMarqueeMessages(section)[0]?.text || "No messages"}
-                </p>
-              )}
-              {section.key === "hero" && (
-                <p>
-                  {section.slides?.filter((slide) => slide.active).length ?? 0}{" "}
-                  active slides
-                </p>
-              )}
-              {section.key === "perks" && (
-                <p>
-                  {section.items?.filter((item) => item.active !== false)
-                    .length ?? 0}{" "}
-                  active perks
-                </p>
-              )}
-              {section.key === "category" && <p>{section.title}</p>}
-              {section.key === "promo" && (
-                <p>
-                  {section.left?.title} · {section.right?.title}
-                </p>
-              )}
-              {section.key === "firstVisitPopup" && (
-                <p className="truncate">{section.image || "No image set"}</p>
-              )}
-            </div>
+              <div className="mt-4 flex-1 space-y-2 text-sm text-slate-600">
+                {section.key === "marquee" && (
+                  <p className="truncate">
+                    {activeMarqueeMessages(section)[0]?.text || "No messages"}
+                  </p>
+                )}
+                {section.key === "hero" && (
+                  <p>
+                    {section.slides?.filter((slide) => slide.active).length ??
+                      0}{" "}
+                    active slides
+                  </p>
+                )}
+                {section.key === "perks" && (
+                  <p>
+                    {section.items?.filter((item) => item.active !== false)
+                      .length ?? 0}{" "}
+                    active perks
+                  </p>
+                )}
+                {section.key === "category" && <p>{section.title}</p>}
+                {section.key === "promo" && (
+                  <p>
+                    {section.left?.title} · {section.right?.title}
+                  </p>
+                )}
+                {section.key === "firstVisitPopup" && (
+                  <p className="truncate">{section.image || "No image set"}</p>
+                )}
+              </div>
 
-            <button
-              type="button"
-              onClick={() => openEditor(section.key)}
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-            >
-              <PencilSquareIcon className="h-4 w-4" />
-              Edit / Update
-            </button>
+              <button
+                type="button"
+                onClick={() => openEditor(section.key)}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <PencilSquareIcon className="h-4 w-4" />
+                Edit / Update
+              </button>
+            </div>
+          ))}
+        </ManagementGroup>
+      ))}
+
+      <ManagementGroup
+        title="Footer"
+        description="Logo, description, contact details and social links shown on every page."
+        icon={RectangleGroupIcon}
+        count={1}
+      >
+        <div className="card flex h-full flex-col p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Footer Content
+              </h3>
+              <p className="mt-1 truncate text-sm text-slate-500">
+                {[settings?.phone, settings?.supportEmail]
+                  .filter(Boolean)
+                  .join(" · ") || "No contact details set"}
+              </p>
+            </div>
+            <Badge color="green">Active</Badge>
           </div>
-        ))}
-      </div>
+          <div className="mt-4 flex-1 space-y-2 text-sm text-slate-600">
+            <p className="truncate">{settings?.address || "No address set"}</p>
+            <p>
+              {footerSocialCount} social link
+              {footerSocialCount === 1 ? "" : "s"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFooterEditorOpen(true)}
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <PencilSquareIcon className="h-4 w-4" />
+            Edit / Update
+          </button>
+        </div>
+      </ManagementGroup>
+
+      <FooterSettingsModal
+        open={footerEditorOpen}
+        onClose={closeFooterEditor}
+      />
 
       <Modal
         open={!!editorKey}
