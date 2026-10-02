@@ -75,25 +75,25 @@ function FooterHeading({ children }) {
   return (
     <div className="mb-5">
       <h4 className="text-[15px] font-bold text-white">{children}</h4>
-      <span className="mt-2 block h-0.5 w-9 rounded-full bg-red-500" />
+      <span className="bg-primary-400 mt-2 block h-0.5 w-9 rounded-full" />
     </div>
   );
 }
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-red-500/20 bg-[#0b0e17] text-slate-300">
+    <footer className="border-primary-800 bg-primary-950 text-primary-100 mt-16 border-t">
       <div className="container-app py-12">
         <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           <div>
             <Link
               to="/"
-              className="inline-flex items-center rounded-lg border-2 border-orange-300 bg-white px-4 py-2 text-xl font-extrabold tracking-tight"
+              className="border-primary-300 inline-flex items-center rounded-lg border-2 bg-white px-4 py-2 text-xl font-extrabold tracking-tight"
             >
-              <span className="text-[#1f2b6c]">Shoply</span>
-              <span className="text-accent-500">.com</span>
+              <span className="text-primary-950">Shoply</span>
+              <span className="text-primary-600">.com</span>
             </Link>
-            <p className="mt-4 text-[13px] leading-relaxed text-slate-400">
+            <p className="text-primary-200/80 mt-4 text-[13px] leading-relaxed">
               Ubay.shop — your trusted online shopping destination. With trendy
               and attractive lifestyle products, we are always ready to serve
               you.
@@ -128,9 +128,9 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     to={link.to}
-                    className="group flex items-center gap-2 text-[13px] text-slate-300 transition hover:text-white"
+                    className="group text-primary-100 flex items-center gap-2 text-[13px] transition hover:text-white"
                   >
-                    <ChevronRightIcon className="h-3 w-3 text-red-500 transition group-hover:translate-x-0.5" />
+                    <ChevronRightIcon className="text-primary-400 h-3 w-3 transition group-hover:translate-x-0.5" />
                     {link.label}
                   </Link>
                 </li>
@@ -144,12 +144,12 @@ export default function Footer() {
               {supportLinks.map(({ label, to, href, icon: Icon }) => {
                 const content = (
                   <>
-                    <Icon className="h-4 w-4 text-red-500" />
+                    <Icon className="text-primary-400 h-4 w-4" />
                     {label}
                   </>
                 );
                 const className =
-                  "flex items-center gap-2 text-[13px] text-slate-300 transition hover:text-white";
+                  "flex items-center gap-2 text-[13px] text-primary-100 transition hover:text-white";
                 return (
                   <li key={label}>
                     {to ? (
@@ -164,8 +164,8 @@ export default function Footer() {
                   </li>
                 );
               })}
-              <li className="flex items-center gap-2 text-[13px] text-slate-400">
-                <ClockIcon className="h-4 w-4 text-red-500" />
+              <li className="text-primary-200/80 flex items-center gap-2 text-[13px]">
+                <ClockIcon className="text-primary-400 h-4 w-4" />
                 Every day, 10 AM — 10 PM
               </li>
             </ul>
@@ -175,15 +175,15 @@ export default function Footer() {
             <FooterHeading>Showroom & Office</FooterHeading>
             <div className="rounded-xl border border-white/10 bg-white/3 p-4">
               <p className="flex items-center gap-1.5 text-[13px] font-bold text-white">
-                <MapPinIcon className="h-4 w-4 text-red-500" />
+                <MapPinIcon className="text-primary-400 h-4 w-4" />
                 Head Office:
               </p>
-              <p className="mt-2 text-[13px] leading-relaxed text-slate-400">
+              <p className="text-primary-200/80 mt-2 text-[13px] leading-relaxed">
                 Shop No: 37, 3rd Floor, Mukta Tower, Uttara, Dhaka-1230
               </p>
               <a
                 href={`tel:${HELPLINE}`}
-                className="border-accent-500/50 bg-accent-500/10 text-accent-300 hover:bg-accent-500/20 mt-4 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold transition"
+                className="border-primary-400/50 bg-primary-500/15 text-primary-200 hover:bg-primary-500/25 mt-4 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold transition hover:text-white"
               >
                 <PhoneIcon className="h-4 w-4" />
                 Helpline: {HELPLINE}
@@ -193,8 +193,8 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <p className="container-app py-5 text-center text-[13px] text-slate-400">
+      <div className="border-t border-white/10 bg-black/20">
+        <p className="container-app text-primary-200/80 py-5 text-center text-[13px]">
           Copyright © {new Date().getFullYear()}{" "}
           <span className="font-bold text-white">Ubay.Shop</span>. All rights
           reserved.
