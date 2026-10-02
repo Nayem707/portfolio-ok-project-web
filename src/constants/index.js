@@ -68,7 +68,9 @@ export const PRODUCT_STATUS = {
 };
 
 export const toProductStatusKey = (value) =>
-  String(value || "").trim().toUpperCase();
+  String(value || "")
+    .trim()
+    .toUpperCase();
 
 export const toProductStatusLabel = (value) =>
   PRODUCT_STATUS[toProductStatusKey(value)] || value || "";
@@ -104,3 +106,10 @@ export const PAGE_SIZE = 20;
 
 export const SHIPPING_FLAT_RATE = 12;
 export const FREE_SHIPPING_THRESHOLD = 150;
+
+export const DELIVERY_AREAS = {
+  INSIDE_DHAKA: "INSIDE_DHAKA",
+  OUTSIDE_DHAKA: "OUTSIDE_DHAKA",
+};
+export const DELIVERY_INSIDE_DHAKA_RATE = 70;
+export const DELIVERY_OUTSIDE_DHAKA_RATE = 150;

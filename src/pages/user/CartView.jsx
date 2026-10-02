@@ -15,7 +15,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import {
   selectCartItems,
   selectCartTotals,
-  selectFreeShippingMin,
+  selectDeliveryRates,
   removeFromCart,
   setQuantity,
 } from "@/features/cart";
@@ -48,16 +48,14 @@ export default function CartView() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
   const wishlist = useSelector(selectWishlistItems);
-  const { subtotal, shipping, total } = useSelector(selectCartTotals);
-  const freeShippingMin = useSelector(selectFreeShippingMin);
+  const { subtotal } = useSelector(selectCartTotals);
+  const deliveryRates = useSelector(selectDeliveryRates);
 
   const savings = items.reduce(
     (sum, i) =>
       sum + (i.price - getDiscountedPrice(i.price, i.discount)) * i.quantity,
     0,
   );
-  const remaining = Math.max(0, freeShippingMin - subtotal);
-
   if (items.length === 0) {
     return (
       <div className="container-app py-8">
@@ -88,13 +86,13 @@ export default function CartView() {
           Shopping Cart <span className="text-slate-400">({items.length})</span>
         </h1>
 
-        {remaining > 0 && (
-          <div className="border-primary-100 bg-primary-50 text-primary-700 mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
-            <TruckIcon className="h-5 w-5" />
-            Add <strong>{formatCurrency(remaining)}</strong> more to qualify for
-            free shipping!
-          </div>
-        )}
+        <div className="border-primary-100 bg-primary-50 text-primary-700 mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border px-4 py-3 text-sm">
+          <TruckIcon className="h-5 w-5" />
+          Delivery charge: Inside Dhaka{" "}
+          <strong>{formatCurrency(deliveryRates.INSIDE_DHAKA)}</strong> ·
+          Outside Dhaka{" "}
+          <strong>{formatCurrency(deliveryRates.OUTSIDE_DHAKA)}</strong>
+        </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
           {/* Items */}
@@ -249,9 +247,9 @@ export default function CartView() {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Shipping</dt>
+                  <dt className="text-slate-500">Delivery charge</dt>
                   <dd className="font-medium text-slate-800">
-                    {shipping === 0 ? "Free" : formatCurrency(shipping)}
+                    Added at checkout
                   </dd>
                 </div>
                 <div className="border-t border-slate-100 pt-3">
@@ -260,9 +258,12 @@ export default function CartView() {
                       Total
                     </dt>
                     <dd className="text-xl font-bold text-slate-900">
-                      {formatCurrency(total)}
+                      {formatCurrency(subtotal)}
                     </dd>
                   </div>
+                  <p className="mt-1 text-right text-xs text-slate-400">
+                    Excluding delivery charge
+                  </p>
                 </div>
               </dl>
               <Button

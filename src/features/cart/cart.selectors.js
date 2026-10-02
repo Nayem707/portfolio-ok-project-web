@@ -1,6 +1,12 @@
 import { createSelector } from "@reduxjs/toolkit";
 import { calcCartTotals } from "./cart.utils";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE } from "@/constants";
+import {
+  DELIVERY_AREAS,
+  DELIVERY_INSIDE_DHAKA_RATE,
+  DELIVERY_OUTSIDE_DHAKA_RATE,
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FLAT_RATE,
+} from "@/constants";
 
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartPendingProductIds = (state) =>
@@ -22,6 +28,17 @@ export const selectCartTotals = createSelector(
   selectFreeShippingMin,
   (items, shippingFlatRate, freeShippingMin) =>
     calcCartTotals(items, { shippingFlatRate, freeShippingMin }),
+);
+
+export const selectDeliveryRates = createSelector(
+  (state) =>
+    state.settings?.data?.deliveryInsideDhaka ?? DELIVERY_INSIDE_DHAKA_RATE,
+  (state) =>
+    state.settings?.data?.deliveryOutsideDhaka ?? DELIVERY_OUTSIDE_DHAKA_RATE,
+  (inside, outside) => ({
+    [DELIVERY_AREAS.INSIDE_DHAKA]: Number(inside),
+    [DELIVERY_AREAS.OUTSIDE_DHAKA]: Number(outside),
+  }),
 );
 
 export const selectIsProductInCart = (productId) => (state) =>

@@ -31,8 +31,8 @@ export default function AdminSettingsView() {
     address: "123 Market St, San Francisco, CA",
   });
   const [shipping, setShipping] = useState({
-    shippingFlatRate: 12,
-    freeShippingMin: 150,
+    deliveryInsideDhaka: 70,
+    deliveryOutsideDhaka: 150,
   });
 
   useEffect(() => {
@@ -50,8 +50,8 @@ export default function AdminSettingsView() {
       address: settings.address || "",
     });
     setShipping({
-      shippingFlatRate: settings.shippingFlatRate ?? 12,
-      freeShippingMin: settings.freeShippingMin ?? 150,
+      deliveryInsideDhaka: settings.deliveryInsideDhaka ?? 70,
+      deliveryOutsideDhaka: settings.deliveryOutsideDhaka ?? 150,
     });
   }, [settings]);
 
@@ -79,7 +79,9 @@ export default function AdminSettingsView() {
       ).unwrap();
       toast.success("Store details saved");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to save store details");
+      toast.error(
+        typeof err === "string" ? err : "Failed to save store details",
+      );
     }
   };
 
@@ -88,8 +90,8 @@ export default function AdminSettingsView() {
     try {
       await dispatch(
         saveShippingSettings({
-          shippingFlatRate: Number(shipping.shippingFlatRate),
-          freeShippingMin: Number(shipping.freeShippingMin),
+          deliveryInsideDhaka: Number(shipping.deliveryInsideDhaka),
+          deliveryOutsideDhaka: Number(shipping.deliveryOutsideDhaka),
         }),
       ).unwrap();
       toast.success("Shipping settings saved");
@@ -186,24 +188,30 @@ export default function AdminSettingsView() {
         <h2 className="font-semibold text-slate-900">Shipping (BDT)</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Input
-            label="Flat shipping rate (BDT)"
+            label="Inside Dhaka delivery charge (BDT)"
             type="number"
             min="0"
             step="0.01"
-            value={shipping.shippingFlatRate}
-            onChange={setShippingField("shippingFlatRate")}
+            value={shipping.deliveryInsideDhaka}
+            onChange={setShippingField("deliveryInsideDhaka")}
             disabled={loading || saving}
+            required
           />
           <Input
-            label="Free shipping threshold (BDT)"
+            label="Outside Dhaka delivery charge (BDT)"
             type="number"
             min="0"
             step="0.01"
-            value={shipping.freeShippingMin}
-            onChange={setShippingField("freeShippingMin")}
+            value={shipping.deliveryOutsideDhaka}
+            onChange={setShippingField("deliveryOutsideDhaka")}
             disabled={loading || saving}
+            required
           />
         </div>
+        <p className="mt-3 text-xs text-slate-500">
+          Customers choose their delivery area at checkout; the matching charge
+          is added to the order total.
+        </p>
         <div className="mt-5">
           <Button type="submit" disabled={loading || saving}>
             {saving ? "Saving…" : "Save shipping settings"}

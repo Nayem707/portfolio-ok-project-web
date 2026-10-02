@@ -18,6 +18,8 @@ const defaultSettings = {
   address: "123 Market St, San Francisco, CA",
   shippingFlatRate: 12,
   freeShippingMin: 150,
+  deliveryInsideDhaka: 70,
+  deliveryOutsideDhaka: 150,
 };
 
 const cachedCurrency =
@@ -54,7 +56,8 @@ export const saveStoreSettings = createAsyncThunk(
       return await api.updateStoreSettings(payload);
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.error?.message || "Failed to save store settings",
+        error?.response?.data?.error?.message ||
+          "Failed to save store settings",
       );
     }
   },
