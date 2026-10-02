@@ -1017,7 +1017,7 @@ export default function HomePageManagementView() {
   return (
     <div className="space-y-8">
       <AdminPageHeader
-        title="Home Page Management"
+        title="Page Management"
         subtitle="Manage and update the public storefront sections from one place."
       />
 
