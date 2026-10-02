@@ -2,14 +2,21 @@ import { Link } from "react-router-dom";
 import {
   ChevronRightIcon,
   ClockIcon,
+  EnvelopeIcon,
   MapPinIcon,
   PhoneIcon,
   ShoppingCartIcon,
   TruckIcon,
 } from "@heroicons/react/24/solid";
 import { LifebuoyIcon } from "@heroicons/react/24/outline";
-
-const HELPLINE = "+8801748148175";
+import WhatsAppIcon, {
+  WHATSAPP_ICON_PATH,
+} from "@/components/common/WhatsAppIcon";
+import {
+  SHOP_CONTACT as CONTACT,
+  SHOP_PHONE_HREF,
+  SHOP_WHATSAPP_URL as WHATSAPP_URL,
+} from "@/constants";
 
 const importantLinks = [
   { label: "About Us", to: "/" },
@@ -22,7 +29,7 @@ const importantLinks = [
 const supportLinks = [
   { label: "Order Tracking", to: "/track-order", icon: TruckIcon },
   { label: "Shopping Cart", to: "/cart", icon: ShoppingCartIcon },
-  { label: "Customer Helpline", href: `tel:${HELPLINE}`, icon: LifebuoyIcon },
+  { label: "Customer Helpline", href: SHOP_PHONE_HREF, icon: LifebuoyIcon },
 ];
 
 const socialLinks = [
@@ -53,9 +60,9 @@ const socialLinks = [
   },
   {
     label: "WhatsApp",
-    href: `https://wa.me/${HELPLINE.replace("+", "")}`,
+    href: WHATSAPP_URL,
     className: "bg-[#25D366]",
-    path: "M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.2-.1-1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.2-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z",
+    path: WHATSAPP_ICON_PATH,
   },
   {
     label: "Messenger",
@@ -65,7 +72,7 @@ const socialLinks = [
   },
   {
     label: "Call",
-    href: `tel:${HELPLINE}`,
+    href: SHOP_PHONE_HREF,
     className: "bg-[#F0532D]",
     path: "M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z",
   },
@@ -172,23 +179,42 @@ export default function Footer() {
           </div>
 
           <div>
-            <FooterHeading>Showroom & Office</FooterHeading>
-            <div className="rounded-xl border border-white/10 bg-white/3 p-4">
-              <p className="flex items-center gap-1.5 text-[13px] font-bold text-white">
-                <MapPinIcon className="text-primary-400 h-4 w-4" />
-                Head Office:
-              </p>
-              <p className="text-primary-200/80 mt-2 text-[13px] leading-relaxed">
-                Shop No: 37, 3rd Floor, Mukta Tower, Uttara, Dhaka-1230
-              </p>
-              <a
-                href={`tel:${HELPLINE}`}
-                className="border-primary-400/50 bg-primary-500/15 text-primary-200 hover:bg-primary-500/25 mt-4 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold transition hover:text-white"
-              >
-                <PhoneIcon className="h-4 w-4" />
-                Helpline: {HELPLINE}
-              </a>
-            </div>
+            <FooterHeading>Contact Us</FooterHeading>
+            <ul className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-4 text-[13px]">
+              <li className="text-primary-200/80 flex items-start gap-2 leading-relaxed">
+                <MapPinIcon className="text-primary-400 mt-0.5 h-4 w-4 shrink-0" />
+                {CONTACT.address}
+              </li>
+              <li>
+                <a
+                  href={SHOP_PHONE_HREF}
+                  className="text-primary-100 flex items-center gap-2 transition hover:text-white"
+                >
+                  <PhoneIcon className="text-primary-400 h-4 w-4 shrink-0" />
+                  Phone: {CONTACT.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-100 flex items-center gap-2 transition hover:text-white"
+                >
+                  <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" />
+                  WhatsApp: {CONTACT.whatsapp}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${CONTACT.email}`}
+                  className="text-primary-100 flex min-w-0 items-center gap-2 transition hover:text-white"
+                >
+                  <EnvelopeIcon className="text-primary-400 h-4 w-4 shrink-0" />
+                  <span className="break-all">{CONTACT.email}</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
