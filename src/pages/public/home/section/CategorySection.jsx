@@ -10,7 +10,7 @@ import { PUBLIC_PATHS } from "@/routes/public/public.paths";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ErrorState from "@/components/common/ErrorState";
 import EmptyState from "@/components/common/EmptyState";
-import { classNames, resolveMediaUrl } from "@/utils";
+import { classNames, getCategoryLabel, resolveMediaUrl } from "@/utils";
 
 const FALLBACK_CATEGORY_IMAGE =
   "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80";
@@ -41,7 +41,7 @@ function CategorySlide({ category, productCount }) {
         <span className="block aspect-square w-full overflow-hidden rounded-full border-2 border-white bg-slate-100">
           <img
             src={resolveMediaUrl(category.image) || FALLBACK_CATEGORY_IMAGE}
-            alt={category.name}
+            alt={getCategoryLabel(category)}
             loading="lazy"
             onError={handleImageError}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
@@ -53,7 +53,7 @@ function CategorySlide({ category, productCount }) {
         <TagIcon className="h-4 w-4" />
       </span>
       <h3 className="group-hover:text-primary-600 mt-1.5 line-clamp-1 w-full text-center text-sm font-semibold text-slate-800">
-        {category.name}
+        {getCategoryLabel(category)}
       </h3>
     </Link>
   );

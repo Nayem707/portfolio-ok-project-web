@@ -129,6 +129,13 @@ export const range = (n) => Array.from({ length: n }, (_, i) => i);
 
 export const classNames = (...classes) => classes.filter(Boolean).join(" ");
 
+/** Customer-facing category label: the display title, falling back to the English name. */
+export const getCategoryLabel = (category) =>
+  category?.title?.trim() || category?.name || "";
+
+/** English category names (used to build the URL slug). */
+export const ENGLISH_CATEGORY_NAME = /^[A-Za-z0-9][A-Za-z0-9 &'(),./-]*$/;
+
 export const slugify = (str = "") =>
   str
     .toLowerCase()

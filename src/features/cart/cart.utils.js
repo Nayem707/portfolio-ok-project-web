@@ -97,7 +97,7 @@ export const buildCartItem = (product, quantity = 1) => {
     baseCurrency: product.baseCurrency || "BDT",
     discount: Number(product.discount || 0),
     image: getProductImage(product) || null,
-    category: product.category || null,
+    category: product.categoryTitle || product.category || null,
     stock,
     quantity: clampedQty,
     selectedColor,

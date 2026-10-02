@@ -26,9 +26,28 @@ import {
   updateCategory,
 } from "@/features/categories";
 import { api } from "@/services/api";
-import { formatDate, resolveMediaUrl } from "@/utils";
+import {
+  ENGLISH_CATEGORY_NAME,
+  formatDate,
+  getCategoryLabel,
+  resolveMediaUrl,
+} from "@/utils";
 
-const emptyForm = { name: "", description: "", image: "", status: "ACTIVE" };
+const emptyForm = {
+  title: "",
+  name: "",
+  description: "",
+  image: "",
+  status: "ACTIVE",
+};
+
+const toCategorySlug = (name = "") =>
+  name
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .trim()
+    .replace(/[\s-]+/g, "-");
 
 const ACCEPTED_TYPES = [
   "image/jpeg",
@@ -85,6 +104,7 @@ export default function AdminCategoryListView() {
   const openEdit = (cat) => {
     setEditing(cat.id);
     setForm({
+      title: cat.title || "",
       name: cat.name || "",
       description: cat.description || "",
       image: cat.image || "",
@@ -147,8 +167,13 @@ export default function AdminCategoryListView() {
   };
 
   const save = async () => {
-    if (!form.name.trim()) {
+    const name = (form.name || "").trim();
+    if (!name) {
       toast.error("Category name is required");
+      return;
+    }
+    if (!ENGLISH_CATEGORY_NAME.test(name)) {
+      toast.error("Category name must be in English");
       return;
     }
     if (uploading) {
@@ -157,7 +182,8 @@ export default function AdminCategoryListView() {
     }
 
     const payload = {
-      name: form.name.trim(),
+      name,
+      title: (form.title || "").trim() || null,
       description: form.description?.trim() || undefined,
       image: form.image?.trim() || null,
       status: form.status,
@@ -201,6 +227,12 @@ export default function AdminCategoryListView() {
   };
 
   const previewSrc = form.image?.trim() || "";
+  const trimmedName = (form.name || "").trim();
+  const nameError =
+    trimmedName && !ENGLISH_CATEGORY_NAME.test(trimmedName)
+      ? "Use English letters, numbers, spaces and & ' ( ) , . / - only"
+      : undefined;
+  const categorySlug = nameError ? "" : toCategorySlug(trimmedName);
 
   return (
     <div className="space-y-6">
@@ -232,7 +264,7 @@ export default function AdminCategoryListView() {
                 {cat.image ? (
                   <img
                     src={resolveMediaUrl(cat.image)}
-                    alt={cat.name}
+                    alt={getCategoryLabel(cat)}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -248,11 +280,16 @@ export default function AdminCategoryListView() {
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold text-slate-800">{cat.name}</h3>
-                  <span className="text-xs text-slate-400">
+                  <h3 className="truncate font-semibold text-slate-800">
+                    {getCategoryLabel(cat)}
+                  </h3>
+                  <span className="shrink-0 text-xs text-slate-400">
                     {cat._count?.products ?? 0} products
                   </span>
                 </div>
+                <p className="mt-0.5 truncate text-xs text-slate-400">
+                  {cat.name} · /{cat.slug}
+                </p>
                 <p className="mt-1 line-clamp-2 text-sm text-slate-500">
                   {cat.description || "No description"}
                 </p>
@@ -311,9 +348,25 @@ export default function AdminCategoryListView() {
       >
         <div className="space-y-4">
           <Input
-            label="Category name"
+            label="Category title"
+            value={form.title}
+            onChange={set("title")}
+            placeholder="e.g. ওয়াটারপ্রুফ বেডশিট"
+            maxLength={150}
+            hint="Shown to customers. Any language. Leave empty to use the category name."
+          />
+          <Input
+            label="Category name (English)"
             value={form.name}
             onChange={set("name")}
+            placeholder="e.g. Waterproof Bedsheet"
+            maxLength={100}
+            error={nameError}
+            hint={
+              categorySlug
+                ? `URL: /products?category=${categorySlug}`
+                : "English only. Used to build the category URL."
+            }
           />
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">

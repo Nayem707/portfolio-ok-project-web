@@ -6,6 +6,7 @@ import Button from "@/components/common/Button";
 import { toggleMobileMenu } from "@/features/ui";
 import { logout, selectAuth } from "@/features/auth";
 import { selectCategories } from "@/features/categories";
+import { getCategoryLabel } from "@/utils";
 import toast from "react-hot-toast";
 
 export default function MobileMenu({ open }) {
@@ -76,7 +77,7 @@ export default function MobileMenu({ open }) {
                   }
                   className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-100"
                 >
-                  {cat.name}
+                  {getCategoryLabel(cat)}
                 </button>
               </li>
             ))}

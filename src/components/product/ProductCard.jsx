@@ -103,7 +103,7 @@ export default function ProductCard({ product, lockWhenInCart = false }) {
 
         <div className="flex flex-1 flex-col p-4">
           <span className="text-primary-600 text-xs font-medium">
-            {product.category}
+            {product.categoryTitle || product.category}
           </span>
           <Link to={`/products/${product.id}`} className="mt-1">
             <h3 className="hover:text-primary-700 line-clamp-2 text-sm font-semibold text-slate-800 transition">

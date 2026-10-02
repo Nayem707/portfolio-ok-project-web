@@ -16,7 +16,7 @@ import {
   selectCategoriesError,
   selectCategoriesLoading,
 } from "@/features/categories";
-import { resolveMediaUrl } from "@/utils";
+import { getCategoryLabel, resolveMediaUrl } from "@/utils";
 
 const FALLBACK_CATEGORY_IMAGE =
   "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80";
@@ -121,7 +121,7 @@ export default function CategoriesView() {
                       Most popular
                     </dt>
                     <dd className="mt-1 truncate text-base font-semibold">
-                      {topCategory.name}
+                      {getCategoryLabel(topCategory)}
                     </dd>
                     <dd className="text-xs text-white/70">
                       {formatProductCount(productCountOf(topCategory))}
@@ -174,7 +174,7 @@ export default function CategoriesView() {
                       src={
                         resolveMediaUrl(cat.image) || FALLBACK_CATEGORY_IMAGE
                       }
-                      alt={cat.name}
+                      alt={getCategoryLabel(cat)}
                       loading="lazy"
                       onError={handleImageError}
                       className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
@@ -182,7 +182,7 @@ export default function CategoriesView() {
                   </span>
                 </span>
                 <h3 className="group-hover:text-primary-600 mt-4 text-sm font-semibold text-slate-900 transition sm:text-base">
-                  {cat.name}
+                  {getCategoryLabel(cat)}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
                   {formatProductCount(productCountOf(cat))}

@@ -570,8 +570,8 @@ export default function ProductDetailsView() {
           items={[
             { label: "Products", to: "/products" },
             {
-              label: product.category,
-              to: `/products?category=${product.categoryId}`,
+              label: product.categoryTitle || product.category,
+              to: `/products?category=${encodeURIComponent(product.categorySlug || product.categoryId)}`,
             },
             { label: product.name },
           ]}
@@ -682,7 +682,7 @@ export default function ProductDetailsView() {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-primary-600 text-sm font-medium">
-                {product.category}
+                {product.categoryTitle || product.category}
               </span>
               {outOfStock ? (
                 <Badge color="red" dot>

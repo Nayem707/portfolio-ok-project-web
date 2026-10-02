@@ -32,7 +32,7 @@ import { clearMyOrderState } from "@/features/orders";
 import { fetchCategories, selectCategories } from "@/features/categories";
 import { defaultSections, mapHomepageSectionData } from "@/features/homepage";
 import { api } from "@/services/api";
-import { classNames } from "@/utils";
+import { classNames, getCategoryLabel } from "@/utils";
 import toast from "react-hot-toast";
 
 const navLinkClass = ({ isActive }) =>
@@ -294,7 +294,7 @@ export default function Navbar() {
                   to={`/products?category=${encodeURIComponent(categoryKey)}`}
                   className="hover:text-primary-600 text-sm font-medium text-slate-500 transition"
                 >
-                  {cat.name}
+                  {getCategoryLabel(cat)}
                 </Link>
               );
             })}

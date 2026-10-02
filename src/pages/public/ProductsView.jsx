@@ -14,6 +14,7 @@ import Select from "@/components/common/Select";
 import Button from "@/components/common/Button";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ErrorState from "@/components/common/ErrorState";
+import EmptyState from "@/components/common/EmptyState";
 import {
   fetchProducts,
   selectProductListMeta,
@@ -29,7 +30,12 @@ import {
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
 import { SORT_OPTIONS, PAGE_SIZE } from "@/constants";
-import { classNames, formatCurrency, resolveMediaUrl } from "@/utils";
+import {
+  classNames,
+  formatCurrency,
+  getCategoryLabel,
+  resolveMediaUrl,
+} from "@/utils";
 import { api } from "@/services/api";
 import useDebounce from "@/hooks/useDebounce";
 
@@ -98,19 +104,41 @@ export default function ProductsView() {
   useEffect(() => {
     let active = true;
     api
-      .getProducts({ page: 1, limit: 1, sort: "price-desc" })
+      .getProducts({ page: 1, limit: 1 })
       .then((response) => {
-        if (!active) return;
-        setCatalogStats({
-          total: response?.meta?.total ?? null,
-          priceCeiling: toPriceCeiling(response?.data?.[0]?.price),
-        });
+        if (active)
+          setCatalogStats((prev) => ({
+            ...prev,
+            total: response?.meta?.total ?? null,
+          }));
       })
       .catch(() => {});
     return () => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .getProducts({
+        page: 1,
+        limit: 1,
+        sort: "price-desc",
+        category: category || undefined,
+      })
+      .then((response) => {
+        if (active)
+          setCatalogStats((prev) => ({
+            ...prev,
+            priceCeiling: toPriceCeiling(response?.data?.[0]?.price),
+          }));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [category]);
 
   const colorParam = selectedColors.join(",");
   const sizeParam = selectedSizes.join(",");
@@ -179,8 +207,16 @@ export default function ProductsView() {
     const match = categories.find(
       (cat) => cat.slug === category || cat.id === category,
     );
-    return match?.name || "Products";
+    return getCategoryLabel(match) || "Products";
   }, [category, categories]);
+
+  const hasActiveFilters = Boolean(
+    debouncedSearch ||
+    category ||
+    maxPrice ||
+    selectedColors.length ||
+    selectedSizes.length,
+  );
 
   const totalItems = productsMeta?.total ?? products.length;
   const totalPages = productsMeta?.totalPages ?? 1;
@@ -282,7 +318,7 @@ export default function ProductsView() {
                     )}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-left">
-                    {cat.name}
+                    {getCategoryLabel(cat)}
                   </span>
                   <span className="shrink-0 text-xs text-slate-400">
                     {count}
@@ -444,6 +480,32 @@ export default function ProductsView() {
               title="Could not load products"
               description={productsError}
               onRetry={retryProducts}
+            />
+          ) : !productsLoading && !products.length && hasActiveFilters ? (
+            <EmptyState
+              title="No products match your filters"
+              description={
+                maxPrice
+                  ? `Nothing ${category ? `in ${selectedCategoryName} ` : ""}costs ${formatCurrency(maxPrice)} or less. Try a higher max price.`
+                  : "Try removing a filter to see more products."
+              }
+              action={
+                <div className="flex flex-wrap justify-center gap-2">
+                  {maxPrice && (
+                    <Button
+                      onClick={() => {
+                        setMaxPrice(null);
+                        updateParam("maxPrice", "");
+                      }}
+                    >
+                      Remove price limit
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear all filters
+                  </Button>
+                </div>
+              }
             />
           ) : (
             <ProductGrid
