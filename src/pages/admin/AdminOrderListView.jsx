@@ -17,6 +17,7 @@ import StatCard from "@/components/common/StatCard";
 import Table from "@/components/common/Table";
 import Pagination from "@/components/common/Pagination";
 import Select from "@/components/common/Select";
+import Tabs from "@/components/common/Tabs";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
@@ -37,6 +38,10 @@ import { ORDER_STATUS, PAYMENT_STATUS } from "@/constants";
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 const ADMIN_ORDER_LIMIT = 100;
 const ORDER_STATUS_OPTIONS = Object.values(ORDER_STATUS);
+const CUSTOMER_TABS = [
+  { value: "USER", label: "User Orders" },
+  { value: "GUEST", label: "Guest Orders" },
+];
 
 function OrderRowActions({ order }) {
   const dispatch = useDispatch();
@@ -169,10 +174,17 @@ export default function AdminOrderListView() {
   const [paymentStatus, setPaymentStatus] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [customerType, setCustomerType] = useState(CUSTOMER_TABS[0].value);
+
+  const loadOrders = () =>
+    dispatch(
+      fetchAdminOrders({ page: 1, limit: ADMIN_ORDER_LIMIT, customerType }),
+    );
 
   useEffect(() => {
-    dispatch(fetchAdminOrders({ page: 1, limit: ADMIN_ORDER_LIMIT }));
-  }, [dispatch]);
+    loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, customerType]);
 
   const overview = useMemo(() => {
     const pending = orders.filter(
@@ -211,7 +223,8 @@ export default function AdminOrderListView() {
         o.orderNumber?.toLowerCase().includes(q) ||
         o.id?.toLowerCase().includes(q) ||
         o.customer?.name?.toLowerCase().includes(q) ||
-        o.customer?.email?.toLowerCase().includes(q);
+        o.customer?.email?.toLowerCase().includes(q) ||
+        o.shipping?.phone?.includes(q);
       const matchesStatus = !status || o.status === status;
       const matchesPayment =
         !paymentStatus || o.paymentStatus === paymentStatus;
@@ -227,7 +240,7 @@ export default function AdminOrderListView() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, status, paymentStatus, pageSize]);
+  }, [search, status, paymentStatus, pageSize, customerType]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -251,7 +264,9 @@ export default function AdminOrderListView() {
           <p className="font-medium text-slate-700">
             {o.customer?.name || "—"}
           </p>
-          <p className="text-xs text-slate-400">{o.customer?.email || ""}</p>
+          <p className="text-xs text-slate-400">
+            {o.customer?.email || (o.isGuest ? o.shipping?.phone : "")}
+          </p>
         </div>
       ),
     },
@@ -279,7 +294,21 @@ export default function AdminOrderListView() {
     {
       key: "status",
       header: "Status",
-      render: (o) => <OrderStatusBadge status={o.status} />,
+      render: (o) => (
+        <div title={o.cancelReason ? `Reason: ${o.cancelReason}` : undefined}>
+          <OrderStatusBadge status={o.status} />
+          {o.status === ORDER_STATUS.CANCELLED && o.cancelledBy && (
+            <p className="mt-1 text-xs text-slate-400">
+              by {o.cancelledBy === "ADMIN" ? "admin" : "customer"}
+            </p>
+          )}
+          {o.needsManualRefund && (
+            <p className="mt-0.5 text-xs font-medium text-red-600">
+              Refund needed
+            </p>
+          )}
+        </div>
+      ),
     },
     {
       key: "actions",
@@ -300,6 +329,14 @@ export default function AdminOrderListView() {
       <p className="mt-1 text-sm text-slate-600">
         {o.customer?.name || "Customer"}
       </p>
+      {o.cancelReason && (
+        <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+          Cancelled: {o.cancelReason}
+        </p>
+      )}
+      {o.needsManualRefund && (
+        <p className="mt-0.5 text-xs font-medium text-red-600">Refund needed</p>
+      )}
       <div className="mt-2 flex items-center justify-between text-sm">
         <span className="text-slate-400">{formatDate(o.date)}</span>
         <span className="font-semibold text-slate-900">
@@ -318,9 +355,7 @@ export default function AdminOrderListView() {
       <ErrorState
         title="Could not load orders"
         description={error}
-        onRetry={() =>
-          dispatch(fetchAdminOrders({ page: 1, limit: ADMIN_ORDER_LIMIT }))
-        }
+        onRetry={loadOrders}
       />
     );
   }
@@ -371,6 +406,12 @@ export default function AdminOrderListView() {
         />
       </div>
 
+      <Tabs
+        tabs={CUSTOMER_TABS}
+        active={customerType}
+        onChange={setCustomerType}
+      />
+
       <div className="card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -418,18 +459,22 @@ export default function AdminOrderListView() {
         </div>
       </div>
 
-      <Table
-        columns={columns}
-        data={pagedOrders}
-        rowKey="id"
-        renderCard={renderCard}
-        emptyState={
-          <EmptyState
-            title="No orders found"
-            description="Try a different search or filter."
-          />
-        }
-      />
+      {loading ? (
+        <LoadingSpinner className="py-16" label="Loading orders..." />
+      ) : (
+        <Table
+          columns={columns}
+          data={pagedOrders}
+          rowKey="id"
+          renderCard={renderCard}
+          emptyState={
+            <EmptyState
+              title="No orders found"
+              description="Try a different search or filter."
+            />
+          }
+        />
+      )}
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>

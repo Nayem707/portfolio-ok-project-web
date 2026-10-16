@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -10,12 +10,14 @@ import {
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import ContinueWithGoogle from "@/components/auth/ContinueWithGoogle";
-import { loginSuccess } from "@/features/auth";
+import { getAuthRedirect, loginSuccess } from "@/features/auth";
 import { api } from "@/services/api";
 
 export default function RegisterView() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = getAuthRedirect(location);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -62,7 +64,7 @@ export default function RegisterView() {
         }),
       );
       toast.success("Account created successfully!");
-      navigate("/account", { replace: true });
+      navigate(from || "/account", { replace: true });
     } catch (error) {
       const message =
         error?.response?.data?.error?.message || "Unable to create account";
@@ -130,6 +132,7 @@ export default function RegisterView() {
         Already have an account?{" "}
         <Link
           to="/login"
+          state={from ? { from } : undefined}
           className="text-primary-600 hover:text-primary-700 font-semibold"
         >
           Sign in

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import { CheckCircleIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
@@ -8,7 +9,9 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ErrorState from "@/components/common/ErrorState";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import OrderStatusTimeline from "@/components/order/OrderStatusTimeline";
+import CancelOrderPanel from "@/components/order/CancelOrderPanel";
 import {
+  cancelMyOrder,
   fetchMyOrderById,
   selectCurrentOrder,
   selectOrderDetailsLoading,
@@ -195,6 +198,14 @@ export default function OrderDetailsView() {
 
         {/* Info */}
         <div className="space-y-6">
+          <CancelOrderPanel
+            order={order}
+            stacked
+            onCancel={async ({ reason }) => {
+              await dispatch(cancelMyOrder({ id: order.id, reason })).unwrap();
+              toast.success(`Order ${order.orderNumber} cancelled`);
+            }}
+          />
           <div className="card p-4 sm:p-6">
             <h2 className="font-semibold text-slate-900">Customer</h2>
             <div className="mt-3 space-y-1 text-sm text-slate-600">

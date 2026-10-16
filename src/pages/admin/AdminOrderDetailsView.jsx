@@ -237,6 +237,43 @@ export default function AdminOrderDetailsView() {
               </Select>
             </div>
           </div>
+          {order.status === ORDER_STATUS.CANCELLED && (
+            <div className="card border-red-200 p-6">
+              <h2 className="font-semibold text-red-700">Cancellation</h2>
+              <dl className="mt-3 space-y-1.5 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Cancelled by</dt>
+                  <dd className="text-slate-800">
+                    {order.cancelledBy === "CUSTOMER"
+                      ? "Customer"
+                      : order.cancelledBy === "ADMIN"
+                        ? "Admin"
+                        : "Not recorded"}
+                  </dd>
+                </div>
+                {order.cancelledAt && (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-slate-500">Date</dt>
+                    <dd className="text-slate-800">
+                      {formatDate(order.cancelledAt)}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-slate-500">Reason</dt>
+                  <dd className="mt-0.5 break-words text-slate-800">
+                    {order.cancelReason || "No reason given"}
+                  </dd>
+                </div>
+              </dl>
+              {order.needsManualRefund && (
+                <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  Payment was collected. Refund the customer manually, then set
+                  payment status to Refunded.
+                </p>
+              )}
+            </div>
+          )}
           <div className="card p-6">
             <h2 className="font-semibold text-slate-900">Customer</h2>
             <div className="mt-3 flex items-start gap-3 text-sm text-slate-600">
@@ -246,6 +283,11 @@ export default function AdminOrderDetailsView() {
                   {order.customer?.name}
                 </p>
                 <p>{order.customer?.email}</p>
+                {order.isGuest && (
+                  <p className="mt-1">
+                    Guest checkout · {order.shipping?.phone}
+                  </p>
+                )}
                 {order.customer?.id && (
                   <Link
                     to={`/admin/users/${order.customer.id}`}

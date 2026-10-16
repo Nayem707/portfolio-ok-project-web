@@ -11,7 +11,7 @@ import {
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import ContinueWithGoogle from "@/components/auth/ContinueWithGoogle";
-import { loginSuccess } from "@/features/auth";
+import { getAuthRedirect, loginSuccess } from "@/features/auth";
 import { api } from "@/services/api";
 
 export default function LoginView() {
@@ -23,7 +23,8 @@ export default function LoginView() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from?.pathname;
+  const from = getAuthRedirect(location);
+  const isCheckoutRedirect = from?.startsWith("/checkout");
 
   const validate = () => {
     const next = {};
@@ -72,6 +73,16 @@ export default function LoginView() {
       <p className="mt-1.5 text-sm text-slate-500">
         Sign in to your account to continue shopping.
       </p>
+
+      {isCheckoutRedirect && (
+        <p
+          role="status"
+          className="border-primary-200 bg-primary-50 text-primary-700 mt-4 rounded-lg border px-3 py-2 text-sm"
+        >
+          Please sign in or create an account to place your order. Your cart is
+          saved.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
         <Input
@@ -128,6 +139,7 @@ export default function LoginView() {
         Don’t have an account?{" "}
         <Link
           to="/register"
+          state={from ? { from } : undefined}
           className="text-primary-600 hover:text-primary-700 font-semibold"
         >
           Create one

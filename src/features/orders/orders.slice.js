@@ -38,6 +38,7 @@ export const normalizeOrder = (order) => ({
     postalCode: order.shipPostalCode,
     country: order.shipCountry,
   },
+  isGuest: !order.userId,
   customer: {
     id: order.user?.id || order.userId,
     name: order.user?.name || order.shipFullName || "Customer",
@@ -47,7 +48,31 @@ export const normalizeOrder = (order) => ({
   discount: Number(order.discount || 0),
   shippingCost: Number(order.shippingFee || 0),
   total: Number(order.totalAmount || 0),
+  cancelReason: order.cancelReason || null,
+  cancelledAt: order.cancelledAt || null,
+  cancelledBy: order.cancelledBy || null,
+  needsManualRefund:
+    order.status === "CANCELLED" && order.paymentStatus === "PAID",
+  guestCancelCode: order.guestCancelCode || null,
+  hasCancelCode: Boolean(order.hasCancelCode),
+  isAccountOrder: Boolean(order.isAccountOrder),
 });
+
+export const cancelMyOrder = createAsyncThunk(
+  "order/cancelMyOrder",
+  async ({ id, reason }, { rejectWithValue }) => {
+    try {
+      const response = await api.cancelMyOrder(id, reason);
+      return normalizeOrder(response);
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.error?.details?.[0]?.message ||
+          error?.response?.data?.error?.message ||
+          "Failed to cancel order",
+      );
+    }
+  },
+);
 
 export const fetchAdminOrders = createAsyncThunk(
   "order/fetchAdminOrders",
@@ -61,6 +86,7 @@ export const fetchAdminOrders = createAsyncThunk(
         limit: params.limit || 100,
         ...(statusKey ? { status: statusKey } : {}),
         ...(params.search ? { search: params.search } : {}),
+        ...(params.customerType ? { customerType: params.customerType } : {}),
       });
       return {
         items: (response?.data || []).map(normalizeOrder),
@@ -299,6 +325,10 @@ const orderSlice = createSlice({
         state.loadingDetails = false;
         state.currentOrder = null;
         state.error = action.payload || "Failed to load order";
+      })
+      .addCase(cancelMyOrder.fulfilled, (state, action) => {
+        state.currentOrder = action.payload;
+        state.myItems = upsertOrder(state.myItems, action.payload);
       })
       .addCase(placeOrder.pending, (state) => {
         state.placingOrder = true;

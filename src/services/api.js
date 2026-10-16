@@ -165,6 +165,18 @@ export const api = {
     return getData(response);
   },
 
+  cancelMyOrder: async (orderId, reason) => {
+    const response = await axiosInstance.post(`/orders/${orderId}/cancel`, {
+      reason,
+    });
+    return getData(response);
+  },
+
+  cancelGuestOrder: async (payload) => {
+    const response = await axiosInstance.post("/orders/track/cancel", payload);
+    return getData(response);
+  },
+
   updateOrderStatus: async (orderId, payload) => {
     const response = await axiosInstance.patch(
       `/orders/${orderId}/status`,
@@ -233,7 +245,10 @@ export const api = {
   },
 
   updateProduct: async (productId, payload) => {
-    const response = await axiosInstance.patch(`/products/${productId}`, payload);
+    const response = await axiosInstance.patch(
+      `/products/${productId}`,
+      payload,
+    );
     return getData(response);
   },
 

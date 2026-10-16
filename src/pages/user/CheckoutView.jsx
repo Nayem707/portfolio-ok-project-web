@@ -26,7 +26,7 @@ import {
   selectCartTotals,
   selectDeliveryRates,
 } from "@/features/cart";
-import { placeOrder } from "@/features/orders";
+import { placeOrder, saveGuestCancelCode } from "@/features/orders";
 import { selectCurrentUser } from "@/features/auth";
 import {
   formatCurrency,
@@ -62,8 +62,8 @@ const selectControlClass = (error) =>
     "cursor-pointer appearance-none bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-9",
   );
 
-const toLocalMobile = (phone = "") => {
-  const digits = phone.replace(/\D/g, "");
+const toLocalMobile = (phone) => {
+  const digits = (phone || "").replace(/\D/g, "");
   return digits.startsWith("880") ? digits.slice(2) : digits;
 };
 
@@ -142,6 +142,7 @@ export default function CheckoutView() {
   const [payment, setPayment] = useState("COD");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [guestOrder, setGuestOrder] = useState(null);
 
   const shipping = deliveryRates[deliveryArea] ?? 0;
   const total = subtotal + shipping;
@@ -150,6 +151,49 @@ export default function CheckoutView() {
       sum + (i.price - getDiscountedPrice(i.price, i.discount)) * i.quantity,
     0,
   );
+
+  if (guestOrder) {
+    return (
+      <div className="container-app py-8">
+        <div className="card mx-auto max-w-lg p-6 text-center sm:p-8">
+          <CheckCircleIcon className="mx-auto h-14 w-14 text-green-500" />
+          <h1 className="mt-4 text-2xl font-bold text-slate-900">
+            Order placed successfully!
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Your order number is{" "}
+            <span className="font-semibold text-slate-800">
+              {guestOrder.orderNumber}
+            </span>
+            . Total: {formatCurrency(guestOrder.total)}. We'll call{" "}
+            {guestOrder.shipping?.phone} to confirm delivery.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Use this mobile number on the Track Order page to follow your order.
+          </p>
+          {guestOrder.guestCancelCode && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <p>Your cancellation code (save it, it's shown only once):</p>
+              <p className="mt-1 font-mono text-lg font-bold tracking-widest text-amber-900">
+                {guestOrder.guestCancelCode}
+              </p>
+              <p className="mt-1 text-xs">
+                You'll need it to cancel this order from the Track Order page.
+              </p>
+            </div>
+          )}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Button as={Link} to="/track-order">
+              Track order
+            </Button>
+            <Button as={Link} to="/products" variant="secondary">
+              Continue shopping
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -234,6 +278,11 @@ export default function CheckoutView() {
       toast.success(`Order ${order.orderNumber} placed successfully!`, {
         position: "bottom-right",
       });
+      if (!user) {
+        saveGuestCancelCode(order.orderNumber, order.guestCancelCode);
+        setGuestOrder(order);
+        return;
+      }
       navigate(`/account/orders/${order.id}`, {
         state: { justPlaced: true },
       });
@@ -255,6 +304,20 @@ export default function CheckoutView() {
           items={[{ label: "Cart", to: "/cart" }, { label: "Checkout" }]}
         />
         <h1 className="mt-6 text-2xl font-bold text-slate-900">Checkout</h1>
+
+        {!user && (
+          <p className="border-primary-200 bg-primary-50 text-primary-700 mt-4 rounded-lg border px-4 py-3 text-sm">
+            You're checking out as a guest.{" "}
+            <Link
+              to="/login"
+              state={{ from: "/checkout" }}
+              className="font-semibold underline"
+            >
+              Sign in
+            </Link>{" "}
+            for faster checkout and to see your orders in your account.
+          </p>
+        )}
 
         <form
           onSubmit={handlePlaceOrder}

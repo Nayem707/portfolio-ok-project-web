@@ -17,8 +17,9 @@ import EmptyState from "@/components/common/EmptyState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import OrderStatusBadge from "@/components/common/OrderStatusBadge";
 import OrderStatusTimeline from "@/components/order/OrderStatusTimeline";
-import { toOrderStatusLabel } from "@/constants";
-import { normalizeOrder } from "@/features/orders";
+import CancelOrderPanel from "@/components/order/CancelOrderPanel";
+import { ORDER_STATUS, toOrderStatusLabel } from "@/constants";
+import { getGuestCancelCode, normalizeOrder } from "@/features/orders";
 import { api } from "@/services/api";
 import {
   classNames,
@@ -28,6 +29,12 @@ import {
 } from "@/utils";
 
 const MOBILE_MESSAGE = "Please enter a valid mobile number, e.g. 01712345678";
+
+const OPEN_STATUSES = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.CONFIRMED,
+  ORDER_STATUS.PROCESSING,
+];
 
 /** "+880 1712-345678", "8801712345678", "01712 345678", "1712345678" → "01712345678". */
 const normalizeMobile = (value) => {
@@ -43,7 +50,7 @@ const getErrorMessage = (error) =>
   error?.response?.data?.error?.message ||
   "Could not load your orders. Please try again.";
 
-function TrackedOrderDetails({ order }) {
+function TrackedOrderDetails({ order, onCancel }) {
   const copyOrderNumber = async () => {
     try {
       await navigator.clipboard.writeText(order.orderNumber);
@@ -82,6 +89,36 @@ function TrackedOrderDetails({ order }) {
           <OrderStatusBadge status={order.status} />
         </div>
       </div>
+
+      {order.status === ORDER_STATUS.CANCELLED || order.hasCancelCode ? (
+        <CancelOrderPanel
+          key={order.orderNumber}
+          order={order}
+          onCancel={onCancel}
+          requireCode
+          defaultCode={getGuestCancelCode(order.orderNumber)}
+        />
+      ) : (
+        OPEN_STATUSES.includes(order.status) && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
+            {order.isAccountOrder ? (
+              <>
+                This order belongs to an account.{" "}
+                <Link
+                  to="/login"
+                  state={{ from: "/account/orders" }}
+                  className="text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Sign in
+                </Link>{" "}
+                to cancel it from your orders.
+              </>
+            ) : (
+              "To cancel this order, please contact our support team."
+            )}
+          </div>
+        )
+      )}
 
       <div className="card p-4 sm:p-6">
         <h2 className="mb-4 font-semibold text-slate-900 sm:mb-6">
@@ -240,6 +277,34 @@ export default function TrackOrderView() {
       .finally(() => {
         if (requestId === detailRequestRef.current) setDetailLoading(false);
       });
+  };
+
+  const handleCancel = async ({ reason, code }) => {
+    try {
+      const data = await api.cancelGuestOrder({
+        phone: searchedPhone,
+        orderNumber: order.orderNumber,
+        code,
+        reason,
+      });
+      const details = normalizeOrder(data);
+      detailCacheRef.current.set(details.orderNumber, details);
+      setOrder(details);
+      setOrderList((list) =>
+        list?.map((o) =>
+          o.orderNumber === details.orderNumber
+            ? { ...o, status: data.status }
+            : o,
+        ),
+      );
+      toast.success(`Order ${details.orderNumber} cancelled`);
+    } catch (error) {
+      throw (
+        error?.response?.data?.error?.details?.[0]?.message ||
+        error?.response?.data?.error?.message ||
+        "Failed to cancel order"
+      );
+    }
   };
 
   const handleSubmit = (e) => {
@@ -458,7 +523,7 @@ export default function TrackOrderView() {
           )}
 
           {selectedNumber && !detailLoading && order && (
-            <TrackedOrderDetails order={order} />
+            <TrackedOrderDetails order={order} onCancel={handleCancel} />
           )}
         </div>
       </div>

@@ -3,7 +3,11 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
-import { loginSuccess } from "@/features/auth";
+import {
+  getAuthRedirect,
+  loginSuccess,
+  toSafeRedirectPath,
+} from "@/features/auth";
 import { api } from "@/services/api";
 import {
   completeGoogleRedirectSignIn,
@@ -47,9 +51,13 @@ export default function ContinueWithGoogle({ mode = "login" }) {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from?.pathname;
+  const from = getAuthRedirect(location);
 
-  const finishWithIdToken = async (idToken, authMode = mode, returnTo = from) => {
+  const finishWithIdToken = async (
+    idToken,
+    authMode = mode,
+    returnTo = from,
+  ) => {
     const response = await api.loginWithGoogle({ idToken });
     const user = response?.user ?? response;
 
@@ -82,7 +90,11 @@ export default function ContinueWithGoogle({ mode = "login" }) {
         if (!idToken || cancelled) return;
         setLoading(true);
         const { returnTo, mode: authMode } = takeGoogleAuthContext();
-        await finishWithIdToken(idToken, authMode, returnTo || undefined);
+        await finishWithIdToken(
+          idToken,
+          authMode,
+          toSafeRedirectPath(returnTo) || undefined,
+        );
       } catch (error) {
         if (cancelled) return;
         const message =

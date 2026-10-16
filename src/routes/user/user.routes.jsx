@@ -23,14 +23,7 @@ export const userRoutes = (
   <>
     <Route path={USER_PATHS.CART} element={<CartView />} />
     <Route path={USER_PATHS.WISHLIST} element={<WishlistView />} />
-    <Route
-      path={USER_PATHS.CHECKOUT}
-      element={
-        <ProtectedRoute>
-          <CheckoutView />
-        </ProtectedRoute>
-      }
-    />
+    <Route path={USER_PATHS.CHECKOUT} element={<CheckoutView />} />
 
     <Route
       path={USER_PATHS.ACCOUNT}
