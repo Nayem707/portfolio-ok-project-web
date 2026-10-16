@@ -12,6 +12,8 @@ import {
   CheckCircleIcon,
   TruckIcon,
   XCircleIcon,
+  UserCircleIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import StatCard from "@/components/common/StatCard";
 import Table from "@/components/common/Table";
@@ -39,8 +41,8 @@ const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 const ADMIN_ORDER_LIMIT = 100;
 const ORDER_STATUS_OPTIONS = Object.values(ORDER_STATUS);
 const CUSTOMER_TABS = [
-  { value: "USER", label: "User Orders" },
-  { value: "GUEST", label: "Guest Orders" },
+  { value: "USER", label: "User Orders", icon: UserCircleIcon },
+  { value: "GUEST", label: "Guest Orders", icon: UserIcon },
 ];
 
 function OrderRowActions({ order }) {
