@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -8,6 +9,7 @@ import {
   ArrowsRightLeftIcon,
   PhotoIcon,
   ArrowUpTrayIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import Badge from "@/components/common/Badge";
@@ -32,6 +34,7 @@ import {
   getCategoryLabel,
   resolveMediaUrl,
 } from "@/utils";
+import { ADMIN_PATHS } from "@/routes/admin/admin.paths";
 
 const emptyForm = {
   title: "",
@@ -237,12 +240,21 @@ export default function AdminCategoryListView() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Categories"
-        subtitle={`${categories.length} categories`}
+        title="Main Categories"
+        subtitle={`${categories.length} main categories`}
         actions={
-          <Button leftIcon={PlusIcon} onClick={openAdd}>
-            Add Category
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/admin/${ADMIN_PATHS.ATTRIBUTES_CATEGORIES}`}
+              className="btn border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <ArrowLeftIcon className="h-4 w-4" />
+              Back
+            </Link>
+            <Button leftIcon={PlusIcon} onClick={openAdd}>
+              Add Main Category
+            </Button>
+          </div>
         }
       />
 
@@ -326,7 +338,7 @@ export default function AdminCategoryListView() {
       <Modal
         open={modalOpen}
         onClose={closeModal}
-        title={editing ? "Edit category" : "Add category"}
+        title={editing ? "Edit main category" : "Add main category"}
         footer={
           <>
             <Button
@@ -341,7 +353,7 @@ export default function AdminCategoryListView() {
               loading={mutationLoading}
               disabled={uploading}
             >
-              Save category
+              Save main category
             </Button>
           </>
         }

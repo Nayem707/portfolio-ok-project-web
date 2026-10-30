@@ -37,6 +37,7 @@ const empty = {
   shortDescription: toHighlightSlots(),
   description: "",
   category: "",
+  subcategoryId: "",
   price: "",
   baseCurrency: "BDT",
   discount: 0,
@@ -89,7 +90,8 @@ const fromInitial = (initial) => ({
   featured: Boolean(initial?.featured),
   popular: Boolean(initial?.popular),
   newArrival: Boolean(initial?.newArrival),
-  category: initial?.category || "",
+  category: initial?.categoryId || initial?.category || "",
+  subcategoryId: initial?.subcategoryId || "",
   status: toProductStatusKey(initial?.status) || "ACTIVE",
   images: normalizeImages(initial?.images),
   availableColors: toArray(initial?.colors || initial?.availableColors),
@@ -120,6 +122,7 @@ export default function ProductForm({
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
   const [availablePackages, setAvailablePackages] = useState([]);
+  const [availableSubcategories, setAvailableSubcategories] = useState([]);
 
   useEffect(() => {
     dispatch(fetchCategories({ all: true }));
@@ -141,6 +144,55 @@ export default function ProductForm({
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const selectedCategory = categories.find(
+      (category) => category.id === form.category || category.name === form.category,
+    );
+    const categoryId = selectedCategory?.id || form.category || "";
+
+    if (!categoryId) {
+      setAvailableSubcategories([]);
+      if (form.subcategoryId) {
+        setForm((prev) => ({ ...prev, subcategoryId: "" }));
+      }
+      return;
+    }
+
+    let active = true;
+    api
+      .getSubcategories({ categoryId, all: "true" })
+      .then((list) => {
+        if (!active) return;
+        const next = Array.isArray(list) ? list : [];
+        setAvailableSubcategories(next);
+        setForm((prev) => {
+          const selected = prev.subcategoryId
+            ? next.some((item) => item.id === prev.subcategoryId)
+            : false;
+          return {
+            ...prev,
+            subcategoryId: selected ? prev.subcategoryId : "",
+          };
+        });
+      })
+      .catch(() => {
+        if (active) setAvailableSubcategories([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [categories, form.category]);
+
+  const handleCategoryChange = (event) => {
+    const nextCategory = event.target.value;
+    setForm((prev) => ({
+      ...prev,
+      category: nextCategory,
+      subcategoryId: "",
+    }));
+  };
 
   // Keep a selected package set as default; clear a stale default when deselected.
   const togglePackage = (packageId) => {
@@ -343,10 +395,18 @@ export default function ProductForm({
       ? form.availableSizes
       : toArray(form.availableSizes);
 
+    const selectedSubcategory = availableSubcategories.find(
+      (subcategory) => subcategory.id === form.subcategoryId,
+    );
+
     onSubmit({
       name: form.name.trim(),
       sku: form.sku.trim(),
       categoryId: selectedCategory?.id || initial?.categoryId,
+      subcategoryId:
+        selectedSubcategory && selectedSubcategory.categoryId === selectedCategory?.id
+          ? selectedSubcategory.id
+          : null,
       shortDescription: form.shortDescription
         .map((point) => point.trim())
         .filter(Boolean),
@@ -661,16 +721,42 @@ export default function ProductForm({
             <Select
               label="Category"
               value={form.category}
-              onChange={set("category")}
+              onChange={handleCategoryChange}
               error={errors.category}
             >
               <option value="">Select category</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.name}>
+                <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
             </Select>
+
+            {form.category && (
+              <Select
+                label="Subcategory"
+                value={form.subcategoryId}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    subcategoryId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">No subcategory</option>
+                {availableSubcategories.length === 0 && (
+                  <option value="" disabled>
+                    No subcategories available for this category
+                  </option>
+                )}
+                {availableSubcategories.map((subcategory) => (
+                  <option key={subcategory.id} value={subcategory.id}>
+                    {subcategory.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+
             <Select label="Status" value={form.status} onChange={set("status")}>
               {Object.entries(PRODUCT_STATUS).map(([value, label]) => (
                 <option key={value} value={value}>

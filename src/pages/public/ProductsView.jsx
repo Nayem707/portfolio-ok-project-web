@@ -67,6 +67,9 @@ export default function ProductsView() {
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
+  const [subcategory, setSubcategory] = useState(
+    searchParams.get("subcategory") || "",
+  );
   const [sort, setSort] = useState(searchParams.get("sort") || "featured");
   const [maxPrice, setMaxPrice] = useState(
     parsePriceParam(searchParams.get("maxPrice")),
@@ -88,6 +91,7 @@ export default function ProductsView() {
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
     setCategory(searchParams.get("category") || "");
+    setSubcategory(searchParams.get("subcategory") || "");
     setSort(searchParams.get("sort") || "featured");
     setMaxPrice(parsePriceParam(searchParams.get("maxPrice")));
     setSelectedColors(parseMultiParam(searchParams.get("color")));
@@ -148,12 +152,13 @@ export default function ProductsView() {
       limit: PAGE_SIZE,
       search: debouncedSearch || undefined,
       category: category || undefined,
+      subcategory: subcategory || undefined,
       maxPrice: maxPrice ?? undefined,
       color: colorParam || undefined,
       size: sizeParam || undefined,
       sort: sort || undefined,
     }),
-    [page, debouncedSearch, category, maxPrice, colorParam, sizeParam, sort],
+    [page, debouncedSearch, category, subcategory, maxPrice, colorParam, sizeParam, sort],
   );
 
   useEffect(() => {
@@ -169,6 +174,19 @@ export default function ProductsView() {
       next.set("page", "1");
     }
 
+    setSearchParams(next);
+  };
+
+  const selectCategory = (nextCategory) => {
+    const next = new URLSearchParams(searchParams);
+    if (nextCategory) {
+      next.set("category", nextCategory);
+      next.delete("subcategory");
+    } else {
+      next.delete("category");
+      next.delete("subcategory");
+    }
+    next.set("page", "1");
     setSearchParams(next);
   };
 
@@ -207,12 +225,18 @@ export default function ProductsView() {
     const match = categories.find(
       (cat) => cat.slug === category || cat.id === category,
     );
-    return getCategoryLabel(match) || "Products";
-  }, [category, categories]);
+    const base = getCategoryLabel(match) || "Products";
+    if (!subcategory) return base;
+    const subMatch = match?.subcategories?.find(
+      (sub) => sub.slug === subcategory || sub.id === subcategory,
+    );
+    return subMatch ? `${base} / ${subMatch.title || subMatch.name}` : base;
+  }, [category, subcategory, categories]);
 
   const hasActiveFilters = Boolean(
     debouncedSearch ||
     category ||
+    subcategory ||
     maxPrice ||
     selectedColors.length ||
     selectedSizes.length,
@@ -257,7 +281,7 @@ export default function ProductsView() {
         <div className="space-y-1">
           <button
             type="button"
-            onClick={() => updateParam("category", "")}
+            onClick={() => selectCategory("")}
             className={classNames(
               "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
               !category
@@ -282,48 +306,86 @@ export default function ProductsView() {
               {allProductsCount}
             </span>
           </button>
-          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+          <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
             {categories.map((cat) => {
               const count = cat._count?.products ?? 0;
-              const isActive = category === (cat.slug || cat.id);
+              const catKey = cat.slug || cat.id;
+              const isActive = category === catKey;
               const imageUrl = resolveMediaUrl(cat.image);
               return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => updateParam("category", cat.slug || cat.id)}
-                  className={classNames(
-                    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
-                    isActive
-                      ? "bg-primary-50 text-primary-700 font-medium"
-                      : "text-slate-600 hover:bg-slate-50",
-                  )}
-                >
-                  <span
+                <div key={cat.id} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => selectCategory(catKey)}
                     className={classNames(
-                      "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md",
+                      "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
                       isActive
-                        ? "bg-primary-100 text-primary-700"
-                        : "bg-slate-100 text-slate-500",
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-slate-600 hover:bg-slate-50",
                     )}
                   >
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <TagIcon className="h-4 w-4" />
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-left">
-                    {getCategoryLabel(cat)}
-                  </span>
-                  <span className="shrink-0 text-xs text-slate-400">
-                    {count}
-                  </span>
-                </button>
+                    <span
+                      className={classNames(
+                        "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md",
+                        isActive
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-slate-100 text-slate-500",
+                      )}
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <TagIcon className="h-4 w-4" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {getCategoryLabel(cat)}
+                    </span>
+                    <span className="shrink-0 text-xs text-slate-400">
+                      {count}
+                    </span>
+                  </button>
+
+                  {isActive && Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && (
+                    <div className="ml-8 space-y-1 border-l border-slate-200 pl-2">
+                      <button
+                        type="button"
+                        onClick={() => updateParam("subcategory", "")}
+                        className={classNames(
+                          "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
+                          !subcategory
+                            ? "bg-primary-100 text-primary-700 font-medium"
+                            : "text-slate-500 hover:bg-slate-100",
+                        )}
+                      >
+                        All in {getCategoryLabel(cat)}
+                      </button>
+                      {cat.subcategories.map((subcat) => {
+                        const subKey = subcat.slug || subcat.id;
+                        const activeSub = subcategory === subKey;
+                        return (
+                          <button
+                            key={subcat.id}
+                            type="button"
+                            onClick={() => updateParam("subcategory", subKey)}
+                            className={classNames(
+                              "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
+                              activeSub
+                                ? "bg-primary-100 text-primary-700 font-medium"
+                                : "text-slate-500 hover:bg-slate-100",
+                            )}
+                          >
+                            {subcat.title || subcat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

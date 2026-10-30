@@ -18,8 +18,8 @@ import { ADMIN_PATHS } from "@/routes/admin/admin.paths";
 const cards = [
   {
     key: "category",
-    title: "Category",
-    description: "Manage category details and active/inactive status.",
+    title: "Categories",
+    description: "Manage main categories and subcategories.",
     to: `/admin/${ADMIN_PATHS.ATTRIBUTES_CATEGORIES}`,
     icon: TagIcon,
     iconBg: "bg-blue-100 text-blue-700",

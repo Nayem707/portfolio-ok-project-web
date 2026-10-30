@@ -290,6 +290,34 @@ export const api = {
     return getData(response);
   },
 
+  getSubcategories: async (params = {}) => {
+    const response = await axiosInstance.get("/subcategories", { params });
+    return asArray(getData(response));
+  },
+
+  getSubcategoryById: async (subcategoryId) => {
+    const response = await axiosInstance.get(`/subcategories/${subcategoryId}`);
+    return getData(response);
+  },
+
+  createSubcategory: async (payload) => {
+    const response = await axiosInstance.post("/subcategories", payload);
+    return getData(response);
+  },
+
+  updateSubcategory: async (subcategoryId, payload) => {
+    const response = await axiosInstance.patch(
+      `/subcategories/${subcategoryId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deleteSubcategory: async (subcategoryId) => {
+    const response = await axiosInstance.delete(`/subcategories/${subcategoryId}`);
+    return getData(response);
+  },
+
   uploadImages: async (files) => {
     const formData = new FormData();
     const list = Array.isArray(files) ? files : [files];

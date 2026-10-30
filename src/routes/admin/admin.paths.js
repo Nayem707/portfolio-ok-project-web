@@ -10,6 +10,8 @@ export const ADMIN_PATHS = {
   SIZES: "sizes",
   ATTRIBUTES: "product-attributes",
   ATTRIBUTES_CATEGORIES: "product-attributes/categories",
+  ATTRIBUTES_MAIN_CATEGORIES: "product-attributes/categories/main",
+  ATTRIBUTES_SUBCATEGORIES: "product-attributes/categories/subcategories",
   ATTRIBUTES_COLORS: "product-attributes/colors",
   ATTRIBUTES_SIZES: "product-attributes/sizes",
   ATTRIBUTES_PACKAGES: "product-attributes/packages",
