@@ -389,38 +389,85 @@ export default function ProductsView() {
             No subcategories available for this main category.
           </p>
         ) : (
-          <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <div className="space-y-1">
             <button
               type="button"
               onClick={() => updateParam("subcategory", "")}
               className={classNames(
-                "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
+                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
                 !subcategory
-                  ? "bg-primary-100 text-primary-700 font-medium"
-                  : "text-slate-600 hover:bg-slate-100",
+                  ? "bg-primary-50 text-primary-700 font-medium"
+                  : "text-slate-600 hover:bg-slate-50",
               )}
             >
-              All subcategories
+              <span
+                className={classNames(
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                  !subcategory
+                    ? "bg-primary-100 text-primary-700"
+                    : "bg-slate-100 text-slate-500",
+                )}
+              >
+                <Squares2X2Icon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-left">
+                All subcategories
+              </span>
+              <span className="shrink-0 text-xs text-slate-400">
+                {selectedCategorySubcategories.reduce(
+                  (sum, subcat) => sum + (subcat._count?.products ?? 0),
+                  0,
+                )}
+              </span>
             </button>
-            {selectedCategorySubcategories.map((subcat) => {
-              const subKey = subcat.slug || subcat.id;
-              const activeSub = subcategory === subKey;
-              return (
-                <button
-                  key={subcat.id}
-                  type="button"
-                  onClick={() => updateParam("subcategory", subKey)}
-                  className={classNames(
-                    "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
-                    activeSub
-                      ? "bg-primary-100 text-primary-700 font-medium"
-                      : "text-slate-600 hover:bg-slate-100",
-                  )}
-                >
-                  {subcat.title || subcat.name}
-                </button>
-              );
-            })}
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+              {selectedCategorySubcategories.map((subcat) => {
+                const subKey = subcat.slug || subcat.id;
+                const activeSub = subcategory === subKey;
+                const subImageUrl =
+                  resolveMediaUrl(subcat.image) ||
+                  resolveMediaUrl(selectedCategoryObj?.image);
+                const subCount = subcat._count?.products ?? 0;
+                return (
+                  <button
+                    key={subcat.id}
+                    type="button"
+                    onClick={() => updateParam("subcategory", subKey)}
+                    className={classNames(
+                      "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
+                      activeSub
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-slate-600 hover:bg-slate-50",
+                    )}
+                  >
+                    <span
+                      className={classNames(
+                        "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md",
+                        activeSub
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-slate-100 text-slate-500",
+                      )}
+                    >
+                      {subImageUrl ? (
+                        <img
+                          src={subImageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <TagIcon className="h-4 w-4" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {subcat.title || subcat.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-slate-400">
+                      {subCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

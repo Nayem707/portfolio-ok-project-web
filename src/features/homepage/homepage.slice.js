@@ -45,13 +45,13 @@ const heroSlides = [
 ];
 
 const defaultPerks = [
-  {
-    id: 1,
-    title: "Free Shipping",
-    desc: "On orders over $150",
-    icon: "TruckIcon",
-    active: true,
-  },
+  // {
+  //   id: 1,
+  //   title: "Free Shipping",
+  //   desc: "On orders over $150",
+  //   icon: "TruckIcon",
+  //   active: true,
+  // },
   {
     id: 2,
     title: "Easy Returns",
