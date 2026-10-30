@@ -355,6 +355,58 @@ export const api = {
     return getData(response);
   },
 
+  // ---- Packages (combo bundles) ----
+  getPackages: async (params = {}) => {
+    const response = await axiosInstance.get("/packages", { params });
+    return getData(response);
+  },
+
+  getPackageById: async (packageId) => {
+    const response = await axiosInstance.get(`/packages/${packageId}`);
+    return getData(response);
+  },
+
+  createPackage: async (payload) => {
+    const response = await axiosInstance.post("/packages", payload);
+    return getData(response);
+  },
+
+  updatePackage: async (packageId, payload) => {
+    const response = await axiosInstance.patch(
+      `/packages/${packageId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deletePackage: async (packageId) => {
+    const response = await axiosInstance.delete(`/packages/${packageId}`);
+    return getData(response);
+  },
+
+  getPackageItems: async () => {
+    const response = await axiosInstance.get("/packages/items");
+    return getData(response);
+  },
+
+  createPackageItem: async (payload) => {
+    const response = await axiosInstance.post("/packages/items", payload);
+    return getData(response);
+  },
+
+  updatePackageItem: async (itemId, payload) => {
+    const response = await axiosInstance.patch(
+      `/packages/items/${itemId}`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  deletePackageItem: async (itemId) => {
+    const response = await axiosInstance.delete(`/packages/items/${itemId}`);
+    return getData(response);
+  },
+
   getHomepage: async () => {
     const response = await axiosInstance.get("/homepage");
     return getData(response);

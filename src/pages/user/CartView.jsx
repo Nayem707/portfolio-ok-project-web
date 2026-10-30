@@ -7,6 +7,7 @@ import {
   ShoppingBagIcon,
   ArrowLeftIcon,
   TruckIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/common/Button";
 import QuantitySelector from "@/components/common/QuantitySelector";
@@ -18,6 +19,7 @@ import {
   selectDeliveryRates,
   removeFromCart,
   setQuantity,
+  updateCartItemOptions,
 } from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import { formatCurrency, getDiscountedPrice, resolveMediaUrl } from "@/utils";
@@ -121,28 +123,91 @@ export default function CartView() {
                       >
                         {item.name}
                       </Link>
-                      {(item.selectedColor || item.selectedSize) && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {item.selectedColor && (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
-                              <span
-                                className="h-2.5 w-2.5 rounded-full border border-slate-300"
-                                style={{
-                                  backgroundColor:
-                                    colorSwatches[item.selectedColor] ||
-                                    item.selectedColor,
-                                }}
-                              />
-                              {item.selectedColor}
-                            </span>
+
+                      <div className="mt-2 space-y-2">
+                        {(item.selectedColor || item.selectedSize) && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            {item.selectedColor && (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                                <span
+                                  className="h-2.5 w-2.5 rounded-full border border-slate-300"
+                                  style={{
+                                    backgroundColor:
+                                      colorSwatches[item.selectedColor] ||
+                                      item.selectedColor,
+                                  }}
+                                />
+                                {item.selectedColor}
+                              </span>
+                            )}
+                            {item.selectedSize && (
+                              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                                Size: {item.selectedSize}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {Array.isArray(item.packageOptions) &&
+                          item.packageOptions.length > 0 && (
+                            <div className="border-primary-100 bg-primary-50/40 max-w-xs rounded-lg border p-2.5">
+                              <span className="text-primary-700 flex items-center gap-1 text-[11px] font-semibold tracking-wide uppercase">
+                                <CubeIcon className="h-3.5 w-3.5" /> Package
+                                <span className="font-normal text-slate-400 normal-case">
+                                  (optional)
+                                </span>
+                              </span>
+                              <select
+                                aria-label="Change package"
+                                value={item.selectedPackageId || ""}
+                                onChange={(e) =>
+                                  dispatch(
+                                    updateCartItemOptions({
+                                      id: item.id,
+                                      itemKey: item.itemKey,
+                                      cartItemId: item.cartItemId,
+                                      selectedColor: item.selectedColor,
+                                      selectedSize: item.selectedSize,
+                                      selectedPackageId: e.target.value,
+                                    }),
+                                  )
+                                }
+                                className="focus:border-primary-500 focus:ring-primary-100 mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 focus:ring-2 focus:outline-none"
+                              >
+                                <option value="">
+                                  No package —{" "}
+                                  {formatCurrency(
+                                    Number(item.productPrice ?? item.price),
+                                  )}
+                                </option>
+                                {item.packageOptions.map((pkg) => (
+                                  <option key={pkg.id} value={pkg.id}>
+                                    {pkg.name} —{" "}
+                                    {formatCurrency(
+                                      Number(item.productPrice ?? 0) +
+                                        Number(pkg.price),
+                                    )}
+                                  </option>
+                                ))}
+                              </select>
+                              {Array.isArray(item.packageComponents) &&
+                                item.packageComponents.length > 0 && (
+                                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                                    <span className="font-medium text-slate-600">
+                                      Includes:{" "}
+                                    </span>
+                                    {item.packageComponents
+                                      .map((c) =>
+                                        Number(c.quantity) > 1
+                                          ? `${c.name} × ${c.quantity}`
+                                          : c.name,
+                                      )
+                                      .join(", ")}
+                                  </p>
+                                )}
+                            </div>
                           )}
-                          {item.selectedSize && (
-                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
-                              Size: {item.selectedSize}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      </div>
                     </div>
                     <p className="font-bold text-slate-900">
                       {formatCurrency(

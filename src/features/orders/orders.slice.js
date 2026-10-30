@@ -27,6 +27,10 @@ export const normalizeOrder = (order) => ({
     quantity: item.quantity,
     selectedColor: item.selectedColor || null,
     selectedSize: item.selectedSize || null,
+    selectedPackageId: item.packageId || null,
+    packageName: item.packageName || null,
+    packagePrice:
+      item.packagePrice != null ? Number(item.packagePrice) : null,
     image: getProductImage(item) || null,
     subtotal: Number(item.subtotal || 0),
   })),
@@ -194,6 +198,9 @@ export const placeOrder = createAsyncThunk(
         quantity: item.quantity,
         ...(item.selectedColor ? { selectedColor: item.selectedColor } : {}),
         ...(item.selectedSize ? { selectedSize: item.selectedSize } : {}),
+        ...(item.selectedPackageId
+          ? { selectedPackageId: item.selectedPackageId }
+          : {}),
       }));
 
       const response = await api.checkout({

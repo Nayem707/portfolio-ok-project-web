@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import {
+  getDefaultPackage,
   getMissingVariantLabels,
   getProductColorOptions,
+  getProductPackageOptions,
   getProductSizeOptions,
 } from "@/features/cart";
 import { classNames, getProductImage } from "@/utils";
@@ -42,26 +45,28 @@ export default function AddToCartVariantModal({
     [product],
   );
   const sizeOptions = useMemo(() => getProductSizeOptions(product), [product]);
+  const packageOptions = useMemo(
+    () => getProductPackageOptions(product),
+    [product],
+  );
 
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setSelectedColor(null);
     setSelectedSize(null);
+    setSelectedPackage(getDefaultPackage(product) || null);
     setError("");
   }, [open, product?.id]);
 
   if (!product) return null;
 
   const handleConfirm = () => {
-    const missing = getMissingVariantLabels(
-      product,
-      selectedColor,
-      selectedSize,
-    );
+    const missing = getMissingVariantLabels(product, selectedColor, selectedSize);
     if (missing.length) {
       setError(`Please select ${missing.join(" and ")}`);
       return;
@@ -69,6 +74,7 @@ export default function AddToCartVariantModal({
     onConfirm?.({
       selectedColor: selectedColor || null,
       selectedSize: selectedSize || null,
+      selectedPackage: selectedPackage || null,
     });
   };
 
@@ -99,7 +105,10 @@ export default function AddToCartVariantModal({
           </p>
           <div className="mt-1">
             <PriceDisplay
-              price={product.price}
+              price={
+                Number(product.price || 0) +
+                (selectedPackage ? Number(selectedPackage.price) : 0)
+              }
               discount={product.discount}
               baseCurrency={product.baseCurrency || "BDT"}
               size="sm"
@@ -107,6 +116,103 @@ export default function AddToCartVariantModal({
           </div>
         </div>
       </div>
+
+      {packageOptions.length > 0 && (
+        <div className="mt-5">
+          <span className="mb-2 block text-sm font-medium text-slate-700">
+            Package
+          </span>
+          <div className="grid gap-2">
+            {packageOptions.map((pkg) => {
+              const isSelected = selectedPackage?.id === pkg.id;
+              const components = Array.isArray(pkg.items) ? pkg.items : [];
+              return (
+                <button
+                  key={pkg.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setError("");
+                  }}
+                  aria-pressed={isSelected}
+                  className={classNames(
+                    "flex items-start justify-between gap-2 rounded-lg border p-2.5 text-left transition",
+                    isSelected
+                      ? "border-primary-600 bg-primary-50"
+                      : "border-slate-200 hover:border-slate-300",
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-slate-800">
+                      {pkg.name}
+                    </span>
+                    {components.length > 0 && (
+                      <span className="text-[11px] text-slate-500">
+                        {components
+                          .map((c) =>
+                            Number(c.quantity) > 1
+                              ? `${c.name} × ${c.quantity}`
+                              : c.name,
+                          )
+                          .join(", ")}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <PriceDisplay
+                      price={Number(product.price || 0) + Number(pkg.price)}
+                      discount={product.discount}
+                      baseCurrency={product.baseCurrency || "BDT"}
+                      size="sm"
+                      amountClassName="text-primary-600"
+                    />
+                    {isSelected && (
+                      <CheckCircleIcon className="text-primary-600 h-5 w-5" />
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* "None" opt-out: just the product at its base price. */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPackage(null);
+                setError("");
+              }}
+              aria-pressed={!selectedPackage}
+              className={classNames(
+                "flex items-start justify-between gap-2 rounded-lg border p-2.5 text-left transition",
+                !selectedPackage
+                  ? "border-primary-600 bg-primary-50"
+                  : "border-slate-200 hover:border-slate-300",
+              )}
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-slate-800">
+                  No package
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Just the product
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5">
+                <PriceDisplay
+                  price={product.price}
+                  discount={product.discount}
+                  baseCurrency={product.baseCurrency || "BDT"}
+                  size="sm"
+                  amountClassName="text-primary-600"
+                />
+                {!selectedPackage && (
+                  <CheckCircleIcon className="text-primary-600 h-5 w-5" />
+                )}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {colorOptions.length > 0 && (
         <div className="mt-5">

@@ -1,7 +1,11 @@
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-import { addToCart, requiresVariantSelection } from "@/features/cart";
+import {
+  addToCart,
+  getProductPackageOptions,
+  requiresVariantSelection,
+} from "@/features/cart";
 
 /**
  * Shared add-to-cart flow for Products, Wishlist, and similar surfaces.
@@ -15,6 +19,8 @@ export default function useAddProductToCart() {
     (product, options = {}) => {
       const selectedColor = options.selectedColor ?? product.selectedColor ?? null;
       const selectedSize = options.selectedSize ?? product.selectedSize ?? null;
+      const selectedPackage =
+        options.selectedPackage ?? product.selectedPackage ?? null;
       const quantity = options.quantity ?? product.quantity ?? 1;
 
       dispatch(
@@ -23,10 +29,11 @@ export default function useAddProductToCart() {
           quantity,
           selectedColor,
           selectedSize,
+          selectedPackage,
         }),
       );
 
-      const variantLabel = [selectedColor, selectedSize]
+      const variantLabel = [selectedColor, selectedSize, selectedPackage?.name]
         .filter(Boolean)
         .join(", ");
       toast.success(
@@ -48,8 +55,17 @@ export default function useAddProductToCart() {
       const selectedColor =
         options.selectedColor ?? product.selectedColor ?? null;
       const selectedSize = options.selectedSize ?? product.selectedSize ?? null;
+      const packageProvided =
+        options.selectedPackage !== undefined ||
+        options.selectedPackageId !== undefined;
+      const hasPackages = getProductPackageOptions(product).length > 0;
 
-      if (requiresVariantSelection(product, selectedColor, selectedSize)) {
+      // Open the modal when variants are missing, or to let the shopper pick a
+      // package (or "None") for a product that offers packages.
+      if (
+        requiresVariantSelection(product, selectedColor, selectedSize) ||
+        (hasPackages && !packageProvided)
+      ) {
         setPendingProduct(product);
         return;
       }
@@ -60,9 +76,13 @@ export default function useAddProductToCart() {
   );
 
   const confirmVariantSelection = useCallback(
-    ({ selectedColor, selectedSize }) => {
+    ({ selectedColor, selectedSize, selectedPackage }) => {
       if (!pendingProduct) return;
-      commitAdd(pendingProduct, { selectedColor, selectedSize });
+      commitAdd(pendingProduct, {
+        selectedColor,
+        selectedSize,
+        selectedPackage,
+      });
     },
     [commitAdd, pendingProduct],
   );

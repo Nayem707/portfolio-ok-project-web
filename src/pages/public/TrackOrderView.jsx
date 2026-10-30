@@ -27,6 +27,7 @@ import {
   formatDate,
   getProductImage,
 } from "@/utils";
+import PackageTag from "@/components/product/PackageTag";
 
 const MOBILE_MESSAGE = "Please enter a valid mobile number, e.g. 01712345678";
 
@@ -158,6 +159,9 @@ function TrackedOrderDetails({ order, onCancel }) {
                     <p className="line-clamp-1 text-sm font-medium text-slate-800">
                       {item.name}
                     </p>
+                  )}
+                  {item.packageName && (
+                    <PackageTag name={item.packageName} className="mt-0.5" />
                   )}
                   <p className="text-xs text-slate-400">
                     Qty: {item.quantity} × {formatCurrency(item.price)}

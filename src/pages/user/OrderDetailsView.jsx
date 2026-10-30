@@ -23,6 +23,7 @@ import {
   getDiscountedPrice,
   getProductImage,
 } from "@/utils";
+import PackageTag from "@/components/product/PackageTag";
 
 export default function OrderDetailsView() {
   const dispatch = useDispatch();
@@ -154,6 +155,16 @@ export default function OrderDetailsView() {
                   ) : (
                     <p className="line-clamp-1 text-sm font-medium text-slate-800">
                       {item.name}
+                    </p>
+                  )}
+                  {item.packageName && (
+                    <PackageTag name={item.packageName} className="mt-0.5" />
+                  )}
+                  {(item.selectedColor || item.selectedSize) && (
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {[item.selectedColor, item.selectedSize]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   )}
                   <p className="text-xs text-slate-400">Qty: {item.quantity}</p>

@@ -51,7 +51,12 @@ import {
   selectHomePageSections,
 } from "@/features/homepage";
 import PerksSection from "@/pages/public/home/section/PerksSection";
-import { addToCart, getMissingVariantLabels } from "@/features/cart";
+import {
+  addToCart,
+  getDefaultPackage,
+  getMissingVariantLabels,
+  getProductPackageOptions,
+} from "@/features/cart";
 import { toggleWishlist, selectWishlistItems } from "@/features/wishlist";
 import {
   classNames,
@@ -134,6 +139,7 @@ export default function ProductDetailsView() {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [variantError, setVariantError] = useState("");
   const [visibleReviews, setVisibleReviews] = useState(6);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -274,10 +280,15 @@ export default function ProductDetailsView() {
     () => (product?.sizes?.length ? product.sizes : []),
     [product],
   );
+  const productPackages = useMemo(
+    () => getProductPackageOptions(product),
+    [product],
+  );
 
   useEffect(() => {
     setSelectedColor(null);
     setSelectedSize(null);
+    setSelectedPackage(getDefaultPackage(product) || null);
     setQuantity(1);
     setVariantError("");
   }, [product?.id]);
@@ -438,10 +449,11 @@ export default function ProductDetailsView() {
         quantity,
         selectedColor,
         selectedSize,
+        selectedPackage,
       }),
     );
     setVariantError("");
-    const variantLabel = [selectedColor, selectedSize]
+    const variantLabel = [selectedColor, selectedSize, selectedPackage?.name]
       .filter(Boolean)
       .join(", ");
     toast.success(
@@ -474,6 +486,7 @@ export default function ProductDetailsView() {
         quantity,
         selectedColor,
         selectedSize,
+        selectedPackage,
       }),
     );
     navigate("/checkout");
@@ -571,9 +584,17 @@ export default function ProductDetailsView() {
   const shopWhatsapp = settings?.whatsapp?.trim() || "";
   const phoneHref = toPhoneHref(shopPhone);
   const whatsappUrl = toWhatsAppUrl(shopWhatsapp);
+  const whatsappSelections = [
+    selectedPackage?.name ? `Package: ${selectedPackage.name}` : "",
+    selectedColor ? `Color: ${selectedColor}` : "",
+    selectedSize ? `Size: ${selectedSize}` : "",
+  ].filter(Boolean);
   const whatsappHref = whatsappUrl
     ? `${whatsappUrl}?text=${encodeURIComponent(
-        `Hi! I am interested in this product: ${currentProductUrl}`,
+        `Hi! I am interested in this product: ${currentProductUrl}` +
+          (whatsappSelections.length
+            ? `\n${whatsappSelections.join("\n")}`
+            : ""),
       )}`
     : "";
 
@@ -767,7 +788,10 @@ export default function ProductDetailsView() {
 
             <div className="mt-5">
               <PriceDisplay
-                price={product.price}
+                price={
+                  Number(product.price || 0) +
+                  (selectedPackage ? Number(selectedPackage.price) : 0)
+                }
                 discount={product.discount}
                 baseCurrency={product.baseCurrency || "BDT"}
                 size="xl"
@@ -788,6 +812,95 @@ export default function ProductDetailsView() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {productPackages.length > 0 && (
+              <div className="mt-6">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Select Package
+                  <span className="ml-1 font-normal text-slate-400">
+                    (optional):
+                  </span>
+                  {/* {selectedPackage && (
+                    <span className="text-primary-600 ml-1 font-semibold">
+                      • {selectedPackage.name}
+                    </span>
+                  )} */}
+                </span>
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {/* "None" opt-out: just the product at its base price. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPackage(null);
+                      setVariantError("");
+                    }}
+                    aria-pressed={!selectedPackage}
+                    className={classNames(
+                      "flex flex-col gap-1 rounded-xl border p-3 text-left transition",
+                      !selectedPackage
+                        ? "border-primary-600 bg-primary-50 ring-primary-100 ring-2"
+                        : "border-slate-200 bg-white hover:border-slate-300",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold text-slate-800">
+                        No package
+                      </span>
+                      {!selectedPackage && (
+                        <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                      )}
+                    </div>
+                    <span className="text-[11px] text-slate-500">
+                      Just the product — base price only
+                    </span>
+                  </button>
+                  {productPackages.map((pkg) => {
+                    const isSelected = selectedPackage?.id === pkg.id;
+                    const components = Array.isArray(pkg.items)
+                      ? pkg.items
+                      : [];
+                    return (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPackage(pkg);
+                          setVariantError("");
+                        }}
+                        aria-pressed={isSelected}
+                        className={classNames(
+                          "flex flex-col gap-1 rounded-xl border p-3 text-left transition",
+                          isSelected
+                            ? "border-primary-600 bg-primary-50 ring-primary-100 ring-2"
+                            : "border-slate-200 bg-white hover:border-slate-300",
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-sm font-semibold text-slate-800">
+                            {pkg.name}
+                          </span>
+                          {isSelected && (
+                            <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                          )}
+                        </div>
+
+                        {components.length > 0 && (
+                          <span className="text-[11px] text-slate-500">
+                            {components
+                              .map((c) =>
+                                Number(c.quantity) > 1
+                                  ? `${c.name} × ${c.quantity}`
+                                  : c.name,
+                              )
+                              .join(", ")}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

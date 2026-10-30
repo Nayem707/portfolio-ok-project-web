@@ -35,6 +35,7 @@ import {
   resolveMediaUrl,
 } from "@/utils";
 import { DELIVERY_AREAS, PAYMENT_METHODS } from "@/constants";
+import PackageTag from "@/components/product/PackageTag";
 import {
   BD_DISTRICTS,
   DHAKA_DISTRICT,
@@ -108,12 +109,12 @@ const PAYMENT_OPTIONS = [
     icon: BanknotesIcon,
     desc: "Pay with cash when you receive your order (no advance payment).",
   },
-  {
-    value: "ONLINE",
-    label: PAYMENT_METHODS.ONLINE,
-    icon: CreditCardIcon,
-    desc: "Pay securely online now.",
-  },
+  // {
+  //   value: "ONLINE",
+  //   label: PAYMENT_METHODS.ONLINE,
+  //   icon: CreditCardIcon,
+  //   desc: "Pay securely online now.",
+  // },
 ];
 
 const DELIVERY_OPTIONS = [
@@ -588,6 +589,21 @@ export default function CheckoutView() {
                       <p className="line-clamp-1 text-sm font-medium text-slate-700">
                         {item.name}
                       </p>
+                      {item.packageName && (
+                        <PackageTag
+                          name={item.packageName}
+                          components={item.packageComponents}
+                          showComponents
+                          className="mt-0.5"
+                        />
+                      )}
+                      {(item.selectedColor || item.selectedSize) && (
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          {[item.selectedColor, item.selectedSize]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
                       <p className="text-sm font-semibold text-slate-900">
                         {formatCurrency(
                           getDiscountedPrice(item.price, item.discount) *

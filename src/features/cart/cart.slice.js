@@ -5,10 +5,12 @@ import {
   buildCartItem,
   calcCartTotals,
   matchesCartItem,
+  normalisePersistedItems,
   normaliseSelector,
   refreshLineTotals,
   requiresVariantSelection,
   resolveItemKey,
+  toPackageOption,
 } from "./cart.utils";
 
 const emptyCart = {
@@ -22,7 +24,7 @@ const loadPersistedCart = () => {
   if (!saved || !Array.isArray(saved.items)) {
     return { ...emptyCart };
   }
-  const items = refreshLineTotals(saved.items);
+  const items = refreshLineTotals(normalisePersistedItems(saved.items));
   const totals = calcCartTotals(items);
   return {
     items,
@@ -128,11 +130,51 @@ const cartSlice = createSlice({
         action.payload.selectedSize !== undefined
           ? action.payload.selectedSize || null
           : target.selectedSize;
-      const nextKey = resolveItemKey(target.id, nextColor, nextSize);
+
+      // Resolve a package change (by object or id) against the line's stored options.
+      const packageChanged =
+        action.payload.selectedPackage !== undefined ||
+        action.payload.selectedPackageId !== undefined;
+      let nextPackage;
+      if (packageChanged) {
+        const nextPkgId =
+          action.payload.selectedPackage?.id ??
+          action.payload.selectedPackageId ??
+          null;
+        nextPackage = nextPkgId
+          ? (target.packageOptions || []).find((pkg) => pkg.id === nextPkgId) ||
+            (action.payload.selectedPackage
+              ? toPackageOption(action.payload.selectedPackage)
+              : null)
+          : null;
+      }
+
+      const resolvedPackageId = packageChanged
+        ? nextPackage?.id || null
+        : target.selectedPackageId || null;
+      const nextKey = resolveItemKey(
+        target.id,
+        nextColor,
+        nextSize,
+        resolvedPackageId,
+      );
+
+      const applyPackage = (item) => {
+        if (!packageChanged) return;
+        item.selectedPackageId = nextPackage?.id || null;
+        item.packageName = nextPackage?.name || null;
+        item.packagePrice = nextPackage ? Number(nextPackage.price) : null;
+        item.packageComponents = nextPackage?.items || null;
+        // Add-on model: product price + selected package price (0 when "None").
+        item.price =
+          Number(item.productPrice ?? 0) +
+          (nextPackage ? Number(nextPackage.price) : 0);
+      };
 
       if (nextKey === target.itemKey) {
         target.selectedColor = nextColor;
         target.selectedSize = nextSize;
+        applyPackage(target);
         applyTotals(state);
         return;
       }
@@ -153,6 +195,7 @@ const cartSlice = createSlice({
       } else {
         target.selectedColor = nextColor;
         target.selectedSize = nextSize;
+        applyPackage(target);
         target.itemKey = nextKey;
         target.cartItemId = nextKey;
       }

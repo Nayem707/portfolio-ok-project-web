@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -12,7 +12,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { fetchCategories, selectCategories } from "@/features/categories";
 import { fetchColors, selectColors } from "@/features/colors";
 import { fetchSizes, selectSizes } from "@/features/sizes";
-import { MOCK_PACKAGES } from "@/features/packages/packages.mock";
+import { api } from "@/services/api";
 import { ADMIN_PATHS } from "@/routes/admin/admin.paths";
 
 const cards = [
@@ -55,18 +55,31 @@ export default function ProductAttributesView() {
   const categories = useSelector(selectCategories);
   const colors = useSelector(selectColors);
   const sizes = useSelector(selectSizes);
+  const [packageCount, setPackageCount] = useState(0);
 
   useEffect(() => {
     dispatch(fetchCategories({ all: true }));
     dispatch(fetchColors());
     dispatch(fetchSizes());
+    let active = true;
+    api
+      .getPackages()
+      .then((list) => {
+        if (active) setPackageCount(Array.isArray(list) ? list.length : 0);
+      })
+      .catch(() => {
+        if (active) setPackageCount(0);
+      });
+    return () => {
+      active = false;
+    };
   }, [dispatch]);
 
   const counts = {
     category: categories.length,
     color: colors.length,
     size: sizes.length,
-    package: MOCK_PACKAGES.length,
+    package: packageCount,
   };
 
   return (

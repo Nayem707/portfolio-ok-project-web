@@ -45,6 +45,8 @@ const empty = {
   images: [],
   availableColors: [],
   availableSizes: [],
+  packageIds: [],
+  defaultPackageId: "",
   status: "ACTIVE",
   featured: false,
   popular: false,
@@ -92,6 +94,12 @@ const fromInitial = (initial) => ({
   images: normalizeImages(initial?.images),
   availableColors: toArray(initial?.colors || initial?.availableColors),
   availableSizes: toArray(initial?.sizes || initial?.availableSizes),
+  packageIds: Array.isArray(initial?.packages)
+    ? initial.packages.map((pkg) => pkg.id)
+    : initial?.packageIds || [],
+  defaultPackageId: Array.isArray(initial?.packages)
+    ? initial.packages.find((pkg) => pkg.isDefault)?.id || ""
+    : initial?.defaultPackageId || "",
 });
 
 export default function ProductForm({
@@ -111,12 +119,46 @@ export default function ProductForm({
   const [imageUrl, setImageUrl] = useState("");
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [availablePackages, setAvailablePackages] = useState([]);
 
   useEffect(() => {
     dispatch(fetchCategories({ all: true }));
     dispatch(fetchColors());
     dispatch(fetchSizes());
   }, [dispatch]);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .getPackages({ status: "ACTIVE" })
+      .then((list) => {
+        if (active) setAvailablePackages(Array.isArray(list) ? list : []);
+      })
+      .catch(() => {
+        if (active) setAvailablePackages([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep a selected package set as default; clear a stale default when deselected.
+  const togglePackage = (packageId) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev.packageIds) ? prev.packageIds : [];
+      const selected = current.includes(packageId);
+      const nextIds = selected
+        ? current.filter((id) => id !== packageId)
+        : [...current, packageId];
+      let nextDefault = prev.defaultPackageId;
+      if (selected && prev.defaultPackageId === packageId) {
+        nextDefault = nextIds[0] || "";
+      } else if (!selected && !prev.defaultPackageId) {
+        nextDefault = packageId;
+      }
+      return { ...prev, packageIds: nextIds, defaultPackageId: nextDefault };
+    });
+  };
 
   useEffect(() => {
     setForm(fromInitial(initial));
@@ -334,6 +376,12 @@ export default function ProductForm({
               .filter((size) => selectedSizeNames.includes(size.name))
               .map((size) => size.id)
           : initial?.sizeIds || [],
+      packageIds: Array.isArray(form.packageIds) ? form.packageIds : [],
+      defaultPackageId:
+        form.defaultPackageId &&
+        (form.packageIds || []).includes(form.defaultPackageId)
+          ? form.defaultPackageId
+          : undefined,
     });
   };
 
@@ -728,6 +776,85 @@ export default function ProductForm({
                     >
                       {size.name}
                     </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Packages
+              </label>
+              <p className="text-xs text-slate-500">
+                Offer combo packages on this product. Pick a default to
+                pre-select it on the product page.
+              </p>
+              <div className="space-y-2">
+                {availablePackages.length === 0 && (
+                  <span className="text-sm text-slate-400">
+                    No active packages available
+                  </span>
+                )}
+                {availablePackages.map((pkg) => {
+                  const selected = (form.packageIds || []).includes(pkg.id);
+                  const isDefault = form.defaultPackageId === pkg.id;
+                  return (
+                    <div
+                      key={pkg.id}
+                      className={[
+                        "rounded-xl border p-3 transition",
+                        selected
+                          ? "border-primary-500 bg-primary-50/50"
+                          : "border-slate-200 bg-white",
+                      ].join(" ")}
+                    >
+                      <label className="flex cursor-pointer items-start gap-2">
+                        <input
+                          type="checkbox"
+                          className="text-primary-600 focus:ring-primary-500 mt-0.5 h-4 w-4 rounded border-slate-300"
+                          checked={selected}
+                          onChange={() => togglePackage(pkg.id)}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-semibold text-slate-800">
+                              {pkg.name}
+                            </span>
+                            <span className="text-primary-600 text-sm font-semibold">
+                              ৳{Number(pkg.price).toLocaleString()}
+                            </span>
+                          </span>
+                          {Array.isArray(pkg.items) && pkg.items.length > 0 && (
+                            <span className="mt-0.5 block text-[11px] text-slate-500">
+                              {pkg.items
+                                .map((c) =>
+                                  Number(c.quantity) > 1
+                                    ? `${c.name} × ${c.quantity}`
+                                    : c.name,
+                                )
+                                .join(", ")}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                      {selected && (
+                        <label className="mt-2 ml-6 flex w-fit cursor-pointer items-center gap-1.5 text-xs text-slate-600">
+                          <input
+                            type="radio"
+                            name="defaultPackage"
+                            className="text-primary-600 focus:ring-primary-500 h-3.5 w-3.5 border-slate-300"
+                            checked={isDefault}
+                            onChange={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                defaultPackageId: pkg.id,
+                              }))
+                            }
+                          />
+                          Default package
+                        </label>
+                      )}
+                    </div>
                   );
                 })}
               </div>

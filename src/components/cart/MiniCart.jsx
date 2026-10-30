@@ -10,6 +10,7 @@ import {
 } from "@/features/cart";
 import { toggleMiniCart } from "@/features/ui";
 import { formatCurrency, getDiscountedPrice, resolveMediaUrl } from "@/utils";
+import PackageTag from "@/components/product/PackageTag";
 
 export default function MiniCart({ open }) {
   const dispatch = useDispatch();
@@ -92,6 +93,9 @@ export default function MiniCart({ open }) {
                     <p className="line-clamp-1 text-sm font-medium text-slate-800">
                       {item.name}
                     </p>
+                    {item.packageName && (
+                      <PackageTag name={item.packageName} className="mt-1" />
+                    )}
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400">
                       <span>Qty {item.quantity}</span>
                       {(item.selectedColor || item.selectedSize) && (

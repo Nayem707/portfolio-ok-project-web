@@ -24,7 +24,9 @@ export default function PriceDisplay({
     });
 
   const displayedFinal = formatValue(hideDecimals ? Math.trunc(final) : final);
-  const displayedOriginal = formatValue(hideDecimals ? Math.trunc(price) : price);
+  const displayedOriginal = formatValue(
+    hideDecimals ? Math.trunc(price) : price,
+  );
 
   const sizes = {
     sm: "text-sm",
