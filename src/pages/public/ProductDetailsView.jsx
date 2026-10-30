@@ -9,6 +9,8 @@ import {
   CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CubeIcon,
+  CubeTransparentIcon,
   EyeIcon,
   PencilSquareIcon,
   PhoneIcon,
@@ -838,22 +840,34 @@ export default function ProductDetailsView() {
                     }}
                     aria-pressed={!selectedPackage}
                     className={classNames(
-                      "flex flex-col gap-1 rounded-xl border p-3 text-left transition",
+                      "flex items-start gap-2.5 rounded-xl border p-3 text-left transition",
                       !selectedPackage
                         ? "border-primary-600 bg-primary-50 ring-primary-100 ring-2"
                         : "border-slate-200 bg-white hover:border-slate-300",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-sm font-semibold text-slate-800">
-                        No package
-                      </span>
-                      {!selectedPackage && (
-                        <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                    <span
+                      className={classNames(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                        !selectedPackage
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-slate-100 text-slate-500",
                       )}
-                    </div>
-                    <span className="text-[11px] text-slate-500">
-                      Just the product — base price only
+                    >
+                      <CubeTransparentIcon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-semibold text-slate-800">
+                          No package
+                        </span>
+                        {!selectedPackage && (
+                          <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                        )}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] text-slate-500">
+                        Just the product — base price only
+                      </span>
                     </span>
                   </button>
                   {productPackages.map((pkg) => {
@@ -871,32 +885,43 @@ export default function ProductDetailsView() {
                         }}
                         aria-pressed={isSelected}
                         className={classNames(
-                          "flex flex-col gap-1 rounded-xl border p-3 text-left transition",
+                          "flex items-start gap-2.5 rounded-xl border p-3 text-left transition",
                           isSelected
                             ? "border-primary-600 bg-primary-50 ring-primary-100 ring-2"
                             : "border-slate-200 bg-white hover:border-slate-300",
                         )}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-sm font-semibold text-slate-800">
-                            {pkg.name}
-                          </span>
-                          {isSelected && (
-                            <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                        <span
+                          className={classNames(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                            isSelected
+                              ? "bg-primary-100 text-primary-700"
+                              : "bg-slate-100 text-slate-500",
                           )}
-                        </div>
-
-                        {components.length > 0 && (
-                          <span className="text-[11px] text-slate-500">
-                            {components
-                              .map((c) =>
-                                Number(c.quantity) > 1
-                                  ? `${c.name} × ${c.quantity}`
-                                  : c.name,
-                              )
-                              .join(", ")}
+                        >
+                          <CubeIcon className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-start justify-between gap-2">
+                            <span className="text-sm font-semibold text-slate-800">
+                              {pkg.name}
+                            </span>
+                            {isSelected && (
+                              <CheckCircleIcon className="text-primary-600 h-5 w-5 shrink-0" />
+                            )}
                           </span>
-                        )}
+                          {components.length > 0 && (
+                            <span className="mt-0.5 block text-[11px] text-slate-500">
+                              {components
+                                .map((c) =>
+                                  Number(c.quantity) > 1
+                                    ? `${c.name} × ${c.quantity}`
+                                    : c.name,
+                                )
+                                .join(", ")}
+                            </span>
+                          )}
+                        </span>
                       </button>
                     );
                   })}

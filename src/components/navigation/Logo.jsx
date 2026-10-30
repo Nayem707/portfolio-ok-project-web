@@ -15,7 +15,7 @@ export default function Logo({ className, textClassName, to = "/" }) {
           textClassName,
         )}
       >
-        {APP_NAME}
+        ALIF ADDRESS SHOP
       </span>
     </Link>
   );

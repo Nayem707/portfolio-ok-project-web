@@ -1,4 +1,4 @@
-export const APP_NAME = "Shoply";
+export const APP_NAME = "ALIF ADDRESS SHOP";
 
 export const SOCIAL_LINK_KEYS = [
   "facebook",

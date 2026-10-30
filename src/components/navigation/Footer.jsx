@@ -117,7 +117,7 @@ const clean = (value) => (typeof value === "string" ? value.trim() : "");
 
 export default function Footer() {
   const settings = useSelector(selectSettings) || {};
-  const storeName = clean(settings.storeName) || APP_NAME;
+  const storeName = APP_NAME;
   const phone = clean(settings.phone);
   const whatsapp = clean(settings.whatsapp);
   const email = clean(settings.supportEmail);
