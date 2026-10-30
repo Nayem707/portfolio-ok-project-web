@@ -11,7 +11,7 @@ export default function Logo({ className, textClassName, to = "/" }) {
       </span>
       <span
         className={classNames(
-          "text-xl font-extrabold tracking-tight text-slate-900",
+          "text-sm font-extrabold tracking-tight text-slate-900",
           textClassName,
         )}
       >

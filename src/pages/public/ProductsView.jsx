@@ -232,6 +232,26 @@ export default function ProductsView() {
     );
     return subMatch ? `${base} / ${subMatch.title || subMatch.name}` : base;
   }, [category, subcategory, categories]);
+  const selectedCategoryObj = useMemo(
+    () =>
+      categories.find((cat) => cat.slug === category || cat.id === category) ||
+      null,
+    [categories, category],
+  );
+
+  const selectedCategorySubcategories = Array.isArray(
+    selectedCategoryObj?.subcategories,
+  )
+    ? selectedCategoryObj.subcategories
+    : [];
+
+  useEffect(() => {
+    if (!subcategory || !selectedCategoryObj) return;
+    const exists = selectedCategorySubcategories.some(
+      (sub) => sub.id === subcategory || sub.slug === subcategory,
+    );
+    if (!exists) updateParam("subcategory", "");
+  }, [subcategory, selectedCategoryObj, selectedCategorySubcategories]);
 
   const hasActiveFilters = Boolean(
     debouncedSearch ||
@@ -349,47 +369,60 @@ export default function ProductsView() {
                       {count}
                     </span>
                   </button>
-
-                  {isActive && Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && (
-                    <div className="ml-8 space-y-1 border-l border-slate-200 pl-2">
-                      <button
-                        type="button"
-                        onClick={() => updateParam("subcategory", "")}
-                        className={classNames(
-                          "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
-                          !subcategory
-                            ? "bg-primary-100 text-primary-700 font-medium"
-                            : "text-slate-500 hover:bg-slate-100",
-                        )}
-                      >
-                        All in {getCategoryLabel(cat)}
-                      </button>
-                      {cat.subcategories.map((subcat) => {
-                        const subKey = subcat.slug || subcat.id;
-                        const activeSub = subcategory === subKey;
-                        return (
-                          <button
-                            key={subcat.id}
-                            type="button"
-                            onClick={() => updateParam("subcategory", subKey)}
-                            className={classNames(
-                              "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
-                              activeSub
-                                ? "bg-primary-100 text-primary-700 font-medium"
-                                : "text-slate-500 hover:bg-slate-100",
-                            )}
-                          >
-                            {subcat.title || subcat.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
         </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-slate-800">
+          Subcategories
+        </h3>
+        {!selectedCategoryObj ? (
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            Select a main category to view subcategories.
+          </p>
+        ) : selectedCategorySubcategories.length === 0 ? (
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            No subcategories available for this main category.
+          </p>
+        ) : (
+          <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2">
+            <button
+              type="button"
+              onClick={() => updateParam("subcategory", "")}
+              className={classNames(
+                "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
+                !subcategory
+                  ? "bg-primary-100 text-primary-700 font-medium"
+                  : "text-slate-600 hover:bg-slate-100",
+              )}
+            >
+              All subcategories
+            </button>
+            {selectedCategorySubcategories.map((subcat) => {
+              const subKey = subcat.slug || subcat.id;
+              const activeSub = subcategory === subKey;
+              return (
+                <button
+                  key={subcat.id}
+                  type="button"
+                  onClick={() => updateParam("subcategory", subKey)}
+                  className={classNames(
+                    "block w-full rounded-md px-2 py-1.5 text-left text-xs transition",
+                    activeSub
+                      ? "bg-primary-100 text-primary-700 font-medium"
+                      : "text-slate-600 hover:bg-slate-100",
+                  )}
+                >
+                  {subcat.title || subcat.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div>

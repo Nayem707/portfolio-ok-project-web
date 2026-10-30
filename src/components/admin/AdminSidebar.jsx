@@ -51,7 +51,7 @@ export default function AdminSidebar({ open }) {
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-5">
-          <Logo textClassName="text-white" />
+          <Logo textClassName="text-white text-lg" />
           <button
             onClick={close}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 lg:hidden"
