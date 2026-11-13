@@ -3,6 +3,7 @@ dist
 dist-ssr
 *.local
 !.env.example
+.env
 
 # Editor
 .idea
